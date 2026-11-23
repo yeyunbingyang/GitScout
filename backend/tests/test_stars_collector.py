@@ -123,9 +123,10 @@ def test_persist_stars_scan_creates_immutable_ranking_and_stats(tmp_path, monkey
     job = create_stars_scan_job(max_results=1000, min_stars=100)
     scan_id = int(job["related_stars_scan_id"])
     items = [
-        _repository(1001, 5000),
-        _repository(1002, 4200),
+        stars_collector._normalize_repository(_repository(1001, 5000)),
+        stars_collector._normalize_repository(_repository(1002, 4200)),
     ]
+    assert all(item is not None for item in items)
     result = StarsScanResult(
         repositories=items,
         request_count=3,
