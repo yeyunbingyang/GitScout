@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, CheckCircle2, Clock3, RefreshCw, RotateCcw } from "lucide-react";
-import { api, type CollectionJob } from "../services/api";
+import { AlertCircle, CheckCircle2, Clock3, FileText, RefreshCw, RotateCcw, X } from "lucide-react";
+import { api, type CollectionJob, type CollectionJobDetail } from "../services/api";
 
 function date(value: string | null): string {
   return value ? new Date(value).toLocaleString("zh-CN", { hour12: false }) : "—";
@@ -25,6 +25,8 @@ export default function CollectionJobsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<CollectionJobDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,6 +42,21 @@ export default function CollectionJobsPage() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  async function showDetails(jobId: string) {
+    if (selectedJob?.id === jobId) {
+      setSelectedJob(null);
+      return;
+    }
+    setDetailLoading(true);
+    try {
+      setSelectedJob(await api.collectionJob(jobId));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "读取任务详情失败");
+    } finally {
+      setDetailLoading(false);
+    }
+  }
 
   async function retry(job: CollectionJob) {
     setRetrying(job.id);
@@ -90,11 +107,16 @@ export default function CollectionJobsPage() {
                     <td>{job.inserted_count} / {job.updated_count}</td>
                     <td>{job.request_count} / {job.fetched_count}</td>
                     <td>
-                      {["failed", "partial_success"].includes(job.status) ? (
-                        <button className="text-button" disabled={retrying === job.id} onClick={() => void retry(job)}>
-                          <RotateCcw size={13} />{retrying === job.id ? "提交中" : "重试"}
+                      <div className="job-actions">
+                        <button className="text-button" onClick={() => void showDetails(job.id)}>
+                          <FileText size={13} />详情
                         </button>
-                      ) : <span className="muted-dash">—</span>}
+                        {["failed", "partial_success"].includes(job.status) && (
+                          <button className="text-button" disabled={retrying === job.id} onClick={() => void retry(job)}>
+                            <RotateCcw size={13} />{retrying === job.id ? "提交中" : "重试"}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -103,6 +125,35 @@ export default function CollectionJobsPage() {
           </div>
         )}
       </section>
+      {detailLoading && <div className="surface-card job-detail-panel">正在读取任务详情…</div>}
+      {selectedJob && (
+        <section className="surface-card job-detail-panel">
+          <div className="job-detail-heading">
+            <div><span className="eyebrow">COLLECTION JOB DETAIL</span><h3>{periodName(selectedJob.job_type)} · {selectedJob.id}</h3></div>
+            <button className="icon-button" onClick={() => setSelectedJob(null)} aria-label="关闭详情"><X size={16} /></button>
+          </div>
+          {selectedJob.error_message && <div className="job-error-message">{selectedJob.error_message}</div>}
+          {selectedJob.retry_of_job_id && <p className="job-retry-link">重试来源：{selectedJob.retry_of_job_id}</p>}
+          <div className="job-detail-stats">
+            <span>请求 {selectedJob.request_count}</span>
+            <span>返回 {selectedJob.fetched_count}</span>
+            <span>新增 {selectedJob.inserted_count}</span>
+            <span>更新 {selectedJob.updated_count}</span>
+            <span>去重 {selectedJob.deduplicated_count}</span>
+            <span>重试 {selectedJob.retry_count}</span>
+          </div>
+          <div className="job-log-list">
+            {selectedJob.logs.map((log) => (
+              <div className="job-log-row" key={log.id}>
+                <span className={log.level === "ERROR" ? "log-level error" : log.level === "WARNING" ? "log-level warning" : "log-level"}>{log.level}</span>
+                <div><strong>{log.message}</strong><small>{date(log.created_at)}</small>
+                  {Object.keys(log.details).length > 0 && <code>{JSON.stringify(log.details)}</code>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       <p className="jobs-footnote">失败任务的重试会创建新的执行记录，并保留与原任务的关联；历史任务不会被覆盖。</p>
     </div>
   );
