@@ -106,7 +106,7 @@ SQLite 是唯一业务数据库，首期核心表如下：
 - `GET /dashboard/analytics` 只读取 SQLite：返回所选周期最新 / 上一批快照、最近 12 次快照平均 Stars 走势、当前快照语言与 Topic 分布、三个周期各自最新快照的 Top 100 交叉矩阵，以及最新 Stars 扫描摘要。
 - 跨周期热门项目以各周期最新快照 Top 100 为计算边界；不把未进入采集范围解释为零热度。
 - `GET /trending/compare` 要求两个不同且同周期的有效快照，按 repository_id 做并集比较，区分 new / dropped / up / down / unchanged；支持关键词、语言、变化类型筛选和分页。
-- `GET /repositories/{id}` 聚合仓库主档、Topics、个人兴趣 / 研究状态、Trending 上榜历史、Stars 扫描历史和 repository_stats 历史观测；所有数据都来自本地数据库。
+- `GET /repositories/{id}` 聚合仓库主档、Topics、个人兴趣 / 研究状态、Trending 上榜历史、各周期当前连续上榜次数、Stars 扫描历史和 repository_stats 历史观测；所有数据都来自本地数据库。
 - 对比 CSV 由前端按当前筛选条件分页拉取完整结果后生成，不增加后端导出服务。
 - M4 复用现有 `trending_snapshots`、`trending_snapshot_items`、`stars_scans`、`stars_scan_items` 和 `repository_stats`，不需要新增迁移。
 
