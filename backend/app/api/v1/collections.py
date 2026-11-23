@@ -48,6 +48,25 @@ def get_collection_schedules() -> dict[str, Any]:
     return {"items": list_schedules()}
 
 
+@router.put("/schedules/stars")
+def update_stars_collection_schedule(payload: StarsScheduleUpdate) -> dict[str, Any]:
+    settings = {
+        "time": payload.time,
+        "max_results": payload.max_results,
+        "min_stars": payload.min_stars,
+        "include_forks": payload.include_forks,
+    }
+    try:
+        schedule = save_stars_schedule(
+            enabled=payload.enabled,
+            settings=settings,
+            timezone_name=payload.timezone,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"schedule": schedule}
+
+
 @router.put("/schedules/{period_type}")
 def update_collection_schedule(
     period_type: Literal["daily", "weekly", "monthly"],
@@ -61,25 +80,6 @@ def update_collection_schedule(
     try:
         schedule = save_schedule(
             period_type,
-            enabled=payload.enabled,
-            settings=settings,
-            timezone_name=payload.timezone,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return {"schedule": schedule}
-
-
-@router.put("/schedules/stars")
-def update_stars_collection_schedule(payload: StarsScheduleUpdate) -> dict[str, Any]:
-    settings = {
-        "time": payload.time,
-        "max_results": payload.max_results,
-        "min_stars": payload.min_stars,
-        "include_forks": payload.include_forks,
-    }
-    try:
-        schedule = save_stars_schedule(
             enabled=payload.enabled,
             settings=settings,
             timezone_name=payload.timezone,
