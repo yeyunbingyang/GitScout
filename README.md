@@ -82,7 +82,7 @@ npm run dev
 
 ## 本地配置
 
-首次使用可将仓库根目录的 `.env.example` 复制为 `.env`。后端启动时会读取该文件；已经存在的系统环境变量优先级更高。GitHub Token 只配置在本地根目录 `.env`，不要提交真实 Token。
+首次使用可将仓库根目录的 `.env.example` 复制为 `.env`。后端启动时会读取该文件；已经存在的系统环境变量优先级更高。Trending 来源地址可通过 `GITSCOUT_TRENDING_URL` 覆盖。GitHub Token 只配置在本地根目录 `.env`，不要提交真实 Token。
 
 ## 当前已实现
 
@@ -125,9 +125,9 @@ Stars 总榜真实采集、周期排名对比、推荐评分服务、感兴趣�
 
 | 里程碑 | 状态 |
 |---|---|
-| M0 · React / FastAPI 工程骨架 | 已提交第一批代码 |
-| M1 · SQLite 数据底座 | 已提交初始 Schema 与迁移测试 |
-| M2 · Trending 真实采集 | 待开发 |
+| M0 · React / FastAPI 工程骨架 | 已提交 |
+| M1 · SQLite 数据底座 | 已提交 |
+| M2 · Trending 真实采集与调度 | 已提交实现，等待 CI 与本机验收 |
 | M3 · Stars 总榜采集 | 待开发 |
 | M4 · 榜单与趋势分析 | 待开发 |
 | M5 · 智能推荐 | 待开发 |
