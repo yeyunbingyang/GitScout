@@ -1,40 +1,120 @@
 # GitScout
 ### 开源项目发现与研究平台
 
-GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项目研究的平台。
+GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项目研究的本地 Web 工作台。
 
 > Discover · Track · Recommend · Research
 
 ## 当前版本
 
-- 产品版本：**v0.5.1**
+- 产品需求基线：**v0.5.1**
+- 技术工程版本：**0.1.0 · Foundation**
 - 品牌：**GitScout**
-- 中文副标题：**开源项目发现与研究平台**
-- 当前交付基线：品牌更名版需求说明书与配套 HTML 交互原型
-- 当前阶段：产品需求与原型基线整理；真实采集后端尚未接入
+- 运行模式：**Windows 本地 Web 工作台**
+- 技术栈：**React + TypeScript + FastAPI + SQLite**
+- 当前开发阶段：**M0 / M1 工程骨架与数据库底座**
 
 ## 文档
 
 | 资源 | 说明 |
 |---|---|
-| [需求说明书（Markdown）](docs/requirements/GitScout_PRD_v0.5.1.md) | 当前仓库的可版本管理需求基线，包含功能说明、数据规则、验收标准与原型图注 |
-| [HTML 交互原型](prototype/GitScout_v0.5.1.html) | GitScout v0.5.1 可直接在浏览器打开的完整交互原型 |
+| [需求说明书](docs/requirements/GitScout_PRD_v0.5.1.md) | 产品功能、业务规则、数据要求和原型说明 |
+| [HTML 交互原型](prototype/GitScout_v0.5.1.html) | v0.5.1 可直接在浏览器打开的交互原型 |
+| [技术架构设计说明书 v1.0](docs/architecture/GitScout_Technical_Architecture_v1.0.md) | 正式技术选型、运行形态、数据库和接口边界 |
+| [开发实施计划 v1.0](docs/development/GitScout_Implementation_Plan_v1.0.md) | 阶段、任务、测试和验收计划 |
 
-带完整 14 张原型截图的 DOCX / PDF 版作为本次会话交付附件提供；HTML 交互原型已提交至仓库 `prototype/`，Markdown 版用于后续需求差异审阅与版本管理。
+## 技术选型
 
-## 当前产品范围
+| 层级 | 技术 |
+|---|---|
+| 前端 | React + TypeScript + Vite |
+| 后端 | Python + FastAPI |
+| 数据库 | SQLite（Python 标准库 sqlite3） |
+| 数据采集 | HTTPX + BeautifulSoup + GitHub REST API |
+| 调度 | Python asyncio（单进程） |
 
-- GitHub Trending 日榜、周榜、月榜采集与历史查询
-- 按 Stars 数量排序的总榜
-- 项目比较与项目收藏
-- 智能推荐与推荐评分
-- 项目研究工作区与项目详情
-- 采集日志及系统设置
+不使用 PostgreSQL、Redis、Celery、Docker 或其他独立基础设施。
 
-具体功能边界、交互说明、数据字段与页面设计以 docs/requirements/ 中的当前版本需求说明书为准。
+## Windows 本地启动
 
-## 版本约定
+### 方式一：本地单地址运行
 
-- 以 GitScout 作为唯一正式产品名称。
-- 新增或修订需求时，同步维护需求说明书与 HTML 原型。
-- 每次交付更新版本号，并在提交说明中标注变更范围。
+1. 安装 Python 3.11+、Node.js 20+。
+2. 首次构建前端：
+
+```powershell
+cd frontend
+npm install
+npm run build
+cd ..
+```
+
+3. 双击根目录的 `start_gitscout.bat`。
+4. 浏览器访问：
+
+```text
+http://127.0.0.1:8765
+```
+
+FastAPI 会提供前端构建产物和 API。默认只监听本机回环地址。
+
+### 方式二：前后端开发模式
+
+终端一：
+
+```powershell
+cd backend
+py -3.11 -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+终端二：
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+访问 `http://127.0.0.1:5173`。Vite 会把 `/api` 请求代理到 FastAPI。
+
+## 当前已实现
+
+- React 页面骨架与主要导航。
+- 趋势总览页面读取 SQLite 汇总数据。
+- 项目库页面读取项目主档。
+- FastAPI 健康检查：`GET /api/v1/health`。
+- 首页汇总：`GET /api/v1/dashboard/summary`。
+- 项目列表：`GET /api/v1/repositories`。
+- SQLite 初始数据模型和 SQL 版本迁移。
+- WAL、外键、busy_timeout 和基础索引。
+- Windows 本地启动入口。
+- 数据库迁移与约束测试。
+
+## 尚未接入
+
+当前版本尚未实现真实 Trending / Stars 采集器、定时调度、推荐评分服务、感兴趣标记 API 和研究工作区 CRUD。相关页面入口已建立，按开发实施计划逐阶段接入。页面不会将演示内容标记为真实采集结果。
+
+## 数据与安全
+
+- 数据库默认位于 `data/gitscout.db`。
+- 本地日志位于 `.runtime/logs/`。
+- 数据库、Token、备份、日志、虚拟环境和 node_modules 不提交 Git。
+- GitHub Token 仅允许由后端读取，禁止发送到浏览器。
+- 默认只监听 `127.0.0.1`。
+
+## 开发状态
+
+| 里程碑 | 状态 |
+|---|---|
+| M0 · React / FastAPI 工程骨架 | 已提交第一批代码 |
+| M1 · SQLite 数据底座 | 已提交初始 Schema 与迁移测试 |
+| M2 · Trending 真实采集 | 待开发 |
+| M3 · Stars 总榜采集 | 待开发 |
+| M4 · 榜单与趋势分析 | 待开发 |
+| M5 · 智能推荐 | 待开发 |
+| M6 · 感兴趣与项目研究 | 待开发 |
+| M7 · 本地交付与备份恢复 | 待开发 |
+
