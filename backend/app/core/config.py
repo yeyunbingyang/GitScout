@@ -7,6 +7,28 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
+def _load_local_env_file() -> None:
+    """Load a small UTF-8 .env file without overriding process environment values."""
+    env_file = PROJECT_ROOT / ".env"
+    if not env_file.is_file():
+        return
+
+    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", maxsplit=1)
+        key = key.strip()
+        value = value.strip()
+        if value.startswith(("'", '"')) and value.endswith(("'", '"')) and len(value) >= 2:
+            value = value[1:-1]
+        if key:
+            os.environ.setdefault(key, value)
+
+
+_load_local_env_file()
+
+
 def get_data_dir() -> Path:
     configured = os.getenv("GITSCOUT_DATA_DIR", "").strip()
     if not configured:
