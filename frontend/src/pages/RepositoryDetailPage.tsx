@@ -18,6 +18,16 @@ function periodLabel(period: TrendingPeriod): string {
   return period === "daily" ? "日榜" : period === "weekly" ? "周榜" : "月榜";
 }
 
+function researchStatusLabel(value: string | undefined): string {
+  const labels: Record<string, string> = {
+    pending: "待研究",
+    in_progress: "研究中",
+    completed: "已完成",
+    paused: "暂缓",
+  };
+  return value ? labels[value] ?? value : "尚未加入研究";
+}
+
 function StarsHistoryChart({ data }: { data: RepositoryDetailResponse["stars_history"] }) {
   const pointsData = [...data].reverse();
   if (pointsData.length === 0) {
@@ -144,7 +154,7 @@ export default function RepositoryDetailPage() {
         <article className="surface-card repository-state-card">
           <div className="card-heading"><div><h3>个人工作区状态</h3><p>兴趣标记和研究记录相互独立</p></div></div>
           <div className="repository-state-row"><span>感兴趣</span><strong>{repository.interested ? "已标记" : "未标记"}</strong></div>
-          <div className="repository-state-row"><span>研究状态</span><strong>{repository.research ? repository.research.status : "尚未加入研究"}</strong></div>
+          <div className="repository-state-row"><span>研究状态</span><strong>{researchStatusLabel(repository.research?.status)}</strong></div>
           {repository.research?.research_goal && <p className="repository-research-goal">{repository.research.research_goal}</p>}
         </article>
       </section>
