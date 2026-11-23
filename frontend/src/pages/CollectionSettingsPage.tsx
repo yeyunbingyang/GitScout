@@ -10,10 +10,28 @@ interface ScheduleForm {
   day_of_month: number;
 }
 
+interface StarsScheduleForm {
+  enabled: boolean;
+  time: string;
+  timezone: string;
+  max_results: number;
+  min_stars: number;
+  include_forks: boolean;
+}
+
 const defaults: Record<TrendingPeriod, ScheduleForm> = {
   daily: { enabled: false, time: "09:00", timezone: "Asia/Shanghai", weekday: 0, day_of_month: 1 },
   weekly: { enabled: false, time: "09:00", timezone: "Asia/Shanghai", weekday: 0, day_of_month: 1 },
   monthly: { enabled: false, time: "09:00", timezone: "Asia/Shanghai", weekday: 0, day_of_month: 1 },
+};
+
+const defaultStarsForm: StarsScheduleForm = {
+  enabled: false,
+  time: "09:00",
+  timezone: "Asia/Shanghai",
+  max_results: 5000,
+  min_stars: 100,
+  include_forks: false,
 };
 
 const periods: { value: TrendingPeriod; title: string; subtitle: string }[] = [
@@ -55,6 +73,9 @@ export default function CollectionSettingsPage() {
   const [schedules, setSchedules] = useState<CollectionSchedule[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [savedPeriod, setSavedPeriod] = useState<TrendingPeriod | null>(null);
+  const [starsForm, setStarsForm] = useState<StarsScheduleForm>(defaultStarsForm);
+  const [savingStars, setSavingStars] = useState(false);
+  const [starsSaved, setStarsSaved] = useState(false);
 
   useEffect(() => {
     api.collectionSchedules()
@@ -65,6 +86,16 @@ export default function CollectionSettingsPage() {
           for (const schedule of response.items) {
             const period = schedule.job_type.replace("trending_", "") as TrendingPeriod;
             if (period in next) next[period] = toForm(schedule);
+            if (schedule.job_type === "stars_daily") {
+              setStarsForm({
+                enabled: schedule.enabled,
+                time: schedule.settings.time ?? "09:00",
+                timezone: schedule.timezone || "Asia/Shanghai",
+                max_results: schedule.settings.max_results ?? 5000,
+                min_stars: schedule.settings.min_stars ?? 100,
+                include_forks: schedule.settings.include_forks ?? false,
+              });
+            }
           }
           return next;
         });
@@ -76,6 +107,23 @@ export default function CollectionSettingsPage() {
   function update(period: TrendingPeriod, patch: Partial<ScheduleForm>) {
     setForms((current) => ({ ...current, [period]: { ...current[period], ...patch } }));
     setSavedPeriod(null);
+  }
+
+  async function saveStars() {
+    setSavingStars(true);
+    setError(null);
+    setStarsSaved(false);
+    try {
+      const response = await api.saveStarsSchedule(starsForm);
+      setSchedules((current) => current.map((item) =>
+        item.job_type === response.schedule.job_type ? response.schedule : item,
+      ));
+      setStarsSaved(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "保存 Stars 调度设置失败");
+    } finally {
+      setSavingStars(false);
+    }
   }
 
   async function save(period: TrendingPeriod) {
@@ -101,7 +149,7 @@ export default function CollectionSettingsPage() {
         <div className="settings-intro-icon"><CalendarClock size={21} /></div>
         <div>
           <h3>自动采集计划</h3>
-          <p>日榜、周榜、月榜分别配置。关闭其中一项不会影响其他周期。</p>
+          <p>日榜、周榜、月榜和 Stars 总榜分别配置。关闭其中一项不会影响其他采集计划。</p>
           <small>自动任务仅在 GitScout 本地服务运行时执行；默认全部关闭，不会在首次启动后擅自请求 GitHub。</small>
         </div>
       </section>
@@ -176,9 +224,76 @@ export default function CollectionSettingsPage() {
         })}
       </div>
 
+      <section className="surface-card schedule-card">
+        <div className="schedule-card-heading">
+          <div>
+            <span className="eyebrow">STARS LEADERBOARD · DAILY</span>
+            <h3>Stars 总榜每日采集</h3>
+            <p>独立采集 GitHub 公开仓库 Stars 排名，支持 Top-N 和最低 Stars 阈值</p>
+          </div>
+          <label className="switch-control">
+            <input
+              type="checkbox"
+              checked={starsForm.enabled}
+              onChange={(event) => { setStarsForm((current) => ({ ...current, enabled: event.target.checked })); setStarsSaved(false); }}
+            />
+            <span />
+            <small>{starsForm.enabled ? "已启用" : "已关闭"}</small>
+          </label>
+        </div>
+        <div className="schedule-fields">
+          <label>
+            <span><Clock3 size={13} />执行时间</span>
+            <input type="time" value={starsForm.time} onChange={(event) => { setStarsForm((current) => ({ ...current, time: event.target.value })); setStarsSaved(false); }} />
+          </label>
+          <label>
+            <span>目标数量</span>
+            <select value={starsForm.max_results} onChange={(event) => { setStarsForm((current) => ({ ...current, max_results: Number(event.target.value) })); setStarsSaved(false); }}>
+              <option value={1000}>Top 1,000</option>
+              <option value={3000}>Top 3,000</option>
+              <option value={5000}>Top 5,000</option>
+              <option value={10000}>Top 10,000</option>
+            </select>
+          </label>
+          <label>
+            <span>最低 Stars</span>
+            <select value={starsForm.min_stars} onChange={(event) => { setStarsForm((current) => ({ ...current, min_stars: Number(event.target.value) })); setStarsSaved(false); }}>
+              <option value={10}>10+</option>
+              <option value={100}>100+</option>
+              <option value={500}>500+</option>
+              <option value={1000}>1,000+</option>
+              <option value={5000}>5,000+</option>
+            </select>
+          </label>
+          <label className="timezone-field">
+            <span>时区</span>
+            <select value={starsForm.timezone} onChange={(event) => { setStarsForm((current) => ({ ...current, timezone: event.target.value })); setStarsSaved(false); }}>
+              {timezones.map((zone) => <option key={zone.value} value={zone.value}>{zone.label}</option>)}
+            </select>
+          </label>
+          <label className="stars-fork-setting">
+            <input type="checkbox" checked={starsForm.include_forks} onChange={(event) => { setStarsForm((current) => ({ ...current, include_forks: event.target.checked })); setStarsSaved(false); }} />
+            <span>包含 Fork 仓库</span>
+          </label>
+        </div>
+        <div className="schedule-footer">
+          <div>
+            <small>下次执行</small>
+            <strong>{starsForm.enabled ? formatDate(schedules.find((item) => item.job_type === "stars_daily")?.next_run_at ?? null, starsForm.timezone) : "已关闭"}</strong>
+            {schedules.find((item) => item.job_type === "stars_daily")?.last_run_at && (
+              <small>上次执行：{formatDate(schedules.find((item) => item.job_type === "stars_daily")!.last_run_at, starsForm.timezone)}</small>
+            )}
+          </div>
+          <button className="button button-primary" onClick={() => void saveStars()} disabled={loading || saving !== null || savingStars}>
+            {starsSaved ? <Check size={14} /> : <Save size={14} />}
+            {savingStars ? "保存中…" : starsSaved ? "已保存" : "保存设置"}
+          </button>
+        </div>
+      </section>
+
       <div className="schedule-note">
         <strong>调度说明</strong>
-        <span>周计划使用星期一至星期日；月计划可选每月 1—28 日，避免月底日期缺失。调度时间按所选时区计算，数据库统一保存 UTC 时间。</span>
+        <span>周计划使用星期一至星期日；月计划可选每月 1—28 日，避免月底日期缺失。Stars 总榜使用每日计划，并可独立设置 Top-N、最低 Stars 和是否包含 Fork。调度时间按所选时区计算，数据库统一保存 UTC 时间。</span>
       </div>
     </div>
   );
