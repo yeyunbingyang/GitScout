@@ -164,6 +164,17 @@ def parse_trending_html(html: str, period_type: str) -> ParsedTrending:
             else None
         )
 
+        star_anchor = next(
+            (
+                anchor for anchor in card.select("a[href]")
+                if anchor.get("href", "").rstrip("/").endswith("/stargazers")
+            ),
+            None,
+        )
+        if star_anchor is None:
+            skipped_count += 1
+            continue
+
         card_text = card.get_text(" ", strip=True)
         period_phrase = {
             "daily": r"stars?\s+today",
@@ -202,7 +213,7 @@ def parse_trending_html(html: str, period_type: str) -> ParsedTrending:
                 description=description or None,
                 html_url=f"https://github.com/{owner}/{name}",
                 language=language or None,
-                stars_count=_anchor_count(card, ("/stargazers",)),
+                stars_count=parse_count(star_anchor.get_text(" ", strip=True)),
                 stars_delta=stars_delta,
                 forks_count=_anchor_count(card, ("/forks", "/network/members")),
                 topics=topics,
@@ -430,12 +441,12 @@ def _mark_job_failed(
             """
             UPDATE collection_jobs
             SET status = 'failed', progress = 100, started_at = ?, finished_at = ?,
-                request_count = 1, retry_count = MAX(retry_count, ?),
+                request_count = ?, retry_count = MAX(retry_count, ?),
                 error_code = 'TRENDING_COLLECTION_FAILED', error_message = ?,
                 related_snapshot_id = ?
             WHERE id = ?
             """,
-            (started_at, finished_at, max(attempts - 1, 0), message, snapshot_id, job_id),
+            (started_at, finished_at, attempts, max(attempts - 1, 0), message, snapshot_id, job_id),
         )
         _add_job_log(
             connection,
@@ -541,6 +552,21 @@ def persist_trending_snapshot(
 
             connection.execute(
                 """
+                INSERT OR IGNORE INTO repository_stats (
+                    repository_id, captured_at, source, stars_count, forks_count
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    repository_id,
+                    collected_at,
+                    f"trending_{period_type}",
+                    item.stars_count,
+                    item.forks_count,
+                ),
+            )
+
+            connection.execute(
+                """
                 INSERT INTO trending_snapshot_items (
                     snapshot_id, repository_id, rank, stars_count, stars_delta, forks_count
                 ) VALUES (?, ?, ?, ?, ?, ?)
@@ -564,7 +590,7 @@ def persist_trending_snapshot(
             """
             UPDATE collection_jobs
             SET status = ?, progress = 100, started_at = ?, finished_at = ?,
-                request_count = 1, fetched_count = ?, inserted_count = ?, updated_count = ?,
+                request_count = ?, fetched_count = ?, inserted_count = ?, updated_count = ?,
                 deduplicated_count = ?, retry_count = MAX(retry_count, ?),
                 error_message = ?, related_snapshot_id = ?
             WHERE id = ?
@@ -573,6 +599,7 @@ def persist_trending_snapshot(
                 snapshot_status,
                 started_at,
                 finished_at,
+                attempts,
                 parsed.card_count,
                 inserted_count,
                 updated_count,
