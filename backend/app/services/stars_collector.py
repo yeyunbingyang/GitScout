@@ -542,6 +542,7 @@ async def collect_stars_repositories(
                     datetime.now(timezone.utc).date(),
                     include_forks,
                 )
+                return
             elif created_start < created_end:
                 midpoint_date = created_start + (created_end - created_start) // 2
                 await process_query(
