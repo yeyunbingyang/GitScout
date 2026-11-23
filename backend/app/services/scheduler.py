@@ -139,6 +139,10 @@ def save_schedule(
 ) -> dict[str, Any]:
     if period_type not in DEFAULTS:
         raise ValueError("period_type must be daily, weekly, or monthly")
+    try:
+        ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(f"Unknown timezone: {timezone_name}") from exc
     next_run = (
         calculate_next_run(period_type, settings, timezone_name)
         if enabled
