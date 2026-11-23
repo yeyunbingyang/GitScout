@@ -145,7 +145,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 ## 8. 下一迭代建议
 
-完成 M0 / M1 验收后进入 M2：先实现 Trending 日 / 周 / 月采集器和历史快照链路，再开发 Stars 总榜采集。采集结果、快照完整性和错误信息优先于推荐算法和视觉细节。
+M2 的采集、快照、任务记录、重试和自动调度代码已提交；CI 与 Windows 本机真实采集验收待确认。下一阶段进入 M3：实现独立 Stars 总榜采集、Search API 分片、去重、覆盖范围和 incomplete_results 完整性提示。
 
 ---
 
