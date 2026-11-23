@@ -76,16 +76,18 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 验收：日 / 周 / 月独立采集；历史快照不可覆盖；失败批次不标记成功；自动计划按各自时区运行。
 
-### M3 · Stars 总榜
+### M3 · Stars 总榜（实现已提交，CI 与 Windows 本机验收待确认）
 
-1. 接入 GitHub Search Repositories API。
-2. 实现 Stars 降序和分页。
-3. 实现 Stars 区间分片、结果合并和去重。
-4. 记录分片结果、incomplete_results 和覆盖范围。
-5. 实现手动刷新与定时刷新。
-6. 遵守 GitHub API 限流头和退避策略。
+- GitHub Search Repositories API，按 Stars 降序采集公开仓库。
+- 默认 Top 5,000 / 最低 100 Stars；支持 Top 1,000 / 3,000 / 5,000 / 10,000。
+- Stars 数值区间递归分片；同 Stars 桶超限时按创建日期继续拆分。
+- 按 GitHub Repository ID 去重，更新仓库主档、Topics 和 Stars 历史采样。
+- 每次扫描保存独立历史快照、分片记录、incomplete_results 和覆盖说明。
+- 支持手动扫描、失败 / 部分成功重试和 Stars 每日自动计划。
+- 前端 Stars 总榜、历史扫描、分片覆盖详情、采集任务和设置页面已接入真实 API。
+- 已增加 Stars collector、持久化、API 和调度配置测试。
 
-验收：Stars 榜单独立于 Trending；部分分片失败时明确显示部分成功，不冒充全站完整榜单。
+验收：Search API 分片不超过 1,000 条结果窗口；高 Stars 分片优先；部分分片失败或 incomplete_results 必须明确标记；历史扫描不可覆盖；不得将 Top-N 榜单称为 GitHub 全站完整仓库清单。
 
 ### M4 · 数据分析页面
 
@@ -145,7 +147,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 ## 8. 下一迭代建议
 
-M2 的采集、快照、任务记录、重试和自动调度代码已提交；CI 与 Windows 本机真实采集验收待确认。下一阶段进入 M3：实现独立 Stars 总榜采集、Search API 分片、去重、覆盖范围和 incomplete_results 完整性提示。
+M2 / M3 的实现代码已提交；CI 与 Windows 本机真实联网验收待确认。下一阶段进入 M4：总览数据、周期排名比较、历史快照对比、项目详情与 Stars 历史趋势分析。
 
 ---
 
