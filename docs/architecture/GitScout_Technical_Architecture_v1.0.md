@@ -78,6 +78,29 @@ SQLite 是唯一业务数据库，首期核心表如下：
 
 ## 5. 采集方案
 
+### Trending 采集实现
+
+当前 M2 已实现独立 Trending collector service：
+
+- HTTPX 异步客户端获取 GitHub Trending 页面，默认请求地址为 `https://github.com/trending?since={daily|weekly|monthly}`。
+- 解析器以 `article.Box-row` 和仓库链接为主锚点，提取仓库名、简介、语言、Stars、周期增量、Forks 与可见 Topics。
+- 对短暂网络错误、429 和 5xx 响应进行有限次数退避重试。
+- 网络请求在 SQLite 事务之外执行；仓库 upsert、Topics 更新和快照明细在一个短事务内提交。
+- 每次运行创建独立快照；失败运行创建 status=failed 的审计记录，但历史榜单接口只返回 success / partial_success。
+- HTML 解析结果包含重复和跳过计数；存在无法识别卡片时以 partial_success 标记，避免伪装成完整采集。
+
+### 本地调度实现
+
+- 使用 FastAPI lifespan 启动一个 asyncio scheduler loop，不引入 Celery / Redis / APScheduler。
+- `collection_schedules` 中日 / 周 / 月分别保存 enabled、timezone、settings_json 和 next_run_at。
+- 日计划按每日时间触发；周计划按 weekday + 时间触发；月计划按 1—28 日 + 时间触发。
+- 默认三个计划均关闭；必须由用户在采集设置页面显式启用。
+- next_run_at 使用 UTC ISO-8601 持久化，调度时间按用户选定的 IANA 时区计算。
+- 本地服务停止时取消调度任务；重启后遗留 queued / running 任务标记为 interrupted。
+- 生产本地模式必须使用单 Uvicorn Worker，避免进程内调度重复执行。
+
+
+
 ### Trending 日 / 周 / 月
 
 数据来源：
