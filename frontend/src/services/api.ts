@@ -105,6 +105,9 @@ export interface CollectionSchedule {
     time?: string;
     weekday?: number;
     day_of_month?: number;
+    max_results?: number;
+    min_stars?: number;
+    include_forks?: boolean;
   };
 }
 
