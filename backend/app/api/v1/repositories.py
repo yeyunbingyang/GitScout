@@ -98,6 +98,28 @@ def get_repository_detail(repository_id: int) -> dict[str, object]:
             """,
             (repository_id,),
         ).fetchall()
+        streaks: dict[str, int] = {}
+        for period in ("daily", "weekly", "monthly"):
+            streak_rows = connection.execute(
+                """
+                SELECT EXISTS(
+                    SELECT 1 FROM trending_snapshot_items i
+                    WHERE i.snapshot_id = s.id AND i.repository_id = ?
+                ) AS is_listed
+                FROM trending_snapshots s
+                WHERE s.period_type = ? AND s.status IN ('success', 'partial_success')
+                ORDER BY s.collected_at DESC, s.id DESC
+                LIMIT 100
+                """,
+                (repository_id, period),
+            ).fetchall()
+            streak = 0
+            for streak_row in streak_rows:
+                if not streak_row["is_listed"]:
+                    break
+                streak += 1
+            streaks[period] = streak
+
         stars_rows = connection.execute(
             """
             SELECT s.id AS scan_id, s.finished_at AS captured_at, s.status AS scan_status,
@@ -163,6 +185,7 @@ def get_repository_detail(repository_id: int) -> dict[str, object]:
             "trending_appearances": len(trending_history),
             "stars_scan_observations": len(stars_history),
             "best_rank_by_period": best_rank_by_period,
+            "current_appearance_streak_by_period": streaks,
             "first_observed_stars": first_stars,
             "latest_observed_stars": latest_stars,
             "observed_stars_growth": stars_growth,
