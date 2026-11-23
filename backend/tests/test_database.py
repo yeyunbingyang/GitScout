@@ -24,7 +24,7 @@ def test_initial_migration_creates_core_tables(tmp_path):
     assert "recommendation_runs" in tables
     assert "research_projects" in tables
     assert "collection_jobs" in tables
-    assert get_schema_version(database_path) == "0002"
+    assert get_schema_version(database_path) == "0003"
     with get_connection(database_path) as connection:
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(collection_jobs)")}
     assert "retry_of_job_id" in columns
@@ -41,7 +41,7 @@ def test_migration_is_idempotent(tmp_path):
             "SELECT COUNT(*) AS count FROM schema_migrations"
         ).fetchone()["count"]
 
-    assert count == 2
+    assert count == 3
 
 
 def test_repository_unique_constraints_and_foreign_keys(tmp_path):
