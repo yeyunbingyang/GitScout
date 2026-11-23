@@ -133,7 +133,13 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | `GET /dashboard/summary` | 首页概览统计 |
 | `GET /repositories` | 项目主档列表 |
 | `GET /trending` | 周期榜单 |
-| `GET /trending/snapshots` | 历史快照 |
+| `GET /trending/snapshots` | 历史快照列表 |
+| `GET /trending/snapshots/{id}` | 历史快照详情 |
+| `POST /trending/collect` | 手动触发日 / 周 / 月采集 |
+| `GET /collections/jobs/{id}` | 任务详情与执行日志 |
+| `POST /collections/jobs/{id}/retry` | 重试失败任务 |
+| `GET /collections/schedules` | 查询日 / 周 / 月调度设置 |
+| `PUT /collections/schedules/{period}` | 更新某个周期的调度计划 |
 | `GET /stars/leaderboard` | Stars 排名 |
 | `POST /stars/collect` | 手动触发 Stars 扫描 |
 | `GET /recommendations` | 推荐结果 |
