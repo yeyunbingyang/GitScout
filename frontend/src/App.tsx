@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import DashboardPage from "./pages/DashboardPage";
 import RepositoriesPage from "./pages/RepositoriesPage";
+import TrendingPage from "./pages/TrendingPage";
+import CollectionJobsPage from "./pages/CollectionJobsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { api, type HealthResponse } from "./services/api";
 
@@ -87,13 +89,13 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/repositories" element={<RepositoriesPage />} />
-            <Route path="/trending" element={<PlaceholderPage title="日榜 · 周榜 · 月榜" description="一个周期榜单入口，切换周期并查询历史快照。采集器完成后，这里将展示真实排名和历史批次。" milestone="M2 · TRENDING COLLECTOR" />} />
+            <Route path="/trending" element={<TrendingPage />} />
             <Route path="/stars" element={<PlaceholderPage title="Stars 实时总榜" description="独立于 Trending 的 Stars 排名采集。将显示扫描时间、结果覆盖范围、分片状态和排名快照。" milestone="M3 · STARS LEADERBOARD" />} />
             <Route path="/recommendations" element={<PlaceholderPage title="综合推荐评分" description="按 Stars 30%、日榜 15%、周榜 30%、月榜 25% 的默认权重计算推荐分，并保留每次计算批次。" milestone="M5 · RECOMMENDATION ENGINE" />} />
             <Route path="/compare" element={<PlaceholderPage title="跨周期排名矩阵" description="选择历史快照，对比项目新增、掉榜和排名变化。" milestone="M4 · TREND ANALYTICS" />} />
             <Route path="/interested" element={<PlaceholderPage title="感兴趣项目库" description="轻量保存感兴趣项目；该标记与加入项目研究相互独立。" milestone="M6 · RESEARCH WORKSPACE" />} />
             <Route path="/research" element={<PlaceholderPage title="项目研究工作区" description="管理待研究、研究中、已完成和暂缓项目，记录目标、笔记、下一步行动与结论。" milestone="M6 · RESEARCH WORKSPACE" />} />
-            <Route path="/collections" element={<PlaceholderPage title="采集任务与运行日志" description="统一查看采集任务状态、进度、重试次数、请求统计和异常详情。" milestone="M2 · COLLECTION OPERATIONS" />} />
+            <Route path="/collections" element={<CollectionJobsPage />} />
             <Route path="/settings" element={<PlaceholderPage title="本地采集配置" description="后续在这里配置日周月调度、Stars 刷新间隔、GitHub Token 和数据备份。" milestone="M7 · LOCAL OPERATIONS" />} />
           </Routes>
         </div>
