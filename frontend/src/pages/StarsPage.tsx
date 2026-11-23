@@ -1,7 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
-  AlertCircle, ArrowDown, ArrowUp, CheckCircle2, Clock3, ExternalLink,
-  Filter, Github, RefreshCw, RotateCcw, Search, ShieldCheck,
+  ExternalLink, Filter, Github, RefreshCw, RotateCcw, Search, ShieldCheck,
 } from "lucide-react";
 import {
   api,
@@ -136,6 +135,16 @@ export default function StarsPage() {
             setError(job.error_message || "Stars 总榜采集失败，请查看采集记录。");
           }
           await refreshScans();
+          if (job.related_stars_scan_id) {
+            const [detail, leaderboard] = await Promise.all([
+              api.starsScan(job.related_stars_scan_id),
+              api.starsLeaderboard({ scanId: job.related_stars_scan_id }),
+            ]);
+            if (active) {
+              setScanDetail(detail);
+              setResult(leaderboard);
+            }
+          }
         }
       } catch (reason) {
         if (active) setError(reason instanceof Error ? reason.message : "读取采集进度失败");
@@ -193,7 +202,7 @@ export default function StarsPage() {
     setPage(1);
   }
 
-  const scan = result.scan;
+  const scan = result.scan ?? scanDetail;
   const totalPages = result.pagination.total_pages;
 
   return (
