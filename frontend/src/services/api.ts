@@ -164,8 +164,19 @@ export interface StarsScanDetail extends StarsScan {
   shards: StarsShard[];
 }
 
-export interface StarsLeaderboardItem extends TrendingItem {
+export interface StarsLeaderboardItem {
+  rank: number;
+  repository_id: number;
+  github_repo_id: number | null;
+  full_name: string;
+  owner: string;
+  name: string;
+  description: string | null;
+  html_url: string;
+  language: string | null;
+  stars_count: number;
   forks_count: number;
+  topics: string[];
 }
 
 export interface StarsLeaderboardResponse {
