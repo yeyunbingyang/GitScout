@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ExternalLink, Search } from "lucide-react";
 import { api, type Repository } from "../services/api";
 
@@ -39,7 +40,7 @@ export default function RepositoriesPage() {
               <tbody>
                 {items.map((item) => (
                   <tr key={item.id}>
-                    <td><strong>{item.full_name}</strong><small>{item.description || "暂无项目简介"}</small></td>
+                    <td><Link className="repo-link" to={"/repositories/" + item.id}>{item.full_name}</Link><small>{item.description || "暂无项目简介"}</small></td>
                     <td>{item.language || "—"}</td>
                     <td>{item.stars_count.toLocaleString()}</td>
                     <td>{item.forks_count.toLocaleString()}</td>
