@@ -1,5 +1,5 @@
-"""Read-only repository list API for the first development milestone."""
-from fastapi import APIRouter, Query
+"""Repository library and historical repository detail APIs."""
+from fastapi import APIRouter, HTTPException, Query
 
 from app.database.connection import get_connection
 
@@ -72,8 +72,6 @@ def get_repository_detail(repository_id: int) -> dict[str, object]:
             (repository_id,),
         ).fetchone()
         if repository_row is None:
-            from fastapi import HTTPException
-
             raise HTTPException(status_code=404, detail="Repository not found")
 
         repository = dict(repository_row)
