@@ -248,5 +248,5 @@ def test_repository_detail_returns_stars_and_trending_history(tmp_path, monkeypa
     }
     assert payload["summary"]["observed_stars_growth"] == 100
     assert len(payload["stars_history"]) == 2
-    assert len(payload["trending_history"]) == 3
+    assert len(payload["trending_history"]) == 4
     assert missing.status_code == 404
