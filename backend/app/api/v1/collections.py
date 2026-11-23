@@ -17,6 +17,11 @@ from app.services.trending_collector import (
     utc_now,
 )
 from app.services.scheduler import list_schedules, save_schedule
+from app.services.stars_collector import (
+    execute_stars_scan,
+    get_stars_scan,
+    retry_stars_scan_job,
+)
 
 router = APIRouter(prefix="/collections", tags=["collections"])
 
@@ -68,13 +73,18 @@ def get_collection_jobs(
 @router.get("/jobs/{job_id}")
 def get_collection_job_detail(job_id: str) -> dict[str, Any]:
     job = get_collection_job(job_id)
-    if job is None or not str(job.get("job_type", "")).startswith("trending_"):
+    if job is None or not (
+        str(job.get("job_type", "")).startswith("trending_")
+        or job.get("job_type") == "stars_scan"
+    ):
         raise HTTPException(status_code=404, detail="Collection job not found")
     for log in job.get("logs", []):
         try:
             log["details"] = json.loads(log.pop("details_json") or "{}")
         except json.JSONDecodeError:
             log["details"] = {}
+    if job.get("job_type") == "stars_scan" and job.get("related_stars_scan_id"):
+        job["stars_scan"] = get_stars_scan(int(job["related_stars_scan_id"]))
     return job
 
 
@@ -84,13 +94,34 @@ def retry_failed_collection(
     background_tasks: BackgroundTasks,
 ) -> dict[str, Any]:
     original = get_collection_job(job_id)
-    if original is None or not str(original.get("job_type", "")).startswith("trending_"):
-        raise HTTPException(status_code=404, detail="Trending collection job not found")
+    if original is None or not (
+        str(original.get("job_type", "")).startswith("trending_")
+        or original.get("job_type") == "stars_scan"
+    ):
+        raise HTTPException(status_code=404, detail="Collection job not found")
     if original["status"] not in {"failed", "partial_success", "interrupted"}:
         raise HTTPException(
             status_code=409,
             detail="Only failed, partial-success or interrupted collection jobs can be retried.",
         )
+
+    if original.get("job_type") == "stars_scan":
+        try:
+            retry_job = retry_stars_scan_job(job_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        scan_id = int(retry_job["related_stars_scan_id"])
+        scan = get_stars_scan(scan_id)
+        plan = scan.get("query_plan", {}) if scan else {}
+        background_tasks.add_task(
+            execute_stars_scan,
+            retry_job["id"],
+            scan_id,
+            int(plan.get("max_results", 5000)),
+            int(plan.get("min_stars", 100)),
+            bool(plan.get("include_forks", False)),
+        )
+        return {"job": retry_job, "retry_of_job_id": job_id, "scan_id": scan_id}
 
     period_type = str(original["job_type"]).removeprefix("trending_")
     try:
