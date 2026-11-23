@@ -1,8 +1,9 @@
 """GitScout FastAPI application entry point."""
 from __future__ import annotations
 
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,12 @@ from fastapi.staticfiles import StaticFiles
 from app.api.v1 import collections, dashboard, health, repositories, trending
 from app.core.config import APP_NAME, APP_VERSION, LOG_LEVEL, PROJECT_ROOT, get_cors_origins
 from app.database.connection import initialize_database
+from app.services.scheduler import (
+    ensure_default_schedules,
+    recover_interrupted_jobs,
+    scheduler_loop,
+    stop_scheduler_tasks,
+)
 
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
@@ -23,9 +30,21 @@ logger = logging.getLogger("gitscout")
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     database_path = initialize_database()
+    interrupted = recover_interrupted_jobs()
+    ensure_default_schedules()
     logger.info("SQLite initialized at %s", database_path)
-    yield
-    logger.info("GitScout API stopped")
+    if interrupted:
+        logger.warning("Marked %s interrupted collection job(s) after restart", interrupted)
+    scheduler_task = asyncio.create_task(scheduler_loop(), name="gitscout-collection-scheduler")
+    try:
+        yield
+    finally:
+        scheduler_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await scheduler_task
+        await stop_scheduler_tasks()
+        recover_interrupted_jobs()
+        logger.info("GitScout API stopped")
 
 
 app = FastAPI(
