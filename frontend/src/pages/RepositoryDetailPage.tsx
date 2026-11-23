@@ -69,8 +69,58 @@ function StarsHistoryChart({ data }: { data: RepositoryDetailResponse["stars_his
   );
 }
 
+
+
+function RankHistoryChart({
+  data,
+  period,
+}: {
+  data: RepositoryDetailResponse["trending_history"];
+  period: TrendingPeriod;
+}) {
+  const pointsData = [...data].filter((item) => item.period_type === period).reverse();
+  if (pointsData.length === 0) {
+    return <div className="analytics-empty">该项目还没有{periodLabel(period)}历史排名。</div>;
+  }
+  const width = 760;
+  const height = 210;
+  const padX = 26;
+  const padY = 24;
+  const ranks = pointsData.map((item) => item.rank);
+  const minRank = Math.min(...ranks);
+  const maxRank = Math.max(...ranks);
+  const range = Math.max(maxRank - minRank, 1);
+  const coords = pointsData.map((item, index) => {
+    const x = pointsData.length === 1
+      ? width / 2
+      : padX + index / (pointsData.length - 1) * (width - padX * 2);
+    const y = padY + (item.rank - minRank) / range * (height - padY * 2);
+    return { x, y, item };
+  });
+  return (
+    <div className="repository-chart-wrap">
+      <svg viewBox={"0 0 " + width + " " + height} className="repository-stars-chart" role="img" aria-label={periodLabel(period) + "历史排名走势"}>
+        {[0, 1, 2, 3].map((line) => {
+          const y = padY + line / 3 * (height - padY * 2);
+          return <line key={line} x1={padX} x2={width - padX} y1={y} y2={y} className="chart-grid-line" />;
+        })}
+        <polyline points={coords.map((point) => point.x + "," + point.y).join(" ")} className="chart-line" />
+        {coords.map((point) => (
+          <circle key={point.item.snapshot_id} cx={point.x} cy={point.y} r="4" className="chart-point">
+            <title>{point.item.period_key + " · 排名 #" + point.item.rank}</title>
+          </circle>
+        ))}
+      </svg>
+      <div className="analytics-chart-labels">
+        {pointsData.map((item) => <span key={item.snapshot_id}>{item.period_key}</span>)}
+      </div>
+    </div>
+  );
+}
+
 export default function RepositoryDetailPage() {
   const { repositoryId } = useParams();
+  const [rankPeriod, setRankPeriod] = useState<TrendingPeriod>("daily");
   const id = Number(repositoryId);
   const [detail, setDetail] = useState<RepositoryDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,7 +193,7 @@ export default function RepositoryDetailPage() {
           <div className="card-heading"><div><h3>周期最佳排名</h3><p>历史快照中记录到的最好名次</p></div></div>
           <div className="repository-best-ranks">
             {(["daily", "weekly", "monthly"] as TrendingPeriod[]).map((period) => (
-              <div key={period}><span>{periodLabel(period)}</span><strong>{summary.best_rank_by_period[period] ? "#" + summary.best_rank_by_period[period] : "—"}</strong></div>
+              <div key={period}><span>{periodLabel(period)}</span><strong>{summary.best_rank_by_period[period] ? "#" + summary.best_rank_by_period[period] : "—"}</strong><small>当前连续 {summary.current_appearance_streak_by_period[period] ?? 0} 次</small></div>
             ))}
           </div>
           <div className="repository-first-last">
@@ -157,6 +207,19 @@ export default function RepositoryDetailPage() {
           <div className="repository-state-row"><span>研究状态</span><strong>{researchStatusLabel(repository.research?.status)}</strong></div>
           {repository.research?.research_goal && <p className="repository-research-goal">{repository.research.research_goal}</p>}
         </article>
+      </section>
+
+      <section className="surface-card repository-history-card">
+        <div className="card-heading repository-chart-heading">
+          <div><h3>周期排名走势</h3><p>按所选周期查看该项目在历史快照中的名次变化</p></div>
+          <div className="repository-period-switch">
+            {(["daily", "weekly", "monthly"] as TrendingPeriod[]).map((period) => (
+              <button key={period} className={rankPeriod === period ? "period-tab active" : "period-tab"}
+                onClick={() => setRankPeriod(period)}>{periodLabel(period)}</button>
+            ))}
+          </div>
+        </div>
+        <RankHistoryChart data={detail.trending_history} period={rankPeriod} />
       </section>
 
       <section className="surface-card repository-history-card">
