@@ -88,7 +88,8 @@ export interface CollectionJob {
   error_code: string | null;
   error_message: string | null;
   related_snapshot_id: number | null;
-  retry_of_job_id?: string | null;
+  related_stars_scan_id: number | null;
+  retry_of_job_id: string | null;
   created_at: string;
 }
 
