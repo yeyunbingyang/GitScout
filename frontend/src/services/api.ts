@@ -113,6 +113,7 @@ export interface RepositoryDetailResponse {
     trending_appearances: number;
     stars_scan_observations: number;
     best_rank_by_period: Partial<Record<TrendingPeriod, number>>;
+    current_appearance_streak_by_period: Partial<Record<TrendingPeriod, number>>;
     first_observed_stars: number | null;
     latest_observed_stars: number | null;
     observed_stars_growth: number | null;
