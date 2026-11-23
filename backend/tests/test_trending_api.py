@@ -77,7 +77,7 @@ def test_schedule_configuration_api(tmp_path, monkeypatch):
     with TestClient(app) as client:
         current = client.get("/api/v1/collections/schedules")
         assert current.status_code == 200
-        assert len(current.json()["items"]) == 3
+        assert len(current.json()["items"]) == 4
 
         saved = client.put(
             "/api/v1/collections/schedules/daily",
