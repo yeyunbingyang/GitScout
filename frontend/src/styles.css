@@ -265,3 +265,4 @@ a { color: inherit; text-decoration: none; }
   .stars-hero-controls > label { flex: 1; min-width: 95px; }
   .stars-hero-controls .button { width: 100%; }
 }
+.stars-job-summary { display: grid; gap: 5px; margin: 12px 0; padding: 10px 12px; border-radius: 7px; background: #f7f7ff; color: #6d68b7; font-size: 10px; line-height: 1.6; }.stars-job-summary small { color: #9a9ab8; font-size: 9px; }
