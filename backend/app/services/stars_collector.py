@@ -457,7 +457,7 @@ async def collect_stars_repositories(
             shard_incomplete = True
             state.incomplete_results = True
         if page_error:
-            state.failed_shards.append(str(shard_id))
+            state.failed_shards.append(shard_key)
             _add_log(job_id, "ERROR", "Stars shard pagination failed", {"query": query_text, "error": page_error})
         shard_status = (
             "failed" if page_error and fetched == 0
@@ -503,6 +503,7 @@ async def collect_stars_repositories(
             return
 
         total_count = max(0, int(payload.get("total_count") or 0))
+        await update_progress()
         incomplete = bool(payload.get("incomplete_results"))
         state.incomplete_results = state.incomplete_results or incomplete
         remaining = max_results - len(repositories_by_id)
