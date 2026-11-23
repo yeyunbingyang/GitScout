@@ -393,3 +393,13 @@ a { color: inherit; text-decoration: none; }
   .repository-hero > .button { width:100%; justify-content:center; }
   .repository-back-row { align-items:flex-start; flex-direction:column; }
 }
+
+.repository-best-ranks small { display:block; margin-top:4px; color:#a0a7b4; font-size:8px; }
+.repository-chart-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.repository-period-switch { display:flex; flex:0 0 auto; gap:3px; padding:3px; border:1px solid #eceef4; border-radius:8px; background:#f7f8fb; }
+.repository-period-switch .period-tab { padding:5px 8px; font-size:9px; }
+@media (max-width: 640px) {
+  .repository-chart-heading { align-items:flex-start; flex-direction:column; }
+  .repository-period-switch { width:100%; }
+  .repository-period-switch .period-tab { flex:1; }
+}
