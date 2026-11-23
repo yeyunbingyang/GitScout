@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   Activity, ArrowDown, ArrowUp, ExternalLink, Filter, RefreshCw, Search,
 } from "lucide-react";
@@ -178,7 +178,7 @@ export default function TrendingPage() {
     }
   }
 
-  function applyFilters(event: React.FormEvent<HTMLFormElement>) {
+  function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAppliedQuery(query.trim());
     setPage(1);
