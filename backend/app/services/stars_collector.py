@@ -495,6 +495,7 @@ async def collect_stars_repositories(
         try:
             payload = await _fetch_page(client, query_text, 1, state)
         except Exception as exc:
+            await update_progress()
             message = str(exc)[:800]
             _finish_shard(shard_id, "failed", 0, 0, False, message)
             state.failed_shards.append(shard_key)
@@ -621,12 +622,14 @@ async def collect_stars_repositories(
         try:
             root_payload = await _fetch_page(client, root_query, 1, state)
         except Exception as exc:
+            await update_progress()
             message = str(exc)[:800]
             _finish_shard(root_id, "failed", 0, 0, False, message)
             state.failed_shards.append("root")
             raise StarsCollectionError(message) from exc
 
         root_total = max(0, int(root_payload.get("total_count") or 0))
+        await update_progress()
         root_incomplete = bool(root_payload.get("incomplete_results"))
         state.incomplete_results = state.incomplete_results or root_incomplete
         first_items = root_payload.get("items") or []
@@ -739,8 +742,8 @@ def _upsert_repository(connection: Any, item: dict[str, Any], captured_at: str) 
             (
                 github_repo_id,
                 persisted_name,
-                item["owner"],
-                item["name"] if not name_collision else current_name.split("/", 1)[-1],
+                persisted_owner,
+                persisted_repo_name,
                 item["description"],
                 item["html_url"],
                 item["language"],
