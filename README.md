@@ -8,11 +8,11 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 ## 当前版本
 
 - 产品需求基线：**v0.5.1**
-- 技术工程版本：**0.2.0 · Trending Collector**
+- 技术工程版本：**0.3.0 · Stars Leaderboard**
 - 品牌：**GitScout**
 - 运行模式：**Windows 本地 Web 工作台**
 - 技术栈：**React + TypeScript + FastAPI + SQLite**
-- 当前开发阶段：**M2 · Trending 真实采集与历史快照**
+- 当前开发阶段：**M3 · Stars 总榜采集与覆盖审计**
 
 ## 文档
 
@@ -82,7 +82,7 @@ npm run dev
 
 ## 本地配置
 
-首次使用可将仓库根目录的 `.env.example` 复制为 `.env`。后端启动时会读取该文件；已经存在的系统环境变量优先级更高。Trending 来源地址可通过 `GITSCOUT_TRENDING_URL` 覆盖。GitHub Token 只配置在本地根目录 `.env`，不要提交真实 Token。
+首次使用可将仓库根目录的 `.env.example` 复制为 `.env`。后端启动时会读取该文件；已经存在的系统环境变量优先级更高。Trending 来源地址可通过 `GITSCOUT_TRENDING_URL` 覆盖。Stars 总榜可选配置 `GITHUB_TOKEN`，以提高 Search API 可用请求额度；也可通过 `GITSCOUT_GITHUB_SEARCH_INTERVAL_SECONDS` 调整请求间隔。GitHub Token 只配置在本地根目录 `.env`，不要提交真实 Token。
 
 
 
@@ -98,6 +98,19 @@ API 文档地址：`http://127.0.0.1:8765/docs`。健康检查：`http://127.0.0
 
 若 GitHub 返回限流、访问拒绝或页面结构发生变化，任务会保留失败记录，不会生成成功榜单；可在采集记录中查看原因并重试。
 
+
+
+### 首次验证 Stars 总榜
+
+1. 在根目录 `.env` 中按需配置 `GITHUB_TOKEN`；只采集公开仓库时不强制要求 Token。
+2. 启动 GitScout，打开左侧“Stars 总榜”。
+3. 选择 Top 1,000 / 3,000 / 5,000 / 10,000、最低 Stars 阈值和是否包含 Fork。
+4. 点击“开始采集”，页面会显示任务进度、历史扫描和分片覆盖详情。
+5. 在“采集设置”中可单独启用 Stars 每日自动扫描；默认关闭。
+6. 在“采集记录”查看请求数、获取数量、失败分片和重试关系。
+
+Stars 扫描默认目标为 Top 5,000、最低 100 Stars。它是有边界的公开仓库排行榜，不是 GitHub 全站仓库清单。Search API 每个查询最多可返回 1,000 条，系统会按 Stars 区间递归拆分；同 Stars 桶仍超限时再按创建日期拆分。若 GitHub 返回不完整结果或某个分片失败，扫描状态会明确显示为部分覆盖。
+
 ## 当前已实现
 
 ### M2 · Trending 真实采集
@@ -110,6 +123,17 @@ API 文档地址：`http://127.0.0.1:8765/docs`。健康检查：`http://127.0.0
 - 日 / 周 / 月独立自动调度，可配置执行时间与时区；默认关闭。
 - 历史榜单查询、快照切换、语言 / Topic / 关键词筛选、排序和分页。
 - 采集任务记录、失败重试和调度设置页面接入真实 API。
+
+### M3 · Stars 总榜采集
+
+- GitHub Search Repositories API，按 Stars 降序获取公开仓库。
+- Stars 数值区间递归分片，单个查询不超过 Search API 1,000 条结果窗口。
+- 同 Stars 桶超限时使用创建日期继续拆分；不可再拆分时记录失败，不伪装完整。
+- 按 GitHub Repository ID 去重，并同步仓库主档、Topics 和 Stars 历史采样。
+- 每次扫描独立保存快照、分片状态、incomplete_results、覆盖范围和错误说明。
+- 支持 Top 1,000 / 3,000 / 5,000 / 10,000，最低 Stars 阈值和 Fork 开关。
+- Stars 总榜、历史扫描、分片审计、任务详情和失败重试页面接入真实 API。
+- Stars 每日自动采集可独立配置，默认关闭；支持时区和 Top-N 参数。
 
 
 - React 页面骨架与主要导航。
@@ -125,7 +149,7 @@ API 文档地址：`http://127.0.0.1:8765/docs`。健康检查：`http://127.0.0
 
 ## 尚未接入
 
-Stars 总榜真实采集、周期排名对比、推荐评分服务、感兴趣标记 API 和研究工作区 CRUD 尚未完成。Trending 页面已接入真实采集链路；尚无采集记录时会显示真实空状态，不会用演示数据填充。
+M3 已提交 Stars 总榜采集实现，等待 CI 和 Windows 本机真实 API 验收。周期排名对比、推荐评分服务、感兴趣标记 API 和研究工作区 CRUD 尚未完成。所有榜单空状态均使用真实数据库结果，不以演示数据填充。
 
 ## 数据与安全
 
