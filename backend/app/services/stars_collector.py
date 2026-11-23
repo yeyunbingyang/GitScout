@@ -899,7 +899,7 @@ def persist_stars_scan(
                 updated_count,
                 result.deduplicated_count,
                 result.retry_count,
-                "STARS_SCAN_PARTIAL" if final_status == "partial_success" else None,
+                "STARS_SCAN_FAILED" if final_status == "failed" else "STARS_SCAN_PARTIAL" if final_status == "partial_success" else None,
                 error_message,
                 scan_id,
                 job_id,
