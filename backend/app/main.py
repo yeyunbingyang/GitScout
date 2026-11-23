@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1 import dashboard, health, repositories
+from app.api.v1 import collections, dashboard, health, repositories, trending
 from app.core.config import APP_NAME, APP_VERSION, LOG_LEVEL, PROJECT_ROOT, get_cors_origins
 from app.database.connection import initialize_database
 
@@ -46,6 +46,8 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(repositories.router, prefix="/api/v1")
+app.include_router(trending.router, prefix="/api/v1")
+app.include_router(collections.router, prefix="/api/v1")
 
 frontend_dist = PROJECT_ROOT / "frontend" / "dist"
 assets_dir = frontend_dist / "assets"
