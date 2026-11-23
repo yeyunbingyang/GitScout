@@ -33,7 +33,7 @@ if not exist "%VENV%\Scripts\python.exe" (
 )
 
 echo [2/3] Checking backend dependencies...
-"%VENV%\Scripts\python.exe" -c "import fastapi, uvicorn" >nul 2>nul
+"%VENV%\Scripts\python.exe" -c "import fastapi, uvicorn, httpx, bs4" >nul 2>nul
 if errorlevel 1 (
     "%VENV%\Scripts\python.exe" -m pip install -r "%BACKEND%\requirements.txt"
     if errorlevel 1 (
