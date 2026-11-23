@@ -92,7 +92,7 @@ function AppShell() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/repositories" element={<RepositoriesPage />} />
             <Route path="/trending" element={<TrendingPage />} />
-            <Route path="/stars" element={<PlaceholderPage title="Stars 实时总榜" description="独立于 Trending 的 Stars 排名采集。将显示扫描时间、结果覆盖范围、分片状态和排名快照。" milestone="M3 · STARS LEADERBOARD" />} />
+            <Route path="/stars" element={<StarsPage />} />
             <Route path="/recommendations" element={<PlaceholderPage title="综合推荐评分" description="按 Stars 30%、日榜 15%、周榜 30%、月榜 25% 的默认权重计算推荐分，并保留每次计算批次。" milestone="M5 · RECOMMENDATION ENGINE" />} />
             <Route path="/compare" element={<PlaceholderPage title="跨周期排名矩阵" description="选择历史快照，对比项目新增、掉榜和排名变化。" milestone="M4 · TREND ANALYTICS" />} />
             <Route path="/interested" element={<PlaceholderPage title="感兴趣项目库" description="轻量保存感兴趣项目；该标记与加入项目研究相互独立。" milestone="M6 · RESEARCH WORKSPACE" />} />
