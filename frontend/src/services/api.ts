@@ -118,7 +118,68 @@ export interface CollectionJobLog {
 
 export interface CollectionJobDetail extends CollectionJob {
   logs: CollectionJobLog[];
+  stars_scan?: StarsScanDetail | null;
 }
+
+
+export interface StarsScanPlan {
+  max_results: number;
+  min_stars: number;
+  include_forks: boolean;
+  sort: string;
+  scope: string;
+  per_page: number;
+  search_result_limit: number;
+}
+
+export interface StarsShard {
+  id: number;
+  shard_key: string;
+  query_text: string;
+  status: "queued" | "running" | "success" | "partial_success" | "failed";
+  total_count: number;
+  fetched_count: number;
+  incomplete_results: boolean;
+  started_at: string | null;
+  finished_at: string | null;
+  error_message: string | null;
+}
+
+export interface StarsScan {
+  id: number;
+  trigger_type: string;
+  started_at: string;
+  finished_at: string | null;
+  status: "queued" | "running" | "success" | "partial_success" | "failed" | "interrupted";
+  incomplete_results: boolean;
+  total_count: number;
+  fetched_count: number;
+  deduplicated_count: number;
+  coverage_description: string | null;
+  error_summary: string | null;
+  query_plan: StarsScanPlan;
+}
+
+export interface StarsScanDetail extends StarsScan {
+  shards: StarsShard[];
+}
+
+export interface StarsLeaderboardItem extends TrendingItem {
+  forks_count: number;
+}
+
+export interface StarsLeaderboardResponse {
+  scan: StarsScan | null;
+  items: StarsLeaderboardItem[];
+  pagination: Pagination;
+}
+
+export interface StarsCollectOptions {
+  max_results: number;
+  min_stars: number;
+  include_forks: boolean;
+}
+
 
 export interface ListResponse<T> {
   items: T[];
@@ -190,6 +251,24 @@ export const api = {
   },
   collectTrending: (periodType: TrendingPeriod) =>
     postJson<{ job: CollectionJob }>("/api/v1/trending/collect", { period_type: periodType }),
+  starsScans: (page = 1) =>
+    request<ListResponse<StarsScan>>("/api/v1/stars/scans?page=" + page + "&page_size=30"),
+  starsScan: (scanId: number) =>
+    request<StarsScanDetail>("/api/v1/stars/scans/" + scanId),
+  starsLeaderboard: (filters: { scanId?: number | null; q?: string; language?: string; page?: number } = {}) => {
+    const params = new URLSearchParams({ page: String(filters.page ?? 1), page_size: "50" });
+    if (filters.scanId) params.set("scan_id", String(filters.scanId));
+    if (filters.q) params.set("q", filters.q);
+    if (filters.language) params.set("language", filters.language);
+    return request<StarsLeaderboardResponse>("/api/v1/stars/leaderboard?" + params.toString());
+  },
+  collectStars: (options: StarsCollectOptions) =>
+    postJson<{ job: CollectionJob; scan_id: number }>("/api/v1/stars/collect", options),
+  retryStarsScan: (scanId: number) =>
+    postJson<{ job: CollectionJob; scan_id: number; retry_of_job_id: string }>(
+      "/api/v1/stars/scans/" + scanId + "/retry",
+      {},
+    ),
   collectionSchedules: () =>
     request<{ items: CollectionSchedule[] }>("/api/v1/collections/schedules"),
   saveCollectionSchedule: (
@@ -199,6 +278,11 @@ export const api = {
     "/api/v1/collections/schedules/" + periodType,
     { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
   ),
+  saveStarsSchedule: (payload: StarsCollectOptions & { enabled: boolean; time: string; timezone: string }) =>
+    request<{ schedule: CollectionSchedule }>(
+      "/api/v1/collections/schedules/stars",
+      { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+    ),
   collectionJobs: (page = 1) =>
     request<ListResponse<CollectionJob>>(
       "/api/v1/collections/jobs?page=" + page + "&page_size=50",
