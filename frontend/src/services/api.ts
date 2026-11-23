@@ -29,32 +29,161 @@ export interface Repository {
   last_synced_at: string | null;
 }
 
-export interface RepositoryListResponse {
-  items: Repository[];
-  pagination: {
-    page: number;
-    page_size: number;
-    total: number;
-    total_pages: number;
-  };
+export interface Pagination {
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
 }
 
-async function request<T>(path: string): Promise<T> {
+export type TrendingPeriod = "daily" | "weekly" | "monthly";
+
+export interface TrendingSnapshot {
+  id: number;
+  period_type: TrendingPeriod;
+  period_key: string;
+  collected_at: string;
+  status: "success" | "partial_success" | "failed";
+  source_url: string;
+  item_count: number;
+  error_summary: string | null;
+}
+
+export interface TrendingItem {
+  rank: number;
+  repository_id: number;
+  github_repo_id: number | null;
+  full_name: string;
+  owner: string;
+  name: string;
+  description: string | null;
+  html_url: string;
+  language: string | null;
+  stars_count: number;
+  stars_delta: number;
+  forks_count: number;
+  topics: string[];
+}
+
+export interface TrendingResponse {
+  snapshot: TrendingSnapshot | null;
+  items: TrendingItem[];
+  pagination: Pagination;
+}
+
+export interface CollectionJob {
+  id: string;
+  job_type: string;
+  trigger_type: string;
+  status: "queued" | "running" | "success" | "partial_success" | "failed" | "cancelled" | "interrupted";
+  progress: number;
+  started_at: string | null;
+  finished_at: string | null;
+  retry_count: number;
+  request_count: number;
+  fetched_count: number;
+  inserted_count: number;
+  updated_count: number;
+  deduplicated_count: number;
+  error_code: string | null;
+  error_message: string | null;
+  related_snapshot_id: number | null;
+  retry_of_job_id?: string | null;
+  created_at: string;
+}
+
+export interface CollectionJobLog {
+  id: number;
+  level: string;
+  message: string;
+  details: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface CollectionJobDetail extends CollectionJob {
+  logs: CollectionJobLog[];
+}
+
+export interface ListResponse<T> {
+  items: T[];
+  pagination: Pagination;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
-    headers: { Accept: "application/json" },
+    ...init,
+    headers: {
+      Accept: "application/json",
+      ...(init?.headers ?? {}),
+    },
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Request failed: " + response.status);
+    let message = "Request failed: " + response.status;
+    try {
+      const payload = await response.json();
+      message = typeof payload.detail === "string"
+        ? payload.detail
+        : payload.detail?.message ?? JSON.stringify(payload.detail ?? payload);
+    } catch {
+      const body = await response.text();
+      if (body) message = body;
+    }
+    throw new Error(message);
   }
 
   return (await response.json()) as T;
+}
+
+function postJson<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
 
 export const api = {
   health: () => request<HealthResponse>("/api/v1/health"),
   dashboardSummary: () => request<DashboardSummary>("/api/v1/dashboard/summary"),
   repositories: (page = 1) =>
-    request<RepositoryListResponse>("/api/v1/repositories?page=" + page + "&page_size=20"),
+    request<ListResponse<Repository>>("/api/v1/repositories?page=" + page + "&page_size=20"),
+  trendingSnapshots: (periodType: TrendingPeriod) =>
+    request<ListResponse<TrendingSnapshot>>(
+      "/api/v1/trending/snapshots?period_type=" + periodType + "&page_size=50",
+    ),
+  trending: (
+    periodType: TrendingPeriod,
+    filters: {
+      snapshotId?: number | null;
+      q?: string;
+      language?: string;
+      topic?: string;
+      sortBy?: "rank" | "stars" | "delta" | "forks";
+      sortOrder?: "asc" | "desc";
+      page?: number;
+    } = {},
+  ) => {
+    const params = new URLSearchParams({ period_type: periodType, page: String(filters.page ?? 1) });
+    if (filters.snapshotId) params.set("snapshot_id", String(filters.snapshotId));
+    if (filters.q) params.set("q", filters.q);
+    if (filters.language) params.set("language", filters.language);
+    if (filters.topic) params.set("topic", filters.topic);
+    if (filters.sortBy) params.set("sort_by", filters.sortBy);
+    if (filters.sortOrder) params.set("sort_order", filters.sortOrder);
+    return request<TrendingResponse>("/api/v1/trending?" + params.toString());
+  },
+  collectTrending: (periodType: TrendingPeriod) =>
+    postJson<{ job: CollectionJob }>("/api/v1/trending/collect", { period_type: periodType }),
+  collectionJobs: (page = 1) =>
+    request<ListResponse<CollectionJob>>(
+      "/api/v1/collections/jobs?page=" + page + "&page_size=50",
+    ),
+  collectionJob: (jobId: string) =>
+    request<CollectionJobDetail>("/api/v1/collections/jobs/" + encodeURIComponent(jobId)),
+  retryCollectionJob: (jobId: string) =>
+    postJson<{ job: CollectionJob; retry_of_job_id: string }>(
+      "/api/v1/collections/jobs/" + encodeURIComponent(jobId) + "/retry",
+      {},
+    ),
 };
