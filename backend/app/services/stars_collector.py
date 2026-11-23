@@ -383,7 +383,6 @@ async def collect_stars_repositories(
     state = SearchState()
     repositories_by_id: dict[int, dict[str, Any]] = {}
     coverage_total = 0
-    last_query_progress = 0
 
     token = os.getenv("GITHUB_TOKEN", "").strip()
     headers = {
@@ -417,6 +416,7 @@ async def collect_stars_repositories(
         query_text: str,
         first_payload: dict[str, Any],
         shard_id: int,
+        shard_key: str,
         total_count: int,
     ) -> None:
         remaining = max_results - len(repositories_by_id)
@@ -578,7 +578,7 @@ async def collect_stars_repositories(
             return
 
         coverage_total += total_count
-        await consume_pages(client, query_text, payload, shard_id, total_count)
+        await consume_pages(client, query_text, payload, shard_id, shard_key, total_count)
         _add_log(
             job_id,
             "INFO",
