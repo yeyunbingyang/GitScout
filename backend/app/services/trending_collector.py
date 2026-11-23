@@ -367,7 +367,7 @@ def list_collection_jobs(
     page: int = 1,
     page_size: int = 20,
 ) -> dict[str, Any]:
-    where = "WHERE job_type LIKE 'trending_%'"
+    where = "WHERE (job_type LIKE 'trending_%' OR job_type = 'stars_scan')"
     parameters: list[Any] = []
     if job_type:
         where += " AND job_type = ?"
