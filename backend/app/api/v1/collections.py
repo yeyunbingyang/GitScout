@@ -18,6 +18,7 @@ from app.services.trending_collector import (
 )
 from app.services.scheduler import list_schedules, save_schedule, save_stars_schedule
 from app.services.stars_collector import (
+    ActiveStarsScanError,
     execute_stars_scan,
     get_stars_scan,
     retry_stars_scan_job,
