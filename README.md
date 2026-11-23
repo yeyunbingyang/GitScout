@@ -18,8 +18,9 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 | 资源 | 说明 |
 |---|---|
 | [需求说明书（Markdown）](docs/requirements/GitScout_PRD_v0.5.1.md) | 当前仓库的可版本管理需求基线，包含功能说明、数据规则、验收标准与原型图注 |
+| [HTML 交互原型](prototype/GitScout_v0.5.1.html) | GitScout v0.5.1 可直接在浏览器打开的完整交互原型 |
 
-带完整 14 张原型截图的 DOCX / PDF 版，以及可交互 HTML 原型，作为本次会话交付附件提供；仓库 Markdown 版用于后续需求差异审阅与版本管理。
+带完整 14 张原型截图的 DOCX / PDF 版作为本次会话交付附件提供；HTML 交互原型已提交至仓库 `prototype/`，Markdown 版用于后续需求差异审阅与版本管理。
 
 ## 当前产品范围
 
