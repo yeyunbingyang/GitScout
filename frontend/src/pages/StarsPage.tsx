@@ -124,7 +124,6 @@ export default function StarsPage() {
         if (!active) return;
         setActiveJob(job);
         if (["success", "partial_success", "failed", "interrupted", "cancelled"].includes(job.status)) {
-          setActiveJobId(null);
           setCollecting(false);
           if (job.related_stars_scan_id) setScanId(job.related_stars_scan_id);
           if (job.status === "success") {
@@ -145,6 +144,7 @@ export default function StarsPage() {
               setResult(leaderboard);
             }
           }
+          setActiveJobId(null);
         }
       } catch (reason) {
         if (active) setError(reason instanceof Error ? reason.message : "读取采集进度失败");
