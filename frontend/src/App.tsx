@@ -82,7 +82,7 @@ function AppShell() {
             <span className={apiError ? "connection-state offline" : "connection-state"}>
               <i />{apiError ? "后端未连接" : health ? "本地服务已连接" : "正在连接"}
             </span>
-            <span className="version-tag">FOUNDATION · 0.1.0</span>
+            <span className="version-tag">TRENDING COLLECTOR · 0.2.0</span>
           </div>
         </header>
         <div className="page-header"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></div>
