@@ -13,7 +13,7 @@ def dashboard_summary() -> dict[str, object]:
             "SELECT COUNT(*) AS count FROM repositories"
         ).fetchone()["count"]
         trending_count = connection.execute(
-            "SELECT COUNT(*) AS count FROM trending_snapshots WHERE status = 'success'"
+            "SELECT COUNT(*) AS count FROM trending_snapshots WHERE status IN ('success', 'partial_success')"
         ).fetchone()["count"]
         interested_count = connection.execute(
             "SELECT COUNT(*) AS count FROM interested_projects"
