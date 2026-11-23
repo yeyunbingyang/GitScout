@@ -89,12 +89,24 @@ SQLite 是唯一业务数据库，首期核心表如下：
 - 每次运行创建独立快照；失败运行创建 status=failed 的审计记录，但历史榜单接口只返回 success / partial_success。
 - HTML 解析结果包含重复和跳过计数；存在无法识别卡片时以 partial_success 标记，避免伪装成完整采集。
 
+### Stars 总榜采集实现
+
+- 使用 GitHub REST `GET /search/repositories`，`sort=stars&order=desc`，仅采集公开仓库。
+- 默认 Top 5,000、最低 100 Stars；可配置 Top 1,000 / 3,000 / 5,000 / 10,000、Stars 下限及是否包含 Fork。
+- 每页最多 100 条；每个 Search 查询最多可读取 1,000 条。超出时按 Stars 数值范围递归拆分，优先处理高 Stars 区间。
+- 同一 Stars 值的结果桶若仍超过 1,000 条，则按 `created` 日期区间继续拆分；无法继续拆分的叶子分片标记失败。
+- 使用 GitHub Repository ID 去重；更新仓库主档、Topics 和 `repository_stats`；每次扫描写入独立 `stars_scans`、`stars_scan_shards` 和 `stars_scan_items`。
+- 记录 `incomplete_results`、每个分片的查询、匹配数量、获取数量、失败原因及覆盖说明。部分分片失败或 API 返回不完整结果时，扫描标记 `partial_success`。
+- Token 从本地 `.env` 的 `GITHUB_TOKEN` 读取，只在后端请求头中使用；日志不记录 Token。
+- Search API 请求默认节流：有 Token 时约 2.1 秒一次；无 Token 时约 6.1 秒一次。尊重 `Retry-After` 与 `X-RateLimit-Reset`，并对短暂网络错误和服务端错误有限重试。
+- Stars 扫描是有明确 Top-N 和最低 Stars 阈值的排行榜，不宣称覆盖 GitHub 全站所有仓库。
+
 ### 本地调度实现
 
 - 使用 FastAPI lifespan 启动一个 asyncio scheduler loop，不引入 Celery / Redis / APScheduler。
 - `collection_schedules` 中日 / 周 / 月分别保存 enabled、timezone、settings_json 和 next_run_at。
 - 日计划按每日时间触发；周计划按 weekday + 时间触发；月计划按 1—28 日 + 时间触发。
-- 默认三个计划均关闭；必须由用户在采集设置页面显式启用。
+- Trending 日 / 周 / 月与 Stars 每日计划默认均关闭；必须由用户在采集设置页面显式启用。
 - next_run_at 使用 UTC ISO-8601 持久化，调度时间按用户选定的 IANA 时区计算。
 - 本地服务停止时取消调度任务；重启后遗留 queued / running 任务标记为 interrupted。
 - 生产本地模式必须使用单 Uvicorn Worker，避免进程内调度重复执行。
@@ -167,7 +179,7 @@ GitScout/
 
 ## 9. 当前实现边界
 
-本次 M0 / M1 已建立 React 页面骨架、FastAPI 健康检查、首页概览和项目库读取 API、SQLite 初始 schema 及迁移机制。Trending / Stars 真实采集、asyncio 定时调度、推荐计算、收藏和研究 CRUD 尚未实现，按开发计划后续阶段完成。
+M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度。M2 / M3 的 CI 与 Windows 本机联网验收仍待确认。推荐计算、周期对比、收藏和研究 CRUD 按后续阶段完成。
 
 ## 10. 升级条件
 
