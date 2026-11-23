@@ -28,6 +28,10 @@ DEFAULT_TRENDING_URL = "https://github.com/trending"
 class TrendingCollectionError(RuntimeError):
     """A collection or parsing failure that should be visible in the job history."""
 
+    def __init__(self, message: str, attempts: int = 1):
+        super().__init__(message)
+        self.attempts = attempts
+
 
 class ActiveTrendingJobError(RuntimeError):
     def __init__(self, job_id: str):
@@ -258,7 +262,7 @@ async def fetch_trending_html(period_type: str) -> tuple[str, str, int]:
                         continue
                 response.raise_for_status()
                 return response.text, str(response.url), attempt
-            except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+            except (httpx.RequestError, httpx.HTTPStatusError) as exc:
                 last_error = exc
                 if isinstance(exc, httpx.HTTPStatusError):
                     status = exc.response.status_code
@@ -270,7 +274,7 @@ async def fetch_trending_html(period_type: str) -> tuple[str, str, int]:
                 break
 
     detail = str(last_error) if last_error else "Unknown HTTP request failure"
-    raise TrendingCollectionError(f"Failed to fetch GitHub Trending after retries: {detail}") from last_error
+    raise TrendingCollectionError(f"Failed to fetch GitHub Trending after retries: {detail}", attempts=attempt) from last_error
 
 
 def create_trending_job(
@@ -278,6 +282,7 @@ def create_trending_job(
     trigger_type: str = "manual",
     retry_count: int = 0,
     retry_of_job_id: str | None = None,
+    schedule_id: int | None = None,
 ) -> dict[str, Any]:
     period_type = validate_period(period_type)
     if trigger_type not in {"manual", "scheduled", "startup"}:
@@ -288,6 +293,7 @@ def create_trending_job(
     created_at = utc_now()
 
     with get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
         active = connection.execute(
             """
             SELECT id FROM collection_jobs
@@ -302,10 +308,11 @@ def create_trending_job(
         connection.execute(
             """
             INSERT INTO collection_jobs (
-                id, job_type, trigger_type, status, progress, retry_count, retry_of_job_id, created_at
-            ) VALUES (?, ?, ?, 'queued', 0, ?, ?, ?)
+                id, job_type, trigger_type, schedule_id, status, progress,
+                retry_count, retry_of_job_id, created_at
+            ) VALUES (?, ?, ?, ?, 'queued', 0, ?, ?, ?)
             """,
-            (job_id, job_type, trigger_type, retry_count, retry_of_job_id, created_at),
+            (job_id, job_type, trigger_type, schedule_id, retry_count, retry_of_job_id, created_at),
         )
         connection.execute(
             """
@@ -522,14 +529,15 @@ def persist_trending_snapshot(
             else:
                 inserted_count += 1
 
-            connection.execute(
-                "DELETE FROM repository_topics WHERE repository_id = ?",
-                (repository_id,),
-            )
-            connection.executemany(
-                "INSERT OR IGNORE INTO repository_topics (repository_id, topic) VALUES (?, ?)",
-                [(repository_id, topic) for topic in item.topics],
-            )
+            if item.topics:
+                connection.execute(
+                    "DELETE FROM repository_topics WHERE repository_id = ?",
+                    (repository_id,),
+                )
+                connection.executemany(
+                    "INSERT OR IGNORE INTO repository_topics (repository_id, topic) VALUES (?, ?)",
+                    [(repository_id, topic) for topic in item.topics],
+                )
 
             connection.execute(
                 """
@@ -646,6 +654,7 @@ async def execute_trending_job(job_id: str, period_type: str) -> dict[str, Any]:
     except Exception as exc:
         if isinstance(exc, TrendingCollectionError):
             error = exc
+            attempts = max(attempts, exc.attempts)
         else:
             error = TrendingCollectionError(f"{type(exc).__name__}: {exc}")
         return _mark_job_failed(job_id, period_type, source_url, started_at, error, attempts)
