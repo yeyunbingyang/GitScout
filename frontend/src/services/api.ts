@@ -92,6 +92,22 @@ export interface CollectionJob {
   created_at: string;
 }
 
+
+export interface CollectionSchedule {
+  id: number;
+  name: string;
+  job_type: string;
+  enabled: boolean;
+  timezone: string;
+  next_run_at: string | null;
+  last_run_at: string | null;
+  settings: {
+    time?: string;
+    weekday?: number;
+    day_of_month?: number;
+  };
+}
+
 export interface CollectionJobLog {
   id: number;
   level: string;
@@ -175,6 +191,15 @@ export const api = {
   },
   collectTrending: (periodType: TrendingPeriod) =>
     postJson<{ job: CollectionJob }>("/api/v1/trending/collect", { period_type: periodType }),
+  collectionSchedules: () =>
+    request<{ items: CollectionSchedule[] }>("/api/v1/collections/schedules"),
+  saveCollectionSchedule: (
+    periodType: TrendingPeriod,
+    payload: { enabled: boolean; time: string; timezone: string; weekday: number; day_of_month: number },
+  ) => request<{ schedule: CollectionSchedule }>(
+    "/api/v1/collections/schedules/" + periodType,
+    { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+  ),
   collectionJobs: (page = 1) =>
     request<ListResponse<CollectionJob>>(
       "/api/v1/collections/jobs?page=" + page + "&page_size=50",
