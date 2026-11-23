@@ -12,6 +12,16 @@ echo  GitScout - Open Source Discovery & Research
 echo  -------------------------------------------
 echo.
 
+if not exist "%ROOT%frontend\dist\index.html" (
+    echo Frontend build not found.
+    echo Run these commands once before first launch:
+    echo   cd frontend
+    echo   npm install
+    echo   npm run build
+    pause
+    exit /b 1
+)
+
 if not exist "%VENV%\Scripts\python.exe" (
     echo [1/3] Creating Python virtual environment...
     py -3.11 -m venv "%VENV%"
@@ -23,7 +33,7 @@ if not exist "%VENV%\Scripts\python.exe" (
 )
 
 echo [2/3] Checking backend dependencies...
-"%VENV%\Scripts\python.exe" -m pip show fastapi >nul 2>nul
+"%VENV%\Scripts\python.exe" -c "import fastapi, uvicorn" >nul 2>nul
 if errorlevel 1 (
     "%VENV%\Scripts\python.exe" -m pip install -r "%BACKEND%\requirements.txt"
     if errorlevel 1 (
