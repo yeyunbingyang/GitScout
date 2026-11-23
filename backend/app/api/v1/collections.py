@@ -136,6 +136,11 @@ def retry_failed_collection(
     if original.get("job_type") == "stars_scan":
         try:
             retry_job = retry_stars_scan_job(job_id)
+        except ActiveStarsScanError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "A Stars scan is already active.", "active_job_id": exc.job_id},
+            ) from exc
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         scan_id = int(retry_job["related_stars_scan_id"])
