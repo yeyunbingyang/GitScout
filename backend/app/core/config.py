@@ -53,5 +53,5 @@ def get_cors_origins() -> list[str]:
 
 
 APP_NAME = "GitScout"
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 LOG_LEVEL = os.getenv("GITSCOUT_LOG_LEVEL", "INFO").upper()
