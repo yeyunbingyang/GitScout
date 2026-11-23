@@ -1,5 +1,8 @@
 from app.database.connection import get_connection, initialize_database
+import pytest
+
 from app.services.trending_collector import (
+    ActiveTrendingJobError,
     create_trending_job,
     get_collection_job,
     parse_trending_html,
@@ -151,3 +154,13 @@ def test_collection_job_records_retry_lineage(tmp_path, monkeypatch):
     )
 
     assert retry["retry_of_job_id"] == original["id"]
+
+
+
+def test_same_period_cannot_have_two_active_jobs(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITSCOUT_DATA_DIR", str(tmp_path))
+    initialize_database()
+
+    create_trending_job("monthly")
+    with pytest.raises(ActiveTrendingJobError):
+        create_trending_job("monthly")
