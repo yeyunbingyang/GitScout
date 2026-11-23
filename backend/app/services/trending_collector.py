@@ -472,6 +472,11 @@ def persist_trending_snapshot(
     period_type = validate_period(period_type)
     collected_at = utc_now()
     snapshot_status = "partial_success" if parsed.skipped_count else "success"
+    warning = (
+        f"{parsed.skipped_count} malformed or non-repository cards were skipped."
+        if parsed.skipped_count
+        else None
+    )
     inserted_count = 0
     updated_count = 0
 
@@ -479,8 +484,8 @@ def persist_trending_snapshot(
         cursor = connection.execute(
             """
             INSERT INTO trending_snapshots (
-                period_type, period_key, collected_at, status, source_url, item_count
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                period_type, period_key, collected_at, status, source_url, item_count, error_summary
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 period_type,
@@ -489,6 +494,7 @@ def persist_trending_snapshot(
                 snapshot_status,
                 source_url,
                 len(parsed.items),
+                warning,
             ),
         )
         snapshot_id = int(cursor.lastrowid)
@@ -582,9 +588,6 @@ def persist_trending_snapshot(
             )
 
         finished_at = utc_now()
-        warning = None
-        if parsed.skipped_count:
-            warning = f"{parsed.skipped_count} malformed or non-repository cards were skipped."
 
         connection.execute(
             """
