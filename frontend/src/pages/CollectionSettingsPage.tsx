@@ -81,21 +81,22 @@ export default function CollectionSettingsPage() {
     api.collectionSchedules()
       .then((response) => {
         setSchedules(response.items);
+        const starsSchedule = response.items.find((item) => item.job_type === "stars_daily");
+        if (starsSchedule) {
+          setStarsForm({
+            enabled: starsSchedule.enabled,
+            time: starsSchedule.settings.time ?? "09:00",
+            timezone: starsSchedule.timezone || "Asia/Shanghai",
+            max_results: starsSchedule.settings.max_results ?? 5000,
+            min_stars: starsSchedule.settings.min_stars ?? 100,
+            include_forks: starsSchedule.settings.include_forks ?? false,
+          });
+        }
         setForms((current) => {
           const next = { ...current };
           for (const schedule of response.items) {
             const period = schedule.job_type.replace("trending_", "") as TrendingPeriod;
             if (period in next) next[period] = toForm(schedule);
-            if (schedule.job_type === "stars_daily") {
-              setStarsForm({
-                enabled: schedule.enabled,
-                time: schedule.settings.time ?? "09:00",
-                timezone: schedule.timezone || "Asia/Shanghai",
-                max_results: schedule.settings.max_results ?? 5000,
-                min_stars: schedule.settings.min_stars ?? 100,
-                include_forks: schedule.settings.include_forks ?? false,
-              });
-            }
           }
           return next;
         });
