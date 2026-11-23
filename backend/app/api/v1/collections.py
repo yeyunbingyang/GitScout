@@ -86,10 +86,10 @@ def retry_failed_collection(
     original = get_collection_job(job_id)
     if original is None or not str(original.get("job_type", "")).startswith("trending_"):
         raise HTTPException(status_code=404, detail="Trending collection job not found")
-    if original["status"] not in {"failed", "partial_success"}:
+    if original["status"] not in {"failed", "partial_success", "interrupted"}:
         raise HTTPException(
             status_code=409,
-            detail="Only failed or partial-success collection jobs can be retried.",
+            detail="Only failed, partial-success or interrupted collection jobs can be retried.",
         )
 
     period_type = str(original["job_type"]).removeprefix("trending_")
