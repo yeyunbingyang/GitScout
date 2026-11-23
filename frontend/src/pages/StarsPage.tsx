@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import {
   ExternalLink, Filter, Github, RefreshCw, RotateCcw, Search, ShieldCheck,
 } from "lucide-react";
@@ -332,8 +333,9 @@ export default function StarsPage() {
                   <tr key={item.repository_id}>
                     <td><span className="rank-number">{String(item.rank).padStart(2, "0")}</span></td>
                     <td className="trending-project-cell">
-                      <a href={item.html_url} target="_blank" rel="noreferrer" className="repo-link">
-                        {item.full_name}<ExternalLink size={12} />
+                      <Link to={"/repositories/" + item.repository_id} className="repo-link">{item.full_name}</Link>
+                      <a href={item.html_url} target="_blank" rel="noreferrer" className="repo-external-link" aria-label="打开 GitHub 仓库">
+                        <ExternalLink size={12} />
                       </a>
                       <small>{item.description || "暂无项目简介"}</small>
                       {item.topics.length > 0 && <div className="topic-list">{item.topics.slice(0, 4).map((topic) => <span key={topic}>{topic}</span>)}</div>}
