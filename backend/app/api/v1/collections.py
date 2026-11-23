@@ -23,7 +23,7 @@ router = APIRouter(prefix="/collections", tags=["collections"])
 
 class ScheduleUpdate(BaseModel):
     enabled: bool = False
-    time: str = Field(default="09:00", pattern=r"^(?:[01]\\d|2[0-3]):[0-5]\\d$")
+    time: str = Field(default="09:00", pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
     timezone: str = "Asia/Shanghai"
     weekday: int = Field(default=0, ge=0, le=6)
     day_of_month: int = Field(default=1, ge=1, le=28)
