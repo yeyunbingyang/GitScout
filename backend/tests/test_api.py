@@ -13,7 +13,7 @@ def test_health_and_empty_dashboard_use_sqlite(tmp_path, monkeypatch):
 
     assert health.status_code == 200
     assert health.json()["database"] == "connected"
-    assert health.json()["schema_version"] == "0001"
+    assert health.json()["schema_version"] == "0002"
 
     assert summary.status_code == 200
     assert summary.json()["repositories"] == 0
