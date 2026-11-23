@@ -382,7 +382,8 @@ def list_collection_jobs(
             f"""
             SELECT id, job_type, trigger_type, status, progress, started_at, finished_at,
                    retry_count, request_count, fetched_count, inserted_count, updated_count,
-                   deduplicated_count, error_code, error_message, related_snapshot_id, created_at
+                   deduplicated_count, error_code, error_message, related_snapshot_id,
+                   related_stars_scan_id, retry_of_job_id, created_at
             FROM collection_jobs {where}
             ORDER BY created_at DESC LIMIT ? OFFSET ?
             """,
