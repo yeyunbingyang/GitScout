@@ -16,7 +16,7 @@ from app.services.trending_collector import (
     list_collection_jobs,
     utc_now,
 )
-from app.services.scheduler import list_schedules, save_schedule
+from app.services.scheduler import list_schedules, save_schedule, save_stars_schedule
 from app.services.stars_collector import (
     execute_stars_scan,
     get_stars_scan,
@@ -32,6 +32,15 @@ class ScheduleUpdate(BaseModel):
     timezone: str = "Asia/Shanghai"
     weekday: int = Field(default=0, ge=0, le=6)
     day_of_month: int = Field(default=1, ge=1, le=28)
+
+
+class StarsScheduleUpdate(BaseModel):
+    enabled: bool = False
+    time: str = Field(default="09:00", pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    timezone: str = "Asia/Shanghai"
+    max_results: int = Field(default=5000, ge=100, le=10000)
+    min_stars: int = Field(default=100, ge=1, le=10000000)
+    include_forks: bool = False
 
 
 @router.get("/schedules")
@@ -52,6 +61,25 @@ def update_collection_schedule(
     try:
         schedule = save_schedule(
             period_type,
+            enabled=payload.enabled,
+            settings=settings,
+            timezone_name=payload.timezone,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"schedule": schedule}
+
+
+@router.put("/schedules/stars")
+def update_stars_collection_schedule(payload: StarsScheduleUpdate) -> dict[str, Any]:
+    settings = {
+        "time": payload.time,
+        "max_results": payload.max_results,
+        "min_stars": payload.min_stars,
+        "include_forks": payload.include_forks,
+    }
+    try:
+        schedule = save_stars_schedule(
             enabled=payload.enabled,
             settings=settings,
             timezone_name=payload.timezone,
