@@ -242,6 +242,10 @@ export default function TrendingPage() {
         </div>
       </section>
 
+      {snapshot?.error_summary && (
+        <div className="alert alert-warning">{snapshot.error_summary}</div>
+      )}
+
       {activeJob && collecting && (
         <div className="collection-progress">
           <span className="progress-spinner" />
