@@ -8,6 +8,7 @@ import DashboardPage from "./pages/DashboardPage";
 import RepositoriesPage from "./pages/RepositoriesPage";
 import TrendingPage from "./pages/TrendingPage";
 import CollectionJobsPage from "./pages/CollectionJobsPage";
+import CollectionSettingsPage from "./pages/CollectionSettingsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { api, type HealthResponse } from "./services/api";
 
@@ -96,7 +97,7 @@ function AppShell() {
             <Route path="/interested" element={<PlaceholderPage title="感兴趣项目库" description="轻量保存感兴趣项目；该标记与加入项目研究相互独立。" milestone="M6 · RESEARCH WORKSPACE" />} />
             <Route path="/research" element={<PlaceholderPage title="项目研究工作区" description="管理待研究、研究中、已完成和暂缓项目，记录目标、笔记、下一步行动与结论。" milestone="M6 · RESEARCH WORKSPACE" />} />
             <Route path="/collections" element={<CollectionJobsPage />} />
-            <Route path="/settings" element={<PlaceholderPage title="本地采集配置" description="后续在这里配置日周月调度、Stars 刷新间隔、GitHub Token 和数据备份。" milestone="M7 · LOCAL OPERATIONS" />} />
+            <Route path="/settings" element={<CollectionSettingsPage />} />
           </Routes>
         </div>
         <footer className="app-footer"><span>GitScout · Discover · Track · Recommend · Research</span><span>本地数据优先 · SQLite</span></footer>
