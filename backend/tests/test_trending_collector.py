@@ -1,8 +1,14 @@
-from app.database.connection import get_connection, initialize_database
+import asyncio
+
 import pytest
+
+from app.database.connection import get_connection, initialize_database
+from app.services import trending_collector
 
 from app.services.trending_collector import (
     ActiveTrendingJobError,
+    TrendingCollectionError,
+    execute_trending_job,
     create_trending_job,
     get_collection_job,
     parse_trending_html,
@@ -164,3 +170,33 @@ def test_same_period_cannot_have_two_active_jobs(tmp_path, monkeypatch):
     create_trending_job("monthly")
     with pytest.raises(ActiveTrendingJobError):
         create_trending_job("monthly")
+
+
+
+def test_failed_collection_creates_failed_audit_snapshot_not_success(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITSCOUT_DATA_DIR", str(tmp_path))
+    initialize_database()
+    job = create_trending_job("daily")
+
+    async def fail_fetch(period_type):
+        raise TrendingCollectionError("GitHub returned HTTP 503", attempts=3)
+
+    monkeypatch.setattr(trending_collector, "fetch_trending_html", fail_fetch)
+    result = asyncio.run(execute_trending_job(job["id"], "daily"))
+
+    assert result["status"] == "failed"
+    assert result["request_count"] == 3
+    assert result["retry_count"] == 2
+    assert result["related_snapshot_id"] is not None
+
+    with get_connection() as connection:
+        failed = connection.execute(
+            "SELECT status FROM trending_snapshots WHERE id = ?",
+            (result["related_snapshot_id"],),
+        ).fetchone()
+        successful_count = connection.execute(
+            "SELECT COUNT(*) AS count FROM trending_snapshots WHERE status = 'success'"
+        ).fetchone()["count"]
+
+    assert failed["status"] == "failed"
+    assert successful_count == 0
