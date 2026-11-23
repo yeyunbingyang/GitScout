@@ -6,6 +6,7 @@ from app.services.scheduler import (
     ensure_default_schedules,
     list_schedules,
     save_schedule,
+    save_stars_schedule,
 )
 
 
@@ -33,9 +34,9 @@ def test_default_schedules_are_disabled_and_idempotent(tmp_path, monkeypatch):
     ensure_default_schedules()
     schedules = list_schedules()
 
-    assert len(schedules) == 3
+    assert len(schedules) == 4
     assert {item["job_type"] for item in schedules} == {
-        "trending_daily", "trending_weekly", "trending_monthly"
+        "trending_daily", "trending_weekly", "trending_monthly", "stars_daily"
     }
     assert all(item["enabled"] is False for item in schedules)
 
@@ -55,4 +56,29 @@ def test_save_schedule_persists_enabled_state_and_next_run(tmp_path, monkeypatch
     assert saved["enabled"] is True
     assert saved["timezone"] == "Asia/Tokyo"
     assert saved["settings"]["time"] == "08:30"
+    assert saved["next_run_at"]
+
+
+
+def test_save_stars_schedule_persists_daily_scan_options(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITSCOUT_DATA_DIR", str(tmp_path))
+    initialize_database()
+    ensure_default_schedules()
+
+    saved = save_stars_schedule(
+        enabled=True,
+        settings={
+            "time": "07:30",
+            "max_results": 3000,
+            "min_stars": 250,
+            "include_forks": True,
+        },
+        timezone_name="Asia/Tokyo",
+    )
+
+    assert saved["job_type"] == "stars_daily"
+    assert saved["enabled"] is True
+    assert saved["timezone"] == "Asia/Tokyo"
+    assert saved["settings"]["max_results"] == 3000
+    assert saved["settings"]["include_forks"] is True
     assert saved["next_run_at"]
