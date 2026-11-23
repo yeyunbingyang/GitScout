@@ -68,3 +68,33 @@ def test_trending_collection_rejects_unknown_period(tmp_path, monkeypatch):
             json={"period_type": "yearly"},
         )
     assert response.status_code == 422
+
+
+
+def test_schedule_configuration_api(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITSCOUT_DATA_DIR", str(tmp_path))
+
+    with TestClient(app) as client:
+        current = client.get("/api/v1/collections/schedules")
+        assert current.status_code == 200
+        assert len(current.json()["items"]) == 3
+
+        saved = client.put(
+            "/api/v1/collections/schedules/daily",
+            json={
+                "enabled": True,
+                "time": "08:30",
+                "timezone": "Asia/Tokyo",
+                "weekday": 0,
+                "day_of_month": 1,
+            },
+        )
+        assert saved.status_code == 200
+        assert saved.json()["schedule"]["enabled"] is True
+        assert saved.json()["schedule"]["settings"]["time"] == "08:30"
+
+        invalid = client.put(
+            "/api/v1/collections/schedules/daily",
+            json={"enabled": True, "time": "25:99", "timezone": "UTC"},
+        )
+        assert invalid.status_code == 422
