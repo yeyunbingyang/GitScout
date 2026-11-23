@@ -65,7 +65,7 @@ FastAPI 会提供前端构建产物和 API。默认只监听本机回环地址�
 ```powershell
 cd backend
 py -3.11 -m venv .venv
-.venv\Scripts\activate
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
