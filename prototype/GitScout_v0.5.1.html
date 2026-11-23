@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GitScout · 开源项目发现与研究平台</title>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#fff;--surface-2:#f8f9fd;--ink:#172033;--muted:#778198;
+  --line:#e8ebf3;--nav:#111827;--nav-2:#1c2638;--nav-muted:#9ba7ba;
+  --accent:#6658e8;--accent-2:#897cf6;--accent-soft:#efedff;--cyan:#23a6c8;
+  --green:#159b72;--green-soft:#e8f7f1;--orange:#d88735;--orange-soft:#fff4e8;
+  --red:#d45b67;--shadow:0 8px 28px rgba(26,36,64,.055);--radius:16px;
+}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}
+.app-shell{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:248px;background:var(--nav);color:#fff;padding:24px 15px 18px;display:flex;flex-direction:column;z-index:20}
+.brand{display:flex;align-items:center;gap:11px;padding:0 10px 26px}.brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#8779ff,#5547d8);display:grid;place-items:center;box-shadow:0 8px 20px #6557e455}
+.brand-mark svg{width:23px;height:23px}.brand strong{display:block;font-size:16px;letter-spacing:.2px}.brand small{display:block;color:#aab5c7;font-size:9px;letter-spacing:.15px;margin-top:2px;white-space:nowrap}
+.workspace{margin:0 5px 22px;padding:11px 12px;background:#1b2638;border:1px solid #29364a;border-radius:12px;display:flex;align-items:center;gap:9px}
+.workspace-icon{width:27px;height:27px;border-radius:8px;background:#313e55;color:#c8c4ff;display:grid;place-items:center;font-weight:700;font-size:11px}
+.workspace small{display:block;color:#91a0b6;font-size:10px}.workspace strong{font-size:12px;font-weight:600}
+.nav-label{padding:0 12px;margin:8px 0 8px;color:#68778e;font-size:10px;font-weight:700;letter-spacing:1.3px}
+.nav-item{width:100%;border:0;background:transparent;color:#aab5c6;padding:10px 12px;border-radius:10px;display:flex;align-items:center;gap:12px;text-align:left;margin:2px 0;transition:.18s}
+.nav-item:hover{background:#1d293c;color:#fff}.nav-item.active{background:linear-gradient(90deg,#6658e8 0%,#5146c9 100%);color:white;box-shadow:0 7px 18px #5146c944}
+.nav-item .ico{width:18px;height:18px;display:grid;place-items:center;opacity:.95}.nav-item .nav-count{margin-left:auto;font-size:10px;color:#9eabbd;background:#26344a;border-radius:20px;padding:2px 7px}.nav-item.active .nav-count{color:#fff;background:#ffffff24}
+.sidebar-spacer{flex:1}.sidebar-status{margin:14px 5px 14px;padding:12px;background:#182437;border:1px solid #29364a;border-radius:12px}
+.status-row{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600}.live-dot{width:7px;height:7px;background:#39c79a;border-radius:50%;box-shadow:0 0 0 4px #39c79a1c}.sidebar-status small{display:block;color:#8492a8;font-size:10px;margin:5px 0 0 15px}
+.profile{border-top:1px solid #283449;padding:17px 8px 0;display:flex;align-items:center;gap:10px}.avatar{width:31px;height:31px;border-radius:50%;background:linear-gradient(145deg,#f4b98d,#9b72da);display:grid;place-items:center;color:white;font-weight:700;font-size:11px}.profile strong{font-size:11px;display:block}.profile small{color:#8492a8;font-size:10px}
+.main{margin-left:248px;min-height:100vh}.topbar{height:70px;background:#ffffffd9;backdrop-filter:blur(14px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:10}
+.crumb{display:flex;align-items:center;gap:9px;color:#8993a6;font-size:12px}.crumb strong{color:#303a50;font-weight:600}.top-actions{display:flex;align-items:center;gap:11px}
+.searchbox{height:36px;width:245px;border:1px solid var(--line);border-radius:10px;background:#f9faff;display:flex;align-items:center;padding:0 10px;gap:8px;color:#929bb0}.searchbox input{border:0;outline:0;background:transparent;width:100%;font-size:12px;color:var(--ink)}
+.icon-btn{height:36px;width:36px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#68748b;display:grid;place-items:center}.top-avatar{width:31px;height:31px;border-radius:50%;background:#e8e4ff;color:#6558d9;display:grid;place-items:center;font-weight:700;font-size:11px}
+.content{max-width:1560px;margin:0 auto;padding:29px 34px 48px}.page{display:none;animation:fade .22s ease}.page.active{display:block}@keyframes fade{from{opacity:.55;transform:translateY(4px)}to{opacity:1;transform:none}}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:22px}.eyebrow{font-size:10px;letter-spacing:1.5px;color:var(--accent);font-weight:800;text-transform:uppercase;margin-bottom:7px}.page-head h1{margin:0;font-size:26px;letter-spacing:-.7px;font-weight:750}.page-head p{margin:6px 0 0;color:var(--muted);font-size:12px}
+.head-actions{display:flex;gap:9px;align-items:center}.btn{border:1px solid var(--line);border-radius:10px;padding:9px 13px;background:#fff;color:#59647b;font-size:11px;font-weight:650;display:inline-flex;align-items:center;gap:7px;transition:.18s}
+.btn:hover{border-color:#c9c5ff;color:var(--accent);transform:translateY(-1px)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 6px 14px #6658e833}.btn.primary:hover{background:#5548d5;color:#fff}.btn.soft{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.period-switch{display:flex;background:#eceef6;padding:4px;border-radius:11px;gap:3px}.period-switch button{border:0;background:transparent;color:#7c869b;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700}.period-switch button.active{background:#fff;color:var(--accent);box-shadow:0 2px 7px #26304a12}
+.demo-note{display:inline-flex;align-items:center;gap:6px;color:#9a7a45;background:#fff7e9;border:1px solid #f4e4c7;border-radius:7px;padding:5px 8px;font-size:10px;margin-left:10px;vertical-align:middle}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:17px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px}.stat-icon{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.stat-value{font-size:27px;font-weight:750;letter-spacing:-1px;margin:12px 0 4px}.stat-foot{display:flex;align-items:center;gap:6px;color:#8a94a8;font-size:10px}.up{color:var(--green);font-weight:700}.down{color:var(--red);font-weight:700}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:17px 19px 12px}.panel-head h3{font-size:13px;margin:0;font-weight:750}.panel-head p{margin:4px 0 0;color:#929bae;font-size:10px}.panel-link{border:0;background:transparent;color:var(--accent);font-size:10px;font-weight:700}
+.overview-grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(260px,.85fr);gap:15px;margin-bottom:15px}.chart-panel{min-height:260px}.chart-wrap{padding:3px 18px 15px}.chart-legend{display:flex;gap:17px;color:#8993a7;font-size:10px;padding:0 3px 9px}.legend-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}
+.chart-svg{width:100%;height:165px;display:block;overflow:visible}.chart-grid{stroke:#edf0f6;stroke-width:1}.chart-label{fill:#9ba4b5;font-size:9px}.chart-line{fill:none;stroke:#6b5ce8;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}.chart-area{fill:url(#areaFill)}.chart-line2{fill:none;stroke:#29a5c6;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.language-body{display:flex;align-items:center;gap:21px;padding:10px 20px 20px}.donut{width:125px;height:125px;border-radius:50%;background:conic-gradient(#685be8 0 35%,#2ca6c4 35% 57%,#f0ad58 57% 73%,#7bc8a9 73% 87%,#d9deea 87% 100%);position:relative;flex-shrink:0}
+.donut:after{content:"";position:absolute;inset:24px;background:#fff;border-radius:50%}.donut-center{position:absolute;z-index:1;inset:0;display:grid;place-content:center;text-align:center}.donut-center strong{font-size:21px}.donut-center small{font-size:9px;color:#939caf}
+.language-legend{flex:1;display:grid;gap:10px}.lang-row{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#758097}.lang-name{display:flex;align-items:center;gap:7px}.lang-dot{width:7px;height:7px;border-radius:50%}.lang-row strong{color:#344057;font-size:10px}
+.bottom-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.9fr);gap:15px}
+.repo-list{padding:0 18px 10px}.mini-repo{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #f0f2f7}.mini-repo:first-child{border-top:0}.rank{width:25px;color:#a1a9b8;font-size:12px;font-weight:750;text-align:center}.rank.top{color:var(--accent)}
+.repo-avatar{width:34px;height:34px;border-radius:10px;background:#eeeaff;color:#6658e8;display:grid;place-items:center;font-weight:800;font-size:10px;flex-shrink:0}.repo-info{min-width:0;flex:1}.repo-info strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.repo-info small{display:block;color:#929bae;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.repo-metrics{text-align:right;white-space:nowrap}.repo-metrics strong{font-size:11px;display:block}.repo-metrics small{font-size:9px;color:#8f99ac}
+.topic-cloud{padding:5px 18px 19px;display:flex;flex-wrap:wrap;gap:8px}.topic{border:1px solid #eceef6;background:#fafbfe;color:#66728a;border-radius:7px;padding:6px 9px;font-size:10px}.topic b{color:var(--accent);font-size:9px;margin-left:5px}
+.section-gap{margin-top:15px}.table-wrap{overflow:auto;padding:0 18px 15px}.data-table{width:100%;border-collapse:collapse;min-width:680px}.data-table th{text-align:left;color:#929bae;font-size:10px;font-weight:650;padding:11px 10px;border-bottom:1px solid var(--line);white-space:nowrap}.data-table td{padding:13px 10px;border-bottom:1px solid #f0f2f7;font-size:11px;color:#536078;white-space:nowrap}.data-table tr:last-child td{border-bottom:0}.data-table td strong{color:#263249}.trend-pill{display:inline-flex;align-items:center;gap:4px;background:#eaf7f1;color:#1b9a73;border-radius:6px;padding:4px 7px;font-size:9px;font-weight:700}.trend-pill.neutral{background:#f0f2f7;color:#7f899d}.rank-chip{font-weight:800;color:#5f54d8}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:17px 0 14px;flex-wrap:wrap}.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.filter-select{height:35px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#68748b;padding:0 10px;font-size:10px;outline:0}.filter-chip{height:34px;border:1px solid var(--line);background:#fff;color:#778198;padding:0 11px;border-radius:9px;font-size:10px}.filter-chip.active{background:var(--accent-soft);border-color:#e1ddff;color:var(--accent);font-weight:700}
+.result-count{font-size:10px;color:#929bae}.view-toggle{display:flex;background:#eef0f6;padding:3px;border-radius:8px}.view-toggle button{border:0;background:transparent;color:#929bae;width:28px;height:27px;border-radius:6px}.view-toggle button.active{background:#fff;color:var(--accent);box-shadow:0 2px 5px #25304a12}
+.repo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.repo-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px 17px;box-shadow:var(--shadow);transition:.18s;min-width:0}.repo-card:hover{transform:translateY(-2px);border-color:#d9d4ff;box-shadow:0 12px 28px #2d2a6710}
+.repo-card-head{display:flex;align-items:flex-start;gap:11px}.repo-card-head .repo-avatar{width:39px;height:39px;border-radius:11px}.repo-card-main{flex:1;min-width:0}.repo-card-main strong{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.repo-card-main small{display:block;color:#929bae;font-size:10px;margin-top:4px}.bookmark{border:0;background:transparent;color:#b2bac9;padding:3px}.bookmark.saved{color:#efad50}
+.repo-desc{height:37px;overflow:hidden;color:#737f95;font-size:10px;line-height:1.7;margin:13px 0 12px}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px}.tag{font-size:9px;color:#69758c;background:#f4f5fa;border-radius:5px;padding:4px 7px}.tag.ai{color:#6558d9;background:#f0eeff}
+.repo-card-foot{border-top:1px solid #f0f2f7;padding-top:11px;display:flex;align-items:center;justify-content:space-between;gap:10px}.repo-stats{display:flex;gap:13px;align-items:center;color:#78849a;font-size:10px}.repo-stats b{color:#38445b;font-weight:700}.repo-actions{display:flex;gap:6px}.mini-btn{border:1px solid var(--line);background:#fff;border-radius:7px;color:#68748b;padding:5px 8px;font-size:9px}.mini-btn:hover{color:var(--accent);border-color:#d6d1ff}.mini-btn.compare.active{background:var(--accent-soft);color:var(--accent);border-color:#dedaff}
+.rank-label{font-size:10px;color:#a0a9b9;font-weight:800;margin-right:6px}.rank-label span{color:var(--accent)}
+.compare-intro{background:linear-gradient(110deg,#24264d,#3d3a7b);border-radius:16px;padding:20px 22px;color:white;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;overflow:hidden;position:relative}.compare-intro:after{content:"";position:absolute;width:250px;height:250px;border:1px solid #ffffff1a;border-radius:50%;right:70px;top:-150px;box-shadow:0 0 0 28px #ffffff08,0 0 0 56px #ffffff06}
+.compare-intro h2{margin:0;font-size:16px}.compare-intro p{margin:5px 0 0;color:#c5c5e4;font-size:10px}.compare-kpis{display:flex;gap:26px;position:relative;z-index:1}.compare-kpis strong{display:block;font-size:21px}.compare-kpis small{font-size:9px;color:#c4c5e4}
+.period-cell{display:inline-flex;align-items:center;justify-content:center;min-width:35px;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:750}.period-cell.on{background:#efedff;color:#6458dc}.period-cell.off{color:#c1c7d3;background:#f7f8fb}.continuity{display:inline-flex;gap:3px}.continuity i{width:6px;height:6px;border-radius:50%;background:#d9deea}.continuity i.on{background:#6c5ee8}
+.library-empty{text-align:center;padding:50px 15px;color:#8c96a9}.library-empty .empty-icon{font-size:28px;margin-bottom:8px}.library-empty strong{display:block;color:#3b465d;font-size:13px;margin-bottom:5px}
+.log-status{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700}.log-status:before{content:"";width:6px;height:6px;border-radius:50%;background:#20aa7c}.log-status.running:before{background:#e7a34b}.log-status.failed:before{background:#d45b67}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.setting-card{padding:19px}.setting-card h3{margin:0;font-size:13px}.setting-card>p{margin:5px 0 16px;color:#929bae;font-size:10px}.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid #f0f2f7;gap:15px}.setting-row strong{font-size:11px;display:block}.setting-row small{font-size:9px;color:#929bae;display:block;margin-top:3px}.toggle{width:36px;height:20px;border:0;border-radius:20px;background:#d9deea;padding:2px;flex-shrink:0}.toggle:after{content:"";display:block;width:16px;height:16px;background:white;border-radius:50%;transition:.18s;box-shadow:0 1px 3px #0002}.toggle.on{background:var(--accent)}.toggle.on:after{transform:translateX(16px)}
+.field-label{display:block;color:#7c879b;font-size:10px;margin:12px 0 6px}.field-input{width:100%;height:36px;border:1px solid var(--line);border-radius:8px;padding:0 10px;outline:0;color:#39455c;background:#fbfcff;font-size:11px}.field-input:focus{border-color:#bdb6ff;box-shadow:0 0 0 3px #6a5ce815}
+.drawer-backdrop,.modal-backdrop{position:fixed;inset:0;background:#10172b66;z-index:40;opacity:0;pointer-events:none;transition:.2s}.drawer-backdrop.open,.modal-backdrop.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:min(500px,94vw);background:#fff;z-index:41;transform:translateX(100%);transition:.25s;box-shadow:-15px 0 45px #17203322;display:flex;flex-direction:column}.drawer.open{transform:translateX(0)}.drawer-head{padding:22px 23px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start}.drawer-head h2{margin:0;font-size:17px}.drawer-head p{margin:5px 0 0;color:#929bae;font-size:10px}.drawer-body{padding:20px 23px;overflow:auto}.detail-hero{display:flex;gap:13px;align-items:center;margin-bottom:17px}.detail-hero .repo-avatar{width:48px;height:48px;font-size:13px}.detail-hero strong{font-size:13px}.detail-hero small{display:block;color:#929bae;font-size:10px;margin-top:4px}.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:15px 0}.detail-stat{background:#f7f8fc;border-radius:10px;padding:12px}.detail-stat strong{display:block;font-size:17px}.detail-stat small{font-size:9px;color:#929bae}.detail-section{margin-top:20px}.detail-section h4{margin:0 0 9px;font-size:11px}.detail-section p{color:#68748b;font-size:11px;line-height:1.8;margin:0}.detail-list{display:grid;gap:8px}.detail-list div{display:flex;justify-content:space-between;font-size:10px;color:#78849a;padding:8px 0;border-bottom:1px solid #f0f2f7}.detail-list b{color:#3a465c}
+.modal{position:fixed;z-index:42;left:50%;top:50%;width:min(700px,92vw);max-height:82vh;overflow:auto;transform:translate(-50%,-46%) scale(.98);opacity:0;pointer-events:none;transition:.2s;background:#fff;border-radius:17px;box-shadow:0 25px 70px #10172b44}.modal.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}.modal-head{padding:18px 21px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.modal-head h3{margin:0;font-size:14px}.modal-body{padding:20px 22px}.toast{position:fixed;right:25px;bottom:25px;background:#202941;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 12px 30px #10172b33;font-size:11px;z-index:80;opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateY(0)}
+.compare-tray{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:#202941;color:white;padding:10px 13px 10px 17px;border-radius:12px;box-shadow:0 12px 32px #10172b33;display:flex;align-items:center;gap:15px;z-index:25;opacity:0;pointer-events:none;transition:.2s}.compare-tray.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}.compare-tray span{font-size:10px;color:#d3d8e5}.compare-tray strong{font-size:11px}.compare-tray button{border:0;border-radius:7px;background:#776bed;color:#fff;padding:7px 10px;font-size:10px;font-weight:700}
+.footer-note{color:#a1a9b8;font-size:9px;margin-top:17px;text-align:right}
+body.dark{--bg:#111827;--surface:#1c2638;--surface-2:#202b40;--ink:#e8edf7;--muted:#9aa7bd;--line:#2d394d;--shadow:0 8px 28px rgba(0,0,0,.15)}
+body.dark .topbar{background:#172235e8;border-color:#2d394d}body.dark .crumb strong,body.dark .stat-value,body.dark .panel-head h3,body.dark .repo-info strong,body.dark .repo-card-main strong,body.dark .repo-stats b,body.dark .data-table td strong,body.dark .lang-row strong,body.dark .setting-row strong{color:#e8edf7}
+body.dark .stat-card,body.dark .panel,body.dark .repo-card,body.dark .btn,body.dark .filter-select,body.dark .filter-chip,body.dark .icon-btn{background:var(--surface);border-color:var(--line);color:#c2cce0}
+body.dark .searchbox,body.dark .field-input{background:#202b40;border-color:#354158;color:#e8edf7}body.dark .searchbox input{color:#e8edf7}
+body.dark .period-switch,body.dark .view-toggle{background:#202b40}body.dark .period-switch button.active,body.dark .view-toggle button.active{background:#34415a;color:#b9b1ff}
+body.dark .mini-repo,body.dark .data-table td,body.dark .data-table th,body.dark .repo-card-foot,body.dark .setting-row{border-color:#2d394d}
+body.dark .repo-desc,body.dark .repo-info small,body.dark .repo-card-main small,body.dark .panel-head p,body.dark .page-head p,body.dark .stat-foot,body.dark .repo-stats,body.dark .repo-metrics small,body.dark .data-table td,body.dark .setting-row small{color:#9aa7bd}
+body.dark .topic,body.dark .tag,body.dark .detail-stat{background:#27344a;border-color:#354158;color:#b8c4d9}
+body.dark .donut:after{background:#1c2638}body.dark .language-legend .lang-row{color:#a8b4c9}
+body.dark .drawer,body.dark .modal{background:#1c2638;color:#e8edf7}body.dark .drawer-head,body.dark .modal-head{border-color:#2d394d}body.dark .detail-stat{background:#27344a}body.dark .detail-list div{border-color:#2d394d;color:#9aa7bd}body.dark .detail-list b{color:#e8edf7}
+
+.snapshot-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-top:12px;box-shadow:var(--shadow)}
+.snapshot-meta{display:flex;flex-direction:column;gap:2px;min-width:0}.snapshot-label{font-size:9px;color:var(--accent);font-weight:800;letter-spacing:.7px}.snapshot-meta strong{font-size:11px;color:#354057}.snapshot-meta small{font-size:9px;color:#929bae}.snapshot-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.live-collection-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(105deg,#f5f3ff,#f8fbff);border:1px solid #e5e1ff;border-radius:13px;padding:13px 16px;margin-bottom:15px}
+.live-source{display:flex;align-items:center;gap:11px;min-width:0}.live-source-icon{width:34px;height:34px;border-radius:10px;background:#e8e4ff;color:#6658e8;display:grid;place-items:center;font-size:18px;font-weight:800}.live-source strong{display:block;font-size:11px;color:#39445c}.live-source small{display:block;font-size:9px;color:#8792a8;margin-top:3px}
+.live-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.sync-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #f0dfc4;background:#fff8ed;color:#a77838;border-radius:20px;padding:6px 9px;font-size:9px;font-weight:700}.sync-pill i{width:6px;height:6px;border-radius:50%;background:#dba24e}.interval-label{font-size:9px;color:#8792a8}
+.stars-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px 16px;border-top:1px solid var(--line);font-size:10px;color:#929bae}.stars-pagination>div{display:flex;align-items:center;gap:7px}.stars-pagination button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.api-limit-note{margin-top:12px;padding:12px 14px;background:#fff8ed;border:1px solid #f2e5ce;border-radius:10px;color:#8d754f;font-size:10px;line-height:1.7}.api-limit-note strong{color:#765c31}.api-limit-note a{color:#6658e8;font-weight:700;margin-left:5px}
+body.dark .snapshot-bar{background:var(--surface);border-color:var(--line)}body.dark .snapshot-meta strong{color:#e8edf7}
+body.dark .live-collection-strip{background:#202b40;border-color:#354158}body.dark .live-source strong{color:#e8edf7}body.dark .sync-pill{background:#342f26;border-color:#5b4a31;color:#e5bf80}
+body.dark .api-limit-note{background:#342f26;border-color:#5b4a31;color:#d5bd91}body.dark .api-limit-note strong{color:#f0d6a5}
+body.dark .stars-pagination{border-color:var(--line)}
+@media(max-width:760px){.snapshot-bar,.live-collection-strip{align-items:flex-start;flex-direction:column}.snapshot-controls{width:100%}.snapshot-controls select{flex:1;min-width:0}.live-controls{width:100%}.stars-pagination{align-items:flex-start;flex-direction:column}.stars-pagination>div{width:100%;flex-wrap:wrap}}
+
+
+.score-profile-control{display:flex;align-items:center;gap:8px}.score-profile-control label{font-size:10px;color:#8b96aa;white-space:nowrap}
+.score-method-panel{margin-bottom:14px;padding-bottom:14px}.score-weight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;padding:0 18px 13px}
+.weight-item{min-width:0}.weight-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;color:#657189}.weight-head strong{font-size:15px;color:#354057}.weight-track{height:7px;border-radius:10px;background:#eef0f6;overflow:hidden;margin-top:7px}.weight-track i{display:block;height:100%;border-radius:10px}
+.score-formula{margin:0 18px 8px;padding:10px 12px;border-radius:9px;background:#f5f4ff;color:#5d56a8;font-size:10px}.score-formula strong{color:#5148c8}.score-window-note{display:flex;flex-wrap:wrap;gap:7px;padding:0 18px}.score-window-note span{padding:5px 8px;border:1px solid var(--line);border-radius:7px;color:#778198;font-size:9px;background:var(--surface-2)}
+.score-caveat{margin:10px 18px 0;color:#929bae;font-size:9px;line-height:1.6}
+.recommend-table{min-width:1120px}.recommend-project strong{display:block;font-size:10px}.recommend-project small{display:block;color:#929bae;font-size:9px;margin-top:3px}.recommend-score{display:flex;flex-direction:column;align-items:flex-start;gap:2px}.recommend-score strong{font-size:17px;color:#6255d7}.recommend-score small{font-size:9px;color:#159b72}.metric-sub{display:block;color:#929bae;font-size:9px;margin-top:3px}.reason-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.reason-tags span{background:#f1f0ff;color:#6a60bf;border-radius:5px;padding:3px 5px;font-size:8px;white-space:nowrap}.recommend-actions{display:flex;flex-wrap:wrap;gap:5px}.recommend-actions .mini-btn{white-space:nowrap}.mini-btn.research-action{background:#f0f8f4;color:#238b66}.mini-btn:disabled{opacity:.55;cursor:default}.empty-cell{text-align:center;padding:35px;color:#929bae}
+.research-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.research-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);min-width:0}.research-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.research-card-head strong{display:block;font-size:12px}.research-card-head small{display:block;color:#929bae;font-size:9px;margin-top:4px}.research-score{padding:5px 8px;background:#f1f0ff;color:#6255d7;border-radius:7px;font-size:10px;font-weight:800;white-space:nowrap}.research-desc{font-size:10px;color:#78849a;line-height:1.65;min-height:32px;margin:11px 0}.research-meta{display:flex;flex-wrap:wrap;gap:7px 12px;color:#8993a7;font-size:9px;padding:9px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.research-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.research-fields label,.research-note-label{display:grid;gap:5px;font-size:9px;color:#8792a8}.research-fields .filter-select{width:100%;height:32px}.research-note-label{margin-top:11px}.research-note-label textarea,.research-note-label input{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:8px 9px;color:var(--ink);font:10px/1.5 inherit;outline:0;resize:vertical}.research-note-label input{height:34px}.research-note-label textarea:focus,.research-note-label input:focus{border-color:#bdb6ff;box-shadow:0 0 0 3px #6a5ce815}.research-card-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:12px}.research-card-actions .btn{font-size:9px;padding:7px 10px}.remove-research{margin-left:auto;color:#bd6570}.research-guidance{display:flex;flex-direction:column;gap:5px;margin-top:14px;padding:13px 15px;border:1px solid #e4e1ff;background:#f8f7ff;border-radius:10px;color:#7270a7;font-size:10px;line-height:1.7}.research-guidance strong{color:#554cb4}.research-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:9px;padding:35px;color:#929bae}.research-empty strong{color:#59657a;font-size:12px}.research-empty span{font-size:10px}
+body.dark .weight-head strong{color:#e8edf7}body.dark .weight-track{background:#344158}body.dark .score-formula{background:#2b2c4b;color:#c8c1ff}body.dark .score-window-note span{background:#202b40;color:#a8b4c9}
+body.dark .reason-tags span{background:#302d50;color:#c8c1ff}body.dark .research-card{background:var(--surface);border-color:var(--line)}body.dark .research-card-head strong{color:#e8edf7}body.dark .research-score{background:#302d50;color:#c8c1ff}body.dark .research-note-label textarea,body.dark .research-note-label input{background:#202b40;border-color:#354158;color:#e8edf7}body.dark .research-guidance{background:#252844;border-color:#39365f;color:#c4bff1}
+@media(max-width:1100px){.score-weight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.research-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.score-profile-control{width:100%;justify-content:space-between}.score-profile-control select{flex:1}.score-weight-grid{grid-template-columns:1fr 1fr}.research-fields{grid-template-columns:1fr}}
+
+@media(max-width:1100px){.sidebar{width:218px}.main{margin-left:218px}.content{padding:24px}.topbar{padding:0 24px}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.sidebar{width:64px;padding:18px 8px}.brand{padding:0 4px 22px}.brand>div:last-child,.workspace,.nav-label,.nav-item .nav-text,.nav-item .nav-count,.sidebar-status,.profile>div:last-child{display:none}.brand-mark{width:40px;height:40px}.nav-item{justify-content:center;padding:11px 0}.nav-item .ico{width:20px}.profile{justify-content:center;padding:15px 0 0}.main{margin-left:64px}.topbar{padding:0 14px}.crumb{display:none}.searchbox{width:min(200px,45vw)}.content{padding:20px 14px 35px}.page-head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;flex-wrap:wrap}.overview-grid,.bottom-grid,.settings-grid{grid-template-columns:1fr}.repo-grid{grid-template-columns:1fr}.compare-intro{align-items:flex-start;flex-direction:column;gap:17px}.compare-kpis{gap:20px}.stats-grid{gap:9px}.stat-card{padding:13px}.stat-value{font-size:23px}.language-body{justify-content:center}.top-actions{gap:6px}.icon-btn{width:33px;height:33px}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17.5 8.2 13l3 2.2L19.8 6" stroke="white" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.5 6h4.3v4.3" stroke="white" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><strong>GitScout</strong><small>开源项目发现与研究</small></div>
+  </div>
+  <div class="workspace"><div class="workspace-icon">GS</div><div><strong>个人研究空间</strong><small>Personal workspace</small></div><span style="margin-left:auto;color:#8190a7">⌄</span></div>
+  <div class="nav-label">发现 · DISCOVER</div>
+  <button class="nav-item active" data-page="overview"><span class="ico">◫</span><span class="nav-text">趋势总览</span></button>
+  <button class="nav-item" data-page="trending" data-period="daily"><span class="ico">▤</span><span class="nav-text">周期榜单</span><span class="nav-count">D/W/M</span></button>
+  <button class="nav-item" data-page="stars"><span class="ico">★</span><span class="nav-text">Stars 总榜</span><span class="nav-count">ALL</span></button>
+  <button class="nav-item" data-page="recommend"><span class="ico">✦</span><span class="nav-text">智能推荐</span><span class="nav-count">AI</span></button>
+  <button class="nav-item" data-page="compare"><span class="ico">⇄</span><span class="nav-text">周期趋势对比</span></button>
+  <div class="nav-label" style="margin-top:22px">资产 · LIBRARY</div>
+  <button class="nav-item" data-page="library"><span class="ico">♥</span><span class="nav-text">感兴趣项目</span><span class="nav-count" id="savedCount">02</span></button>
+  <button class="nav-item" data-page="research"><span class="ico">⌕</span><span class="nav-text">项目研究</span><span class="nav-count" id="researchCount">02</span></button>
+  <div class="nav-label" style="margin-top:22px">系统 · SYSTEM</div>
+  <button class="nav-item" data-page="logs"><span class="ico">◷</span><span class="nav-text">采集记录</span></button>
+  <button class="nav-item" data-page="settings"><span class="ico">⚙</span><span class="nav-text">采集设置</span></button>
+  <div class="sidebar-spacer"></div>
+  <div class="sidebar-status"><div class="status-row"><i class="live-dot"></i>采集服务运行正常</div><small>下次自动采集 · 23:00</small></div>
+  <div class="profile"><div class="avatar">JT</div><div><strong>Researcher</strong><small>个人工作台</small></div><span style="margin-left:auto;color:#8290a5">···</span></div>
+</aside>
+<div class="main">
+<header class="topbar">
+  <div class="crumb"><span>GitScout</span><span>›</span><strong id="crumbTitle">趋势总览</strong></div>
+  <div class="top-actions">
+    <div class="searchbox"><span>⌕</span><input id="globalSearch" placeholder="搜索项目、作者或关键词..." /></div>
+    <button class="icon-btn" id="themeToggle" title="切换主题">◐</button>
+    <button class="icon-btn" id="helpBtn" title="设计说明">?</button>
+    <div class="top-avatar">JT</div>
+  </div>
+</header>
+<main class="content">
+<section class="page active" id="page-overview">
+  <div class="page-head">
+    <div><div class="eyebrow">OPEN SOURCE RADAR · 2026</div><h1>GitHub 趋势雷达 <span class="demo-note">● UI 演示数据</span></h1><p>从每日脉冲到月度趋势，持续发现值得关注的开源项目。</p></div>
+    <div class="head-actions"><span style="font-size:10px;color:#929bae;margin-right:3px">最近更新 22:15</span><button class="btn" id="exportBtn">⇩ 导出数据</button><button class="btn primary" id="collectBtn">↻ 立即采集</button></div>
+  </div>
+  <div class="period-switch" style="width:max-content;margin-bottom:15px"><button class="active" data-period="daily">日趋势</button><button data-period="weekly">周趋势</button><button data-period="monthly">月趋势</button></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-top"><span>本周期收录项目</span><span class="stat-icon">▧</span></div><div class="stat-value" id="statCollected">128</div><div class="stat-foot"><span class="up">↑ 18.5%</span><span>较上一周期</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>新晋上榜项目</span><span class="stat-icon" style="background:#e9f7f2;color:#159b72">✦</span></div><div class="stat-value" id="statNew">36</div><div class="stat-foot"><span class="up">↑ 12 个</span><span>首次进入榜单</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>跨周期热门项目</span><span class="stat-icon" style="background:#fff3e7;color:#d88735">⇄</span></div><div class="stat-value">12</div><div class="stat-foot"><span class="up">↑ 4 个</span><span>日 / 周 / 月重复上榜</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>感兴趣项目</span><span class="stat-icon" style="background:#eaf4ff;color:#4387cf">☆</span></div><div class="stat-value" id="statSaved">02</div><div class="stat-foot"><span>持续关注中</span><span>·</span><span>可进入感兴趣项目</span></div></div>
+  </div>
+  <div class="overview-grid">
+    <div class="panel chart-panel">
+      <div class="panel-head"><div><h3>趋势热度走势</h3><p id="chartSubtitle">最近 7 天 · 上榜项目与新增 Stars 变化</p></div><button class="panel-link" data-page="compare">查看周期对比 →</button></div>
+      <div class="chart-wrap">
+        <div class="chart-legend"><span><i class="legend-dot" style="background:#6b5ce8"></i>项目收录量</span><span><i class="legend-dot" style="background:#29a5c6"></i>Stars 增量指数</span></div>
+        <svg class="chart-svg" viewBox="0 0 680 165" preserveAspectRatio="none">
+          <defs><linearGradient id="areaFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#6b5ce8" stop-opacity=".19"/><stop offset="100%" stop-color="#6b5ce8" stop-opacity="0"/></linearGradient></defs>
+          <line class="chart-grid" x1="35" y1="18" x2="665" y2="18"/><line class="chart-grid" x1="35" y1="57" x2="665" y2="57"/><line class="chart-grid" x1="35" y1="96" x2="665" y2="96"/><line class="chart-grid" x1="35" y1="135" x2="665" y2="135"/>
+          <path class="chart-area" d="M35 108 C70 101 79 77 123 84 S181 112 214 81 S278 58 302 72 S359 42 393 55 S453 78 484 43 S540 34 574 48 S625 24 665 29 L665 135 L35 135Z"/>
+          <path class="chart-line" d="M35 108 C70 101 79 77 123 84 S181 112 214 81 S278 58 302 72 S359 42 393 55 S453 78 484 43 S540 34 574 48 S625 24 665 29"/>
+          <path class="chart-line2" d="M35 120 C76 115 87 105 123 101 S178 92 214 104 S268 78 302 88 S359 74 393 82 S452 62 484 72 S540 54 574 65 S626 46 665 52"/>
+          <g class="chart-label"><text x="35" y="155">11/17</text><text x="135" y="155">11/18</text><text x="235" y="155">11/19</text><text x="335" y="155">11/20</text><text x="435" y="155">11/21</text><text x="535" y="155">11/22</text><text x="635" y="155">11/23</text></g>
+        </svg>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h3>语言分布</h3><p>当前周期项目技术栈占比</p></div><button class="panel-link" data-page="trending">查看榜单 →</button></div>
+      <div class="language-body"><div class="donut"><div class="donut-center"><strong>128</strong><small>PROJECTS</small></div></div><div class="language-legend">
+        <div class="lang-row"><span class="lang-name"><i class="lang-dot" style="background:#685be8"></i>Python</span><strong>35%</strong></div>
+        <div class="lang-row"><span class="lang-name"><i class="lang-dot" style="background:#2ca6c4"></i>TypeScript</span><strong>22%</strong></div>
+        <div class="lang-row"><span class="lang-name"><i class="lang-dot" style="background:#f0ad58"></i>JavaScript</span><strong>16%</strong></div>
+        <div class="lang-row"><span class="lang-name"><i class="lang-dot" style="background:#7bc8a9"></i>Go</span><strong>14%</strong></div>
+        <div class="lang-row"><span class="lang-name"><i class="lang-dot" style="background:#d9deea"></i>Other</span><strong>13%</strong></div>
+      </div></div>
+    </div>
+  </div>
+  <div class="bottom-grid">
+    <div class="panel">
+      <div class="panel-head"><div><h3>跨周期热度项目</h3><p>同时出现在多个周期榜单中的项目</p></div><button class="panel-link" data-page="compare">全部对比 →</button></div>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>项目</th><th>日榜</th><th>周榜</th><th>月榜</th><th>趋势</th></tr></thead><tbody id="crossPeriodRows"></tbody></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h3>热门主题</h3><p>当前榜单中高频出现的技术方向</p></div><span style="font-size:9px;color:#9aa4b6">TOP TOPICS</span></div>
+      <div class="topic-cloud"><span class="topic">AI Agent <b>28</b></span><span class="topic">LLM <b>24</b></span><span class="topic">Developer Tools <b>19</b></span><span class="topic">RAG <b>16</b></span><span class="topic">Automation <b>14</b></span><span class="topic">Web Framework <b>11</b></span><span class="topic">Multimodal <b>9</b></span><span class="topic">Local-first <b>7</b></span></div>
+      <div style="padding:0 18px 17px"><button class="btn soft" style="width:100%;justify-content:center" data-page="trending">按主题发现项目 →</button></div>
+    </div>
+  </div>
+  <div class="footer-note">演示环境 · 榜单数据为模拟数据，非 GitHub 实时采集结果</div>
+</section>
+
+<section class="page" id="page-trending">
+  <div class="page-head"><div><div class="eyebrow">TRENDING COLLECTION</div><h1 id="trendingTitle">日榜 · Daily Trending <span class="demo-note">● UI 演示数据</span></h1><p>按周期采集 GitHub Trending 项目，保留排名、Stars 增量与历史变化。</p></div><div class="head-actions"><button class="btn" id="trendExport">⇩ 导出 CSV</button><button class="btn primary" id="trendCollect">↻ 采集当前周期</button></div></div>
+  <div class="period-switch" style="width:max-content"><button class="active" data-period="daily">日榜</button><button data-period="weekly">周榜</button><button data-period="monthly">月榜</button></div>
+  <div class="snapshot-bar">
+    <div class="snapshot-meta">
+      <span class="snapshot-label">历史快照</span>
+      <strong id="snapshotSummary">2026-11-23 22:00 · 日榜最新采集</strong>
+      <small id="snapshotDetail">已保存 128 个项目 · 选择日期即可查看当次原始排名</small>
+    </div>
+    <div class="snapshot-controls">
+      <select class="filter-select" id="snapshotPicker" aria-label="选择历史快照"></select>
+      <button class="btn" id="latestSnapshot">回到最新</button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="filter-row"><select class="filter-select" id="languageFilter"><option value="all">全部语言</option><option>Python</option><option>TypeScript</option><option>JavaScript</option><option>Go</option><option>Rust</option></select><select class="filter-select" id="topicFilter"><option value="all">全部主题</option><option>AI Agent</option><option>Developer Tools</option><option>LLM</option><option>Automation</option></select><select class="filter-select" id="sortFilter"><option value="rank">按当前排名</option><option value="stars">按 Stars 总量</option><option value="growth">按增量热度</option></select><button class="filter-chip active" data-category="all">全部项目</button><button class="filter-chip" data-category="new">新晋项目</button><button class="filter-chip" data-category="rising">快速上升</button></div>
+    <div style="display:flex;align-items:center;gap:10px"><span class="result-count" id="resultCount">显示 8 个项目</span><div class="view-toggle"><button class="active" data-view="cards">▦</button><button data-view="list">☷</button></div></div>
+  </div>
+  <div class="repo-grid" id="repoGrid"></div>
+  <div class="footer-note">项目名称与描述用于演示 UI；星标数、排名及增量均为模拟数据</div>
+</section>
+
+<section class="page" id="page-stars">
+  <div class="page-head"><div><div class="eyebrow">LIVE GITHUB STARS RANKING</div><h1>Stars 总榜 <span class="demo-note">● UI 演示数据</span></h1><p>独立实时检索 GitHub 公共仓库，按当前累计 Stars 从高到低排序，不依赖日 / 周 / 月 Trending 采集结果。</p></div><div class="head-actions"><button class="btn" id="starsExport">⇩ 导出当前结果</button><button class="btn primary" id="starsRefresh">↻ 立即采集</button></div></div>
+  <div class="live-collection-strip">
+    <div class="live-source">
+      <span class="live-source-icon">↻</span>
+      <div><strong>GitHub Repository Search API</strong><small>sort=stars · order=desc · 实时获取仓库当前 Stars</small></div>
+    </div>
+    <div class="live-controls">
+      <span class="sync-pill" id="starsSyncStatus"><i></i>尚未连接 GitHub API</span>
+      <label class="interval-label" for="starsRefreshInterval">自动刷新</label>
+      <select class="filter-select" id="starsRefreshInterval"><option value="manual">手动</option><option value="15">每 15 分钟</option><option value="30" selected>每 30 分钟</option><option value="60">每小时</option><option value="360">每 6 小时</option></select>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-top"><span>本次检索结果</span><span class="stat-icon">▧</span></div><div class="stat-value">Top 1,000</div><div class="stat-foot"><span>按当前 Stars 排序</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>当前榜首 Stars</span><span class="stat-icon">★</span></div><div class="stat-value">108k</div><div class="stat-foot"><span>演示项目数据</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>最近同步时间</span><span class="stat-icon" style="background:#e8f7f1;color:#159b72">◷</span></div><div class="stat-value" style="font-size:21px" id="starsLastSync">未同步</div><div class="stat-foot"><span>接入 API 后显示真实时间</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>数据来源</span><span class="stat-icon" style="background:#eaf4ff;color:#4387cf">◎</span></div><div class="stat-value" style="font-size:19px">GitHub API</div><div class="stat-foot"><span>公共仓库 · 实时查询</span></div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h3>全站 Stars 排名</h3><p>按 GitHub 当前 Stars 总数降序；每次采集刷新项目 Stars 与排名</p></div><span class="result-count" id="starsResultCount">显示 8 个演示项目</span></div>
+    <div class="toolbar" style="padding:0 18px;margin:4px 0 12px">
+      <div class="filter-row">
+        <select class="filter-select" id="starsLanguage"><option value="all">全部语言</option><option>Python</option><option>TypeScript</option><option>JavaScript</option><option>Rust</option><option>Zig</option></select>
+        <select class="filter-select" id="starsTopic"><option value="all">全部主题</option><option>AI Agent</option><option>Developer Tools</option><option>LLM</option><option>Automation</option><option>Python</option></select>
+        <select class="filter-select" id="starsSort"><option value="stars-desc">Stars 从高到低</option><option value="stars-asc">Stars 从低到高</option><option value="forks">按 Forks 排序</option><option value="growth">按近期 Stars 增量</option></select>
+        <button class="filter-chip active" data-stars-scope="all">GitHub 检索结果</button><button class="filter-chip" data-stars-scope="trending">曾上过趋势榜</button><button class="filter-chip" data-stars-scope="cross">跨周期上榜</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table class="data-table" style="min-width:920px"><thead><tr><th style="width:44px">排名</th><th style="min-width:230px">项目</th><th>当前 Stars</th><th>Forks</th><th>主要语言</th><th>日榜</th><th>周榜</th><th>月榜</th><th>操作</th></tr></thead><tbody id="starsRows"></tbody></table></div>
+    <div class="stars-pagination">
+      <span id="starsPageInfo">第 1 页 · 共 1 页</span>
+      <div><select class="filter-select" id="starsPageSize"><option value="20">每页 20 条</option><option value="50" selected>每页 50 条</option><option value="100">每页 100 条</option></select><button class="btn" id="starsPrev" disabled>上一页</button><button class="btn" id="starsNext" disabled>下一页</button></div>
+    </div>
+  </div>
+  <div class="api-limit-note"><strong>采集范围说明：</strong>正式版本将独立调用 GitHub 仓库搜索接口。GitHub Search API 单次查询最多返回 1,000 条结果、每页最多 100 条；若要覆盖更深层的全站 Stars 排名，需要按 Stars 区间等条件分片采集，再合并去重。<a href="https://docs.github.com/en/rest/search/search" target="_blank" rel="noopener">GitHub 官方 API 文档 ↗</a></div>
+  <div class="footer-note">当前为交互原型，展示数据为模拟数据；实时采集按钮、自动刷新策略将在后端接入 GitHub API 后执行真实请求。</div>
+</section>
+
+
+<section class="page" id="page-recommend">
+  <div class="page-head">
+    <div><div class="eyebrow">PROJECT DISCOVERY · SCORING ENGINE</div><h1>智能推荐 <span class="demo-note">● UI 演示数据</span></h1><p>综合 Stars 总榜与日 / 周 / 月上榜表现，计算项目推荐分数，帮助发现值得关注和深入研究的开源项目。</p></div>
+    <div class="head-actions"><button class="btn" id="recommendRefresh">↻ 重新计算</button><button class="btn primary" id="recommendExport">⇩ 导出推荐</button></div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-top"><span>候选项目</span><span class="stat-icon">▧</span></div><div class="stat-value" id="recommendCandidateCount">8</div><div class="stat-foot"><span>Stars 总榜与周期榜去重合并</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>优先关注</span><span class="stat-icon" style="background:#e9f7f2;color:#159b72">✦</span></div><div class="stat-value" id="recommendPriorityCount">2</div><div class="stat-foot"><span>综合得分 ≥ 75</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>已标记感兴趣</span><span class="stat-icon" style="background:#fff0f2;color:#d45b67">♥</span></div><div class="stat-value" id="recommendInterestedCount">2</div><div class="stat-foot"><span>可进入感兴趣项目管理</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>平均推荐分</span><span class="stat-icon" style="background:#eaf4ff;color:#4387cf">◎</span></div><div class="stat-value" id="recommendAverageScore">0</div><div class="stat-foot"><span>当前候选池综合得分</span></div></div>
+  </div>
+  <div class="panel score-method-panel">
+    <div class="panel-head">
+      <div><h3>推荐评分模型</h3><p>100 分制 · 权重可切换 · 评分结果可解释</p></div>
+      <div class="score-profile-control"><label for="recommendProfile">权重方案</label><select class="filter-select" id="recommendProfile"><option value="balanced">综合平衡（默认）</option><option value="trend">趋势发现优先</option><option value="longterm">长期价值优先</option></select></div>
+    </div>
+    <div class="score-weight-grid" id="scoreWeights"></div>
+    <div class="score-formula"><strong>综合推荐分</strong> = Stars × 权重 + 日榜 × 权重 + 周榜 × 权重 + 月榜 × 权重</div>
+    <div class="score-window-note"><span>Stars：候选项目当前 Stars 排名百分位</span><span>日榜：最近 30 次成功快照</span><span>周榜：最近 12 次成功快照</span><span>月榜：最近 12 次成功快照</span></div>
+    <div class="score-caveat">上榜分 = 上榜快照次数 ÷ 该窗口成功采集次数 × 100。没有成功采集的周期不计为未上榜；样本不足时标记“数据不足”，不将缺失值按 0 分处理。</div>
+  </div>
+  <div class="toolbar">
+    <div class="filter-row">
+      <select class="filter-select" id="recommendSort"><option value="score">综合推荐分</option><option value="stars">Stars 表现</option><option value="daily">日榜表现</option><option value="weekly">周榜表现</option><option value="monthly">月榜表现</option></select>
+      <select class="filter-select" id="recommendLanguage"><option value="all">全部语言</option><option>Python</option><option>TypeScript</option><option>JavaScript</option><option>Rust</option><option>Zig</option></select>
+      <button class="filter-chip active" data-recommend-scope="all">全部推荐</button><button class="filter-chip" data-recommend-scope="priority">优先关注</button><button class="filter-chip" data-recommend-scope="emerging">新兴潜力</button><button class="filter-chip" data-recommend-scope="stable">长期稳定</button>
+    </div>
+    <span class="result-count" id="recommendResultCount">显示 8 个项目</span>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h3>推荐项目榜单</h3><p>分数越高代表综合热度信号越强，不代表项目质量或安全性评级</p></div><span class="result-count">排序：综合推荐分</span></div>
+    <div class="table-wrap"><table class="data-table recommend-table"><thead><tr><th>排名</th><th style="min-width:220px">项目</th><th>推荐分</th><th>Stars 表现</th><th>日榜上榜</th><th>周榜上榜</th><th>月榜上榜</th><th style="min-width:150px">推荐理由</th><th style="min-width:210px">操作</th></tr></thead><tbody id="recommendRows"></tbody></table></div>
+  </div>
+  <div class="footer-note">推荐结果为发现线索；项目质量仍需结合代码、维护活跃度、许可证、安全性和实际需求进行人工研究。当前为模拟数据。</div>
+</section>
+
+<section class="page" id="page-compare">
+  <div class="page-head"><div><div class="eyebrow">CROSS-PERIOD ANALYSIS</div><h1>周期趋势对比 <span class="demo-note">● UI 演示数据</span></h1><p>把日榜、周榜、月榜放在同一视图，识别短期爆发与长期稳定项目。</p></div><div class="head-actions"><button class="btn" id="compareExport">⇩ 导出对比</button></div></div>
+  <div class="compare-intro"><div><h2>趋势交集 · Cross-period Signals</h2><p>观察项目在不同时间窗口中的排名变化与持续热度。</p></div><div class="compare-kpis"><div><strong>12</strong><small>三榜交集</small></div><div><strong>28</strong><small>双榜重合</small></div><div><strong>06</strong><small>持续上升</small></div></div></div>
+  <div class="panel"><div class="panel-head"><div><h3>项目周期排名矩阵</h3><p>排名越靠前，数值越小；— 表示未进入该周期榜单</p></div><div class="filter-row"><select class="filter-select" id="compareFilter"><option value="all">全部项目</option><option value="all3">三榜均上榜</option><option value="rising">排名持续上升</option></select></div></div>
+    <div class="table-wrap"><table class="data-table" style="min-width:800px"><thead><tr><th style="width:28%">项目</th><th>日榜排名</th><th>周榜排名</th><th>月榜排名</th><th>连续上榜</th><th>趋势判断</th><th>操作</th></tr></thead><tbody id="compareRows"></tbody></table></div>
+  </div>
+  <div class="overview-grid section-gap">
+    <div class="panel"><div class="panel-head"><div><h3>排名迁移示意</h3><p>示例：部分项目从日榜向周榜、月榜沉淀</p></div></div><div style="padding:10px 20px 20px"><svg viewBox="0 0 620 160" width="100%" height="160" preserveAspectRatio="none"><g stroke="#eceef5" stroke-width="1"><line x1="55" y1="20" x2="585" y2="20"/><line x1="55" y1="70" x2="585" y2="70"/><line x1="55" y1="120" x2="585" y2="120"/></g><g fill="#929bae" font-size="10"><text x="8" y="23">日榜</text><text x="8" y="73">周榜</text><text x="8" y="123">月榜</text></g><g fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M90 20 C170 20 180 70 260 70 S380 120 500 120" stroke="#6658e8"/><path d="M90 20 C180 20 190 70 280 70 S410 70 500 70" stroke="#2ca6c4"/><path d="M90 20 C190 20 190 120 280 120 S410 120 500 120" stroke="#e4a04c"/></g><g fill="#6658e8"><circle cx="90" cy="20" r="4"/><circle cx="260" cy="70" r="4"/><circle cx="500" cy="120" r="4"/></g><g fill="#2ca6c4"><circle cx="90" cy="20" r="4"/><circle cx="280" cy="70" r="4"/><circle cx="500" cy="70" r="4"/></g><g fill="#e4a04c"><circle cx="90" cy="20" r="4"/><circle cx="280" cy="120" r="4"/><circle cx="500" cy="120" r="4"/></g><g fill="#929bae" font-size="9"><text x="72" y="150">首次发现</text><text x="245" y="150">持续热度</text><text x="480" y="150">长期沉淀</text></g></svg></div></div>
+    <div class="panel"><div class="panel-head"><div><h3>如何解读周期信号</h3><p>辅助研究判断，不直接等同于项目质量</p></div></div><div style="padding:0 19px 17px;display:grid;gap:12px"><div style="display:flex;gap:10px"><span class="stat-icon">⚡</span><div><strong style="font-size:11px">日榜突增</strong><p style="margin:3px 0;color:#8c96a9;font-size:10px">关注新发布、版本更新或社交传播带来的短期爆发。</p></div></div><div style="display:flex;gap:10px"><span class="stat-icon" style="background:#e8f7f1;color:#159b72">↗</span><div><strong style="font-size:11px">周榜持续</strong><p style="margin:3px 0;color:#8c96a9;font-size:10px">短期关注转化为持续使用或开发者讨论。</p></div></div><div style="display:flex;gap:10px"><span class="stat-icon" style="background:#fff3e7;color:#d88735">◎</span><div><strong style="font-size:11px">月榜沉淀</strong><p style="margin:3px 0;color:#8c96a9;font-size:10px">可能具备较稳定的关注度，适合进入长期研究清单。</p></div></div></div></div>
+  </div>
+</section>
+
+<section class="page" id="page-library">
+  <div class="page-head"><div><div class="eyebrow">SAVED PROJECTS</div><h1>感兴趣项目</h1><p>集中管理已标记感兴趣的仓库；确认研究价值后，可进一步加入项目研究。</p></div><div class="head-actions"><button class="btn" id="libraryExport">⇩ 导出感兴趣项目</button></div></div>
+  <div class="toolbar"><div class="filter-row"><button class="filter-chip active" data-library-filter="all">全部感兴趣</button><button class="filter-chip" data-library-filter="notResearch">尚未加入研究</button><button class="filter-chip" data-library-filter="inResearch">已加入研究</button></div><span class="result-count" id="libraryCount">已标记感兴趣 2 个项目</span></div>
+  <div class="repo-grid" id="libraryGrid"></div>
+</section>
+
+
+<section class="page" id="page-research">
+  <div class="page-head">
+    <div><div class="eyebrow">PROJECT RESEARCH WORKSPACE</div><h1>项目研究 <span class="demo-note">● UI 演示数据</span></h1><p>把发现阶段的项目转入研究工作区，持续记录研究目标、核心功能、技术架构、部署体验与结论。</p></div>
+    <div class="head-actions"><button class="btn" id="researchExport">⇩ 导出研究清单</button><button class="btn primary" data-page="recommend">＋ 发现更多项目</button></div>
+  </div>
+  <div class="stats-grid research-stats">
+    <div class="stat-card"><div class="stat-top"><span>研究项目总数</span><span class="stat-icon">▧</span></div><div class="stat-value" id="researchTotal">2</div><div class="stat-foot"><span>已加入研究工作区</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>待研究</span><span class="stat-icon" style="background:#fff4e8;color:#d88735">◷</span></div><div class="stat-value" id="researchTodo">1</div><div class="stat-foot"><span>等待开始分析</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>研究中</span><span class="stat-icon" style="background:#eaf4ff;color:#4387cf">⌕</span></div><div class="stat-value" id="researchDoing">1</div><div class="stat-foot"><span>正在进行研究</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>已完成</span><span class="stat-icon" style="background:#e9f7f2;color:#159b72">✓</span></div><div class="stat-value" id="researchDone">0</div><div class="stat-foot"><span>已形成研究结论</span></div></div>
+  </div>
+  <div class="toolbar">
+    <div class="filter-row"><button class="filter-chip active" data-research-filter="all">全部研究</button><button class="filter-chip" data-research-filter="todo">待研究</button><button class="filter-chip" data-research-filter="doing">研究中</button><button class="filter-chip" data-research-filter="done">已完成</button><button class="filter-chip" data-research-filter="paused">暂缓</button></div>
+    <span class="result-count" id="researchCountLabel">2 个研究项目</span>
+  </div>
+  <div class="research-grid" id="researchGrid"></div>
+  <div class="research-guidance"><strong>研究记录建议</strong><span>每个项目可以逐步补充：研究目标 → 核心功能 → 技术架构 → 本地部署 → 优缺点 → 研究结论 → 后续行动。研究记录与推荐分数分开保存，避免研究结论反向影响推荐排序。</span></div>
+</section>
+
+<section class="page" id="page-logs">
+  <div class="page-head"><div><div class="eyebrow">COLLECTION HISTORY</div><h1>采集记录</h1><p>统一查看日 / 周 / 月采集任务、执行状态、入库数量与异常信息。</p></div><div class="head-actions"><button class="btn" id="logsExport">⇩ 导出日志</button><button class="btn primary" id="logsRun">↻ 运行一次</button></div></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-top"><span>今日任务执行</span><span class="stat-icon">◷</span></div><div class="stat-value">03</div><div class="stat-foot"><span class="up">全部成功</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>累计采集项目</span><span class="stat-icon">▧</span></div><div class="stat-value">2,486</div><div class="stat-foot"><span>日 / 周 / 月去重后</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>最近成功率</span><span class="stat-icon">✓</span></div><div class="stat-value">99.2%</div><div class="stat-foot"><span class="up">↑ 0.8%</span><span>最近 30 次任务</span></div></div>
+    <div class="stat-card"><div class="stat-top"><span>待处理异常</span><span class="stat-icon" style="background:#fff3e7;color:#d88735">!</span></div><div class="stat-value">01</div><div class="stat-foot"><span style="color:#d88735">需要关注</span></div></div>
+  </div>
+  <div class="panel"><div class="panel-head"><div><h3>任务执行历史</h3><p>示例任务记录 · 可按周期与状态筛选</p></div><div class="filter-row"><select class="filter-select" id="logPeriod"><option value="all">全部周期</option><option>日榜</option><option>周榜</option><option>月榜</option></select><select class="filter-select" id="logStatus"><option value="all">全部状态</option><option>成功</option><option>运行中</option><option>失败</option></select></div></div>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>任务名称</th><th>采集周期</th><th>执行时间</th><th>入库项目</th><th>耗时</th><th>状态</th><th>操作</th></tr></thead><tbody id="logRows">
+      <tr><td><strong>GitHub Trending Daily</strong></td><td>日榜</td><td>2026-11-23 22:00:02</td><td>128</td><td>18.4s</td><td><span class="log-status">成功</span></td><td><button class="mini-btn" data-toast="已打开任务详情（演示）">查看详情</button></td></tr>
+      <tr><td><strong>GitHub Trending Weekly</strong></td><td>周榜</td><td>2026-11-23 21:50:01</td><td>96</td><td>16.8s</td><td><span class="log-status">成功</span></td><td><button class="mini-btn" data-toast="已打开任务详情（演示）">查看详情</button></td></tr>
+      <tr><td><strong>GitHub Trending Monthly</strong></td><td>月榜</td><td>2026-11-23 21:40:01</td><td>84</td><td>17.1s</td><td><span class="log-status">成功</span></td><td><button class="mini-btn" data-toast="已打开任务详情（演示）">查看详情</button></td></tr>
+      <tr><td><strong>GitHub Trending Daily</strong></td><td>日榜</td><td>2026-11-22 22:00:04</td><td>121</td><td>—</td><td><span class="log-status failed">失败 · 网络超时</span></td><td><button class="mini-btn" data-toast="已加入重试队列（演示）">重试</button></td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<section class="page" id="page-settings">
+  <div class="page-head"><div><div class="eyebrow">COLLECTION CONFIGURATION</div><h1>采集设置</h1><p>配置日 / 周 / 月采集策略、采集范围、去重规则与数据保留方式。</p></div><div class="head-actions"><button class="btn primary" id="saveSettings">✓ 保存设置</button></div></div>
+  <div class="settings-grid">
+    <div class="panel setting-card"><h3>自动采集计划</h3><p>每个周期独立配置，避免重复请求。</p>
+      <div class="setting-row"><div><strong>每日采集</strong><small>每天 22:00 采集 daily Trending</small></div><button class="toggle on" data-toggle></button></div>
+      <div class="setting-row"><div><strong>每周采集</strong><small>每周一 08:00 采集 weekly Trending</small></div><button class="toggle on" data-toggle></button></div>
+      <div class="setting-row"><div><strong>每月采集</strong><small>每月 1 日 08:30 采集 monthly Trending</small></div><button class="toggle on" data-toggle></button></div>
+      <label class="field-label">时区</label><select class="field-input"><option>Asia/Shanghai (UTC+8)</option><option>Asia/Singapore (UTC+8)</option><option>UTC</option></select>
+    </div>
+    <div class="panel setting-card"><h3>采集范围</h3><p>控制项目语言、数量与抓取内容。</p>
+      <label class="field-label">每个周期最大项目数</label><select class="field-input"><option>100 个项目</option><option selected>200 个项目</option><option>全部可采集项目</option></select>
+      <label class="field-label">语言范围</label><select class="field-input"><option>全部语言</option><option>仅采集指定语言</option></select>
+      <label class="field-label">需要保存的字段</label><div class="setting-row"><div><strong>基础信息与 Stars / Forks</strong><small>项目名、描述、语言、星标、分叉</small></div><button class="toggle on" data-toggle></button></div>
+      <div class="setting-row"><div><strong>README 摘要与 Topics</strong><small>为后续项目研究提供上下文</small></div><button class="toggle on" data-toggle></button></div>
+    </div>
+    <div class="panel setting-card"><h3>数据管理规则</h3><p>确保跨周期历史可比较、可追溯。</p>
+      <div class="setting-row"><div><strong>跨周期仓库去重</strong><small>同一仓库使用 GitHub repo full name 作为唯一键</small></div><button class="toggle on" data-toggle></button></div>
+      <div class="setting-row"><div><strong>保留历史排名快照</strong><small>保存每次采集结果，支持排名迁移分析</small></div><button class="toggle on" data-toggle></button></div>
+      <label class="field-label">历史快照保留期限</label><select class="field-input"><option>永久保留</option><option>12 个月</option><option>6 个月</option></select>
+    </div>
+    <div class="panel setting-card"><h3>Stars 总榜实时采集</h3><p>与日 / 周 / 月 Trending 任务独立运行。</p>
+      <div class="setting-row"><div><strong>打开总榜时自动刷新</strong><small>进入 Stars 总榜时获取最新仓库排名</small></div><button class="toggle on" data-toggle></button></div>
+      <div class="setting-row"><div><strong>定时自动采集</strong><small>按总榜页面选择的刷新间隔执行</small></div><button class="toggle on" data-toggle></button></div>
+      <label class="field-label">单次采集目标数量</label><select class="field-input"><option>Top 100</option><option selected>Top 1,000</option><option>分片扩展采集</option></select>
+      <label class="field-label">排名来源</label><input class="field-input" value="GitHub Search API · sort=stars · order=desc" readonly>
+    </div>
+    <div class="panel setting-card"><h3>采集来源</h3><p>周期榜单使用 Trending 页面；Stars 总榜独立使用 GitHub 仓库搜索接口。</p>
+      <label class="field-label">Daily</label><input class="field-input" value="https://github.com/trending?since=daily" readonly>
+      <label class="field-label">Weekly</label><input class="field-input" value="https://github.com/trending?since=weekly" readonly>
+      <label class="field-label">Monthly</label><input class="field-input" value="https://github.com/trending?since=monthly" readonly>
+      <label class="field-label">Stars 总榜 API</label><input class="field-input" value="GET /search/repositories?q=stars:>0&sort=stars&order=desc" readonly>
+      <div class="setting-row"><div><strong>采集失败自动重试</strong><small>最多 3 次，间隔递增</small></div><button class="toggle on" data-toggle></button></div>
+    </div>
+  </div>
+  <div class="footer-note">设置页面仅为交互原型；自动采集计划尚未连接实际调度服务</div>
+</section>
+</main>
+</div>
+</div>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="detailDrawer"><div class="drawer-head"><div><div class="eyebrow">REPOSITORY PROFILE</div><h2>项目详情</h2><p>项目基础信息 · 周期表现 · 研究入口</p></div><button class="icon-btn" id="closeDrawer">×</button></div><div class="drawer-body" id="drawerBody"></div></aside>
+<div class="modal-backdrop" id="modalBackdrop"></div>
+<div class="modal" id="compareModal"><div class="modal-head"><h3>项目周期对比</h3><button class="icon-btn" id="closeModal">×</button></div><div class="modal-body" id="compareModalBody"></div></div>
+<div class="toast" id="toast">操作已完成</div>
+<div class="compare-tray" id="compareTray"><div><strong id="compareSelected">0 个项目</strong><span> 已加入对比</span></div><button id="openCompare">开始对比 →</button><button id="clearCompare" style="background:transparent;color:#bfc5d6;padding:6px">清空</button></div>
+
+<script>
+const projects = [
+ {id:1,name:"anthropics/claude-code",owner:"anthropics",abbr:"CC",color:"#efeaff",ink:"#6658d9",desc:"A terminal-based AI coding assistant that understands your codebase and helps you code faster.",language:"TypeScript",stars:"62.8k",forks:"5.1k",growth:1280,dayRank:1,weekRank:4,monthRank:12,topics:["AI Agent","Developer Tools","CLI"],category:"AI 编程",isNew:false,rising:true,license:"Proprietary / source available",updated:"2026-11-23",appearances:{daily:18,weekly:8,monthly:7},status:"watch"},
+ {id:2,name:"microsoft/markitdown",owner:"microsoft",abbr:"MD",color:"#e6f3ff",ink:"#2879b9",desc:"Python tool for converting files and office documents to Markdown.",language:"Python",stars:"58.4k",forks:"3.2k",growth:960,dayRank:2,weekRank:2,monthRank:5,topics:["Python","Document AI","Automation"],category:"开发工具",isNew:false,rising:true,license:"MIT",updated:"2026-11-22",appearances:{daily:22,weekly:10,monthly:10},status:"research"},
+ {id:3,name:"open-webui/open-webui",owner:"open-webui",abbr:"OW",color:"#e8f7f1",ink:"#218c69",desc:"User-friendly AI interface for self-hosted LLMs with a powerful feature set.",language:"Python",stars:"108k",forks:"14.2k",growth:820,dayRank:3,weekRank:1,monthRank:3,topics:["LLM","Self-hosted","AI Agent"],category:"AI 应用",isNew:false,rising:false,license:"MIT",updated:"2026-11-23",appearances:{daily:24,weekly:11,monthly:11},status:"watch"},
+ {id:4,name:"bytedance/deer-flow",owner:"bytedance",abbr:"DF",color:"#fff0e4",ink:"#cf7c36",desc:"A community-driven deep research and multi-agent workflow platform.",language:"Python",stars:"18.6k",forks:"2.4k",growth:760,dayRank:4,weekRank:7,monthRank:18,topics:["AI Agent","Deep Research","Workflow"],category:"AI Agent",isNew:true,rising:true,license:"MIT",updated:"2026-11-23",appearances:{daily:8,weekly:5,monthly:2},status:"research"},
+ {id:5,name:"vercel/ai",owner:"vercel",abbr:"AI",color:"#edf0f5",ink:"#374151",desc:"The AI SDK: build AI-powered applications with TypeScript and popular frameworks.",language:"TypeScript",stars:"21.3k",forks:"3.1k",growth:610,dayRank:5,weekRank:3,monthRank:4,topics:["TypeScript","LLM","Web Framework"],category:"开发框架",isNew:false,rising:true,license:"Apache-2.0",updated:"2026-11-22",appearances:{daily:17,weekly:9,monthly:9},status:"watch"},
+ {id:6,name:"astral-sh/uv",owner:"astral-sh",abbr:"UV",color:"#f0edff",ink:"#6b5ce8",desc:"An extremely fast Python package and project manager, written in Rust.",language:"Rust",stars:"71.2k",forks:"2.1k",growth:530,dayRank:6,weekRank:6,monthRank:2,topics:["Python","Developer Tools","Rust"],category:"开发工具",isNew:false,rising:false,license:"MIT",updated:"2026-11-21",appearances:{daily:16,weekly:10,monthly:11},status:"done"},
+ {id:7,name:"langchain-ai/langgraph",owner:"langchain-ai",abbr:"LG",color:"#e6f7f8",ink:"#218d9c",desc:"Build resilient language agents as graphs with first-class streaming and persistence.",language:"Python",stars:"14.8k",forks:"2.2k",growth:420,dayRank:7,weekRank:8,monthRank:7,topics:["AI Agent","LLM","Workflow"],category:"AI Agent",isNew:true,rising:false,license:"MIT",updated:"2026-11-23",appearances:{daily:9,weekly:6,monthly:5},status:"research"},
+ {id:8,name:"oven-sh/bun",owner:"oven-sh",abbr:"BN",color:"#fff5dd",ink:"#b78b2f",desc:"Incredibly fast JavaScript runtime, bundler, test runner, and package manager.",language:"Zig",stars:"78.1k",forks:"4.1k",growth:370,dayRank:8,weekRank:10,monthRank:9,topics:["JavaScript","Runtime","Developer Tools"],category:"开发工具",isNew:false,rising:false,license:"MIT",updated:"2026-11-20",appearances:{daily:12,weekly:7,monthly:10},status:"watch"}
+];
+const periodNames={daily:"日榜 · Daily Trending",weekly:"周榜 · Weekly Trending",monthly:"月榜 · Monthly Trending"};
+const periodLabels={daily:"日榜",weekly:"周榜",monthly:"月榜"};
+let currentPeriod="daily",currentPage="overview",saved=new Set([2,5]),selected=new Set(),category="all",libraryFilter="all",viewMode="cards",searchText="",languageFilter="all",topicFilter="all",starsScope="all",starsPage=1,starsPerPage=50,recommendationProfile="balanced",recommendationScope="all",researchFilter="all";
+const researchItems=new Map([
+ [2,{stage:"todo",priority:"high",notes:"先梳理文档转换支持范围、解析链路与扩展机制。",nextAction:"阅读 README，跑通 PDF / Office 示例",addedAt:"2026-11-23"}],
+ [6,{stage:"doing",priority:"medium",notes:"重点对比依赖解析、锁文件、缓存与项目管理体验。",nextAction:"完成 uv 与 pip / poetry 工作流对照",addedAt:"2026-11-22"}]
+]);
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+function parseCount(value){const m=String(value).trim().match(/^([\d,.]+)\s*([kmb])?$/i);if(!m)return Number(value)||0;const n=Number(m[1].replaceAll(',',''));const unit=(m[2]||'').toLowerCase();return n*(unit==='k'?1e3:unit==='m'?1e6:unit==='b'?1e9:1)}
+function rankFor(r){return r[currentPeriod==="daily"?"dayRank":currentPeriod==="weekly"?"weekRank":"monthRank"]}
+function starsGrowth(r){return currentPeriod==="daily"?r.growth:currentPeriod==="weekly"?r.growth*4.6:r.growth*15.8}
+function fmt(n){return n>=1000?(n/1000).toFixed(1)+"k":String(n)}
+
+const recommendationProfiles={balanced:{label:"综合平衡",stars:30,daily:15,weekly:30,monthly:25},trend:{label:"趋势发现优先",stars:20,daily:25,weekly:35,monthly:20},longterm:{label:"长期价值优先",stars:40,daily:10,weekly:25,monthly:25}};
+const scoreMetricLabels={stars:"Stars 总榜",daily:"日榜表现",weekly:"周榜表现",monthly:"月榜表现"};
+const researchStageLabels={todo:"待研究",doing:"研究中",done:"已完成",paused:"暂缓"};
+function getRecommendationWeights(){return recommendationProfiles[recommendationProfile]||recommendationProfiles.balanced}
+function getRecommendationMetrics(r){
+ const starOrder=projects.slice().sort((a,b)=>parseCount(b.stars)-parseCount(a.stars));
+ const starRank=starOrder.findIndex(x=>x.id===r.id)+1;
+ const starsScore=100*(projects.length-starRank+1)/projects.length;
+ const dailyScore=Math.min(100,100*r.appearances.daily/30);
+ const weeklyScore=Math.min(100,100*r.appearances.weekly/12);
+ const monthlyScore=Math.min(100,100*r.appearances.monthly/12);
+ const weights=getRecommendationWeights();
+ const score=(starsScore*weights.stars+dailyScore*weights.daily+weeklyScore*weights.weekly+monthlyScore*weights.monthly)/100;
+ const components=[{key:"stars",score:starsScore,weight:weights.stars},{key:"daily",score:dailyScore,weight:weights.daily},{key:"weekly",score:weeklyScore,weight:weights.weekly},{key:"monthly",score:monthlyScore,weight:weights.monthly}];
+ const reasons=components.slice().sort((a,b)=>(b.score*b.weight)-(a.score*a.weight)).slice(0,2).map(x=>({key:x.key,label:({stars:"Stars 排名靠前",daily:"近期日榜活跃",weekly:"周榜持续上榜",monthly:"月榜长期沉淀"})[x.key]}));
+ return {score,starsScore,dailyScore,weeklyScore,monthlyScore,starRank,reasons,weights};
+}
+function recommendationGrade(score){return score>=85?"优先研究":score>=75?"强烈推荐":score>=65?"值得关注":score>=50?"观察":"低优先级"}
+function renderScoreWeights(){
+ const w=getRecommendationWeights(),colors={stars:"#7466e8",daily:"#32a5bd",weekly:"#329b77",monthly:"#d49a48"};
+ $("#scoreWeights").innerHTML=["stars","daily","weekly","monthly"].map(k=>`<div class="weight-item"><div class="weight-head"><span>${scoreMetricLabels[k]}</span><strong>${w[k]}%</strong></div><div class="weight-track"><i style="width:${w[k]}%;background:${colors[k]}"></i></div></div>`).join("");
+}
+function addToResearch(id){
+ if(researchItems.has(id)){showToast("该项目已经在研究工作区");return}
+ researchItems.set(id,{stage:"todo",priority:"medium",notes:"",nextAction:"",addedAt:new Date().toISOString().slice(0,10)});
+ updateResearchCount();if(currentPage==="research")renderResearch();if(currentPage==="recommend")renderRecommend();
+ showToast("已加入项目研究 · 可在项目研究页补充研究记录");
+}
+function updateResearchCount(){const el=$("#researchCount");if(el)el.textContent=String(researchItems.size).padStart(2,"0")}
+
+const snapshotCatalog={
+ daily:[
+  {value:"2026-11-23 22:00",label:"2026-11-23 · 最新",count:128},
+  {value:"2026-11-22 22:00",label:"2026-11-22",count:121},
+  {value:"2026-11-21 22:00",label:"2026-11-21",count:116},
+  {value:"2026-11-20 22:00",label:"2026-11-20",count:109},
+  {value:"2026-11-19 22:00",label:"2026-11-19",count:113}
+ ],
+ weekly:[
+  {value:"2026-11-23 21:50",label:"2026-11-23 · 最新",count:386},
+  {value:"2026-11-16 21:50",label:"2026-11-16",count:362},
+  {value:"2026-11-09 21:50",label:"2026-11-09",count:341},
+  {value:"2026-11-02 21:50",label:"2026-11-02",count:329}
+ ],
+ monthly:[
+  {value:"2026-11-01 08:30",label:"2026-11-01 · 最新",count:1248},
+  {value:"2026-10-01 08:30",label:"2026-10-01",count:1182},
+  {value:"2026-09-01 08:30",label:"2026-09-01",count:1096}
+ ]
+};
+function updateSnapshotOptions(){
+ const picker=$("#snapshotPicker");if(!picker)return;
+ const items=snapshotCatalog[currentPeriod]||[];
+ picker.innerHTML=items.map(x=>`<option value="${x.value}" data-count="${x.count}">${x.label}</option>`).join("");
+ const chosen=items[0];
+ $("#snapshotSummary").textContent=`${chosen.value} · ${periodLabels[currentPeriod]}${chosen.label.includes("最新")?"最新采集":"历史采集"}`;
+ $("#snapshotDetail").textContent=`已保存 ${chosen.count.toLocaleString()} 个项目 · 选择日期即可查看当次原始排名（演示快照）`;
+}
+function applySnapshotSelection(){
+ const picker=$("#snapshotPicker");if(!picker)return;
+ const opt=picker.selectedOptions[0],date=picker.value,count=Number(opt?.dataset.count||0);
+ $("#snapshotSummary").textContent=`${date} · ${periodLabels[currentPeriod]}历史快照`;
+ $("#snapshotDetail").textContent=`该次采集保存 ${count.toLocaleString()} 个项目 · 当前为历史快照交互演示`;
+ showToast(`已切换至 ${date} 历史快照`);
+}
+function showToast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove("show"),2400)}
+function setPage(page,period){currentPage=page;if(period)currentPeriod=period;$$(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.page===page));$("#crumbTitle").textContent=({overview:"趋势总览",trending:periodLabels[currentPeriod]+" · 趋势榜单",stars:"Stars 总榜",recommend:"智能推荐",compare:"周期趋势对比",library:"感兴趣项目",research:"项目研究",logs:"采集记录",settings:"采集设置"})[page];if(page==="trending")renderTrending();if(page==="stars")renderStarsBoard();if(page==="recommend")renderRecommend();if(page==="compare")renderCompare();if(page==="library")renderLibrary();if(page==="research")renderResearch();updatePeriodButtons()}
+function updatePeriodButtons(){$$(".period-switch [data-period]").forEach(b=>b.classList.toggle("active",b.dataset.period===currentPeriod));$("#trendingTitle").innerHTML=periodNames[currentPeriod]+' <span class="demo-note">● UI 演示数据</span>';updateSnapshotOptions()}
+function setPeriod(p){currentPeriod=p;updatePeriodButtons();if(currentPage==="trending")renderTrending();if(currentPage==="overview"){const vals={daily:[128,36,"最近 7 天"],weekly:[386,92,"最近 4 周"],monthly:[1248,214,"最近 6 个月"]};$("#statCollected").textContent=vals[p][0].toLocaleString();$("#statNew").textContent=vals[p][1];$("#chartSubtitle").textContent=vals[p][2]+" · 上榜项目与新增 Stars 变化"}if(currentPage==="compare")renderCompare()}
+function cardHTML(r){const rank=rankFor(r),growth=fmt(starsGrowth(r));return `<article class="repo-card" data-open="${r.id}"><div class="repo-card-head"><div class="repo-avatar" style="background:${r.color};color:${r.ink}">${r.abbr}</div><div class="repo-card-main"><strong><span class="rank-label">#<span>${String(rank).padStart(2,"0")}</span></span>${r.name}</strong><small>${r.owner} · ${r.language}</small></div><button class="bookmark ${saved.has(r.id)?"saved":""}" data-bookmark="${r.id}" title="标记感兴趣">${saved.has(r.id)?"♥":"♡"}</button></div><p class="repo-desc">${r.desc}</p><div class="tag-row">${r.topics.slice(0,3).map(t=>`<span class="tag ${t==="AI Agent"||t==="LLM"?"ai":""}">${t}</span>`).join("")}</div><div class="repo-card-foot"><div class="repo-stats"><span>★ <b>${r.stars}</b></span><span>⑂ <b>${r.forks}</b></span><span class="up">↗ +${growth}</span></div><div class="repo-actions"><button class="mini-btn compare ${selected.has(r.id)?"active":""}" data-compare="${r.id}">${selected.has(r.id)?"已加入":"＋ 对比"}</button><button class="mini-btn" data-open="${r.id}">详情 →</button></div></div></article>`}
+function renderTrending(){let list=projects.slice().sort((a,b)=>rankFor(a)-rankFor(b));if(searchText)list=list.filter(r=>(r.name+" "+r.desc+" "+r.owner+" "+r.topics.join(" ")).toLowerCase().includes(searchText.toLowerCase()));if(languageFilter!=="all")list=list.filter(r=>r.language===languageFilter);if(topicFilter!=="all")list=list.filter(r=>r.topics.includes(topicFilter));if(category==="new")list=list.filter(r=>r.isNew);if(category==="rising")list=list.filter(r=>r.rising);if($("#sortFilter")?.value==="stars")list.sort((a,b)=>parseCount(b.stars)-parseCount(a.stars));if($("#sortFilter")?.value==="growth")list.sort((a,b)=>starsGrowth(b)-starsGrowth(a));$("#resultCount").textContent=`显示 ${list.length} 个项目`;$("#repoGrid").classList.toggle("list-view",viewMode==="list");$("#repoGrid").style.gridTemplateColumns=viewMode==="list"?"1fr":"";$("#repoGrid").innerHTML=list.length?list.map(cardHTML).join(""):`<div class="panel" style="grid-column:1/-1;padding:40px;text-align:center;color:#929bae">没有找到匹配项目，请调整筛选条件。</div>`}
+function renderStarsBoard(){let list=projects.slice();const q=searchText.toLowerCase();if(q)list=list.filter(r=>(r.name+" "+r.desc+" "+r.owner+" "+r.topics.join(" ")).toLowerCase().includes(q));const lang=$("#starsLanguage")?.value||"all",topic=$("#starsTopic")?.value||"all",sort=$("#starsSort")?.value||"stars-desc";if(lang!=="all")list=list.filter(r=>r.language===lang);if(topic!=="all")list=list.filter(r=>r.topics.includes(topic));if(starsScope==="trending")list=list.filter(r=>r.dayRank||r.weekRank||r.monthRank);if(starsScope==="cross")list=list.filter(r=>r.dayRank<=8&&r.weekRank<=10&&r.monthRank<=12);if(sort==="stars-desc")list.sort((a,b)=>parseCount(b.stars)-parseCount(a.stars));if(sort==="stars-asc")list.sort((a,b)=>parseCount(a.stars)-parseCount(b.stars));if(sort==="forks")list.sort((a,b)=>parseCount(b.forks)-parseCount(a.forks));if(sort==="growth")list.sort((a,b)=>starsGrowth(b)-starsGrowth(a));const total=list.length,pageCount=Math.max(1,Math.ceil(total/starsPerPage));if(starsPage>pageCount)starsPage=pageCount;const start=(starsPage-1)*starsPerPage;const pageList=list.slice(start,start+starsPerPage);$("#starsResultCount").textContent=`显示 ${total} 个项目`;$("#starsRows").innerHTML=pageList.length?pageList.map((r,i)=>`<tr><td><span class="rank-chip">${String(start+i+1).padStart(2,"0")}</span></td><td><div style="display:flex;align-items:center;gap:9px"><div class="repo-avatar" style="width:30px;height:30px;background:${r.color};color:${r.ink}">${r.abbr}</div><div><strong>${r.name}</strong><div style="font-size:9px;color:#929bae;margin-top:3px;max-width:230px;overflow:hidden;text-overflow:ellipsis">${r.desc}</div></div></div></td><td><strong style="font-size:12px;color:#6558d9">★ ${r.stars}</strong></td><td>${r.forks}</td><td>${r.language}</td><td>${r.dayRank<=8?"#"+r.dayRank:"—"}</td><td>${r.weekRank<=10?"#"+r.weekRank:"—"}</td><td>${r.monthRank<=12?"#"+r.monthRank:"—"}</td><td><button class="mini-btn" data-open="${r.id}">详情</button> <button class="mini-btn" data-bookmark="${r.id}">${saved.has(r.id)?"♥ 已感兴趣":"♡ 感兴趣"}</button></td></tr>`).join(""):`<tr><td colspan="9" style="text-align:center;padding:35px;color:#929bae">没有找到匹配项目，请调整筛选条件。</td></tr>`;$("#starsPageInfo").textContent=`第 ${starsPage} 页 · 共 ${pageCount} 页 · ${total} 个结果`;$("#starsPrev").disabled=starsPage<=1;$("#starsNext").disabled=starsPage>=pageCount}
+
+function renderRecommend(){
+ renderScoreWeights();
+ let list=projects.map(r=>({r,m:getRecommendationMetrics(r)}));
+ if(searchText){const q=searchText.toLowerCase();list=list.filter(x=>(x.r.name+" "+x.r.desc+" "+x.r.owner+" "+x.r.topics.join(" ")).toLowerCase().includes(q))}
+ const lang=$("#recommendLanguage")?.value||"all";if(lang!=="all")list=list.filter(x=>x.r.language===lang);
+ if(recommendationScope==="priority")list=list.filter(x=>x.m.score>=75);
+ if(recommendationScope==="emerging")list=list.filter(x=>x.m.dailyScore>=55&&x.m.starsScore<70);
+ if(recommendationScope==="stable")list=list.filter(x=>x.m.weeklyScore>=65&&x.m.monthlyScore>=70);
+ const sort=$("#recommendSort")?.value||"score";
+ list.sort((a,b)=>sort==="stars"?b.m.starsScore-a.m.starsScore:sort==="daily"?b.m.dailyScore-a.m.dailyScore:sort==="weekly"?b.m.weeklyScore-a.m.weeklyScore:sort==="monthly"?b.m.monthlyScore-a.m.monthlyScore:b.m.score-a.m.score);
+ const all=projects.map(r=>({r,m:getRecommendationMetrics(r)}));
+ $("#recommendCandidateCount").textContent=projects.length;
+ $("#recommendPriorityCount").textContent=all.filter(x=>x.m.score>=75).length;
+ $("#recommendInterestedCount").textContent=saved.size;
+ $("#recommendAverageScore").textContent=(all.reduce((s,x)=>s+x.m.score,0)/Math.max(1,all.length)).toFixed(1);
+ $("#recommendResultCount").textContent=`显示 ${list.length} 个项目`;
+ $("#recommendRows").innerHTML=list.length?list.map((x,i)=>{
+  const r=x.r,m=x.m,grade=recommendationGrade(m.score),inResearch=researchItems.has(r.id);
+  return `<tr><td><span class="rank-chip">${String(i+1).padStart(2,"0")}</span></td>
+   <td><div class="recommend-project"><strong>${r.name}</strong><small>${r.language} · ${r.topics.slice(0,2).join(" / ")}</small></div></td>
+   <td><div class="recommend-score"><strong>${m.score.toFixed(1)}</strong><small>${grade}</small></div></td>
+   <td><strong>${m.starsScore.toFixed(0)}</strong><small class="metric-sub">Stars #${m.starRank}</small></td>
+   <td><strong>${r.appearances.daily}/30</strong><small class="metric-sub">${m.dailyScore.toFixed(0)} 分</small></td>
+   <td><strong>${r.appearances.weekly}/12</strong><small class="metric-sub">${m.weeklyScore.toFixed(0)} 分</small></td>
+   <td><strong>${r.appearances.monthly}/12</strong><small class="metric-sub">${m.monthlyScore.toFixed(0)} 分</small></td>
+   <td><div class="reason-tags">${m.reasons.map(v=>`<span>${v.label}</span>`).join("")}</div></td>
+   <td><div class="recommend-actions"><button class="mini-btn" data-open="${r.id}">评分详情</button><button class="mini-btn" data-bookmark="${r.id}">${saved.has(r.id)?"♥ 已感兴趣":"♡ 感兴趣"}</button><button class="mini-btn research-action" data-add-research="${r.id}" ${inResearch?"disabled":""}>${inResearch?"已加入研究":"＋ 加入研究"}</button></div></td></tr>`;
+ }).join(""):`<tr><td colspan="9" class="empty-cell">没有符合条件的项目，请调整筛选条件。</td></tr>`;
+}
+function renderResearch(){
+ const all=[...researchItems.entries()].map(([id,record])=>({r:projects.find(x=>x.id===id),record,id})).filter(x=>x.r);
+ const counts={todo:0,doing:0,done:0,paused:0};all.forEach(x=>counts[x.record.stage]=(counts[x.record.stage]||0)+1);
+ $("#researchTotal").textContent=all.length;$("#researchTodo").textContent=counts.todo;$("#researchDoing").textContent=counts.doing;$("#researchDone").textContent=counts.done;
+ const filtered=all.filter(x=>researchFilter==="all"||x.record.stage===researchFilter);
+ $("#researchCountLabel").textContent=`显示 ${filtered.length} / ${all.length} 个研究项目`;
+ let list=filtered;
+ if(searchText){const q=searchText.toLowerCase();list=list.filter(x=>(x.r.name+" "+x.r.desc+" "+x.r.topics.join(" ")).toLowerCase().includes(q))}
+ $("#researchGrid").innerHTML=list.length?list.map(({r,record,id})=>{
+  const m=getRecommendationMetrics(r);
+  return `<article class="research-card" data-research-card="${id}">
+   <div class="research-card-head"><div><strong>${r.name}</strong><small>${r.language} · ${r.topics.slice(0,2).join(" / ")}</small></div><span class="research-score">${m.score.toFixed(1)} 分</span></div>
+   <p class="research-desc">${r.desc}</p>
+   <div class="research-meta"><span>★ ${r.stars}</span><span>日 ${r.appearances.daily}/30</span><span>周 ${r.appearances.weekly}/12</span><span>月 ${r.appearances.monthly}/12</span><span>加入于 ${record.addedAt}</span></div>
+   <div class="research-fields"><label>研究状态<select class="filter-select" data-research-stage="${id}">${Object.entries(researchStageLabels).map(([k,v])=>`<option value="${k}" ${record.stage===k?"selected":""}>${v}</option>`).join("")}</select></label>
+   <label>优先级<select class="filter-select" data-research-priority="${id}"><option value="high" ${record.priority==="high"?"selected":""}>高</option><option value="medium" ${record.priority==="medium"?"selected":""}>中</option><option value="low" ${record.priority==="low"?"selected":""}>低</option></select></label></div>
+   <label class="research-note-label">研究记录<textarea data-research-note="${id}" rows="3" placeholder="记录研究目标、核心功能、技术架构、部署体验、优缺点与结论...">${record.notes||""}</textarea></label>
+   <label class="research-note-label">下一步行动<input data-research-next="${id}" value="${record.nextAction||""}" placeholder="例如：阅读 README、部署项目、分析核心模块"></label>
+   <div class="research-card-actions"><button class="btn primary" data-save-research="${id}">保存研究记录</button><button class="btn" data-open="${id}">项目详情</button><button class="mini-btn remove-research" data-remove-research="${id}">移出研究</button></div>
+  </article>`;
+ }).join(""):`<div class="panel research-empty"><div class="empty-icon">⌕</div><strong>当前没有研究项目</strong><span>从智能推荐或 Stars 总榜中选择项目，点击“加入研究”。</span><button class="btn primary" data-page="recommend">前往智能推荐</button></div>`;
+ updateResearchCount();
+}
+
+function renderOverviewRows(){const list=projects.filter(r=>r.dayRank<=5&&r.weekRank<=7&&r.monthRank<=12).slice(0,5);$("#crossPeriodRows").innerHTML=list.map(r=>`<tr><td><strong>${r.name}</strong></td><td><span class="rank-chip">#${r.dayRank}</span></td><td>#${r.weekRank}</td><td>#${r.monthRank}</td><td><span class="trend-pill">↗ 持续热度</span></td></tr>`).join("")}
+function renderCompare(){let list=projects.slice().sort((a,b)=>a.dayRank-b.dayRank);const f=$("#compareFilter")?.value||"all";if(f==="all3")list=list.filter(r=>r.dayRank<=8&&r.weekRank<=10&&r.monthRank<=12);if(f==="rising")list=list.filter(r=>r.rising);$("#compareRows").innerHTML=list.map(r=>`<tr><td><strong>${r.name}</strong><div style="font-size:9px;color:#9aa4b6;margin-top:3px">${r.language}</div></td><td><span class="period-cell ${r.dayRank<=8?"on":"off"}">${r.dayRank<=8?"#"+r.dayRank:"—"}</span></td><td><span class="period-cell ${r.weekRank<=10?"on":"off"}">${r.weekRank<=10?"#"+r.weekRank:"—"}</span></td><td><span class="period-cell ${r.monthRank<=12?"on":"off"}">${r.monthRank<=12?"#"+r.monthRank:"—"}</span></td><td><span class="continuity"><i class="on"></i><i class="${r.weekRank<=10?"on":""}"></i><i class="${r.monthRank<=12?"on":""}"></i></span></td><td><span class="trend-pill ${r.rising?"":"neutral"}">${r.rising?"↗ 快速上升":"→ 稳定"}</span></td><td><button class="mini-btn" data-open="${r.id}">查看</button></td></tr>`).join("")}
+function renderLibrary(){let list=projects.filter(r=>saved.has(r.id));if(libraryFilter==="notResearch")list=list.filter(r=>!researchItems.has(r.id));if(libraryFilter==="inResearch")list=list.filter(r=>researchItems.has(r.id));$("#libraryCount").textContent=`已标记感兴趣 ${saved.size} 个项目`;$("#libraryGrid").innerHTML=list.length?list.map(cardHTML).join(""):`<div class="panel library-empty" style="grid-column:1/-1"><div class="empty-icon">♥</div><strong>还没有标记感兴趣的项目</strong><span>可以在智能推荐、Stars 总榜或周期榜单中标记感兴趣。</span><button class="btn primary" data-page="recommend">前往智能推荐</button></div>`}
+function updateSaved(){const n=String(saved.size).padStart(2,"0");$("#savedCount").textContent=n;$("#statSaved").textContent=n;if(currentPage==="library")renderLibrary();if(currentPage==="recommend")$("#recommendInterestedCount").textContent=saved.size}
+function openDetail(id){
+ const r=projects.find(x=>x.id===id);if(!r)return;
+ const rm=getRecommendationMetrics(r),researchExists=researchItems.has(id);
+ $("#drawerBody").innerHTML=`<div class="detail-hero"><div class="repo-avatar" style="background:${r.color};color:${r.ink}">${r.abbr}</div><div><strong>${r.name}</strong><small>${r.owner} · ${r.language} · 更新于 ${r.updated}</small></div></div>
+ <div class="detail-stats"><div class="detail-stat"><strong>${r.stars}</strong><small>Stars 总量</small></div><div class="detail-stat"><strong>${r.forks}</strong><small>Forks</small></div><div class="detail-stat"><strong>+${fmt(starsGrowth(r))}</strong><small>${periodLabels[currentPeriod]} Stars 增量</small></div></div>
+ <div class="detail-section"><h4>项目简介</h4><p>${r.desc}</p></div>
+ <div class="detail-section"><h4>周期排名</h4><div class="detail-list"><div><span>日榜排名</span><b>#${r.dayRank}</b></div><div><span>周榜排名</span><b>#${r.weekRank}</b></div><div><span>月榜排名</span><b>#${r.monthRank}</b></div><div><span>主要语言</span><b>${r.language}</b></div><div><span>License</span><b>${r.license}</b></div></div></div>
+ <div class="detail-section"><h4>推荐评分拆解</h4><div class="detail-list"><div><span>综合推荐分</span><b>${rm.score.toFixed(1)} / 100</b></div><div><span>Stars / 日 / 周 / 月</span><b>${rm.starsScore.toFixed(0)} / ${rm.dailyScore.toFixed(0)} / ${rm.weeklyScore.toFixed(0)} / ${rm.monthlyScore.toFixed(0)}</b></div></div><p style="margin-top:7px">当前权重：Stars ${rm.weights.stars}% · 日榜 ${rm.weights.daily}% · 周榜 ${rm.weights.weekly}% · 月榜 ${rm.weights.monthly}%</p></div>
+ <div class="detail-section"><h4>Topics</h4><div class="tag-row">${r.topics.map(t=>`<span class="tag ai">${t}</span>`).join("")}</div></div>
+ <div class="detail-section"><h4>研究建议</h4><p>建议先阅读 README 与快速开始文档，再检查核心目录、依赖、许可证与最近提交；随后记录核心功能、架构、部署体验、优缺点和研究结论。</p></div>
+ <div style="display:flex;gap:8px;margin-top:22px;flex-wrap:wrap"><button class="btn primary" style="flex:1;justify-content:center" data-bookmark="${r.id}">${saved.has(r.id)?"♥ 已感兴趣":"♡ 标记感兴趣"}</button><button class="btn" style="flex:1;justify-content:center" data-add-research="${r.id}" ${researchExists?"disabled":""}>${researchExists?"已加入研究":"＋ 加入研究"}</button><a class="btn" style="flex:1;justify-content:center" href="https://github.com/${r.name}" target="_blank" rel="noopener">↗ GitHub 仓库</a></div>`;
+ $("#drawerBackdrop").classList.add("open");$("#detailDrawer").classList.add("open");
+}
+function closeDetail(){$("#drawerBackdrop").classList.remove("open");$("#detailDrawer").classList.remove("open")}
+function updateCompareTray(){$("#compareSelected").textContent=selected.size+" 个项目";$("#compareTray").classList.toggle("show",selected.size>0)}
+function openCompareModal(){if(selected.size<2){showToast("至少选择 2 个项目进行对比");return}const list=projects.filter(r=>selected.has(r.id));$("#compareModalBody").innerHTML=`<p style="color:#8b96aa;font-size:10px;margin:0 0 14px">已选择 ${list.length} 个项目 · 周期排名、Stars 增量与主题对比</p><table class="data-table"><thead><tr><th>项目</th><th>日榜</th><th>周榜</th><th>月榜</th><th>Stars</th></tr></thead><tbody>${list.map(r=>`<tr><td><strong>${r.name}</strong></td><td>#${r.dayRank}</td><td>#${r.weekRank}</td><td>#${r.monthRank}</td><td>${r.stars}</td></tr>`).join("")}</tbody></table><div style="margin-top:18px;background:#f6f5ff;border-radius:10px;padding:13px;color:#6b61b6;font-size:10px;line-height:1.7">对比结论（演示）：可优先关注跨周期排名靠前、且近期 Stars 增量持续增长的项目。后续可加入排名变化曲线、贡献者活跃度与 Release 频率。</div>`;$("#modalBackdrop").classList.add("open");$("#compareModal").classList.add("open")}
+function closeCompareModal(){$("#modalBackdrop").classList.remove("open");$("#compareModal").classList.remove("open")}
+function exportCSV(rows,name){const head=["repository","description","language","stars","forks","daily_rank","weekly_rank","monthly_rank"];const data=[head,...rows.map(r=>[r.name,r.desc,r.language,r.stars,r.forks,r.dayRank,r.weekRank,r.monthRank])];const csv=data.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);showToast("CSV 文件已导出")}
+function doCollect(){showToast("已提交模拟采集任务 · 当前仅展示 UI 流程")}
+$$(".nav-item").forEach(b=>b.addEventListener("click",()=>setPage(b.dataset.page,b.dataset.period)));
+document.addEventListener("click",e=>{
+ const period=e.target.closest("[data-period]");if(period){setPeriod(period.dataset.period);if(currentPage==="trending")setPage("trending",currentPeriod)}
+ const nav=e.target.closest("[data-page]");if(nav&&!nav.classList.contains("nav-item"))setPage(nav.dataset.page);
+ const bookmark=e.target.closest("[data-bookmark]");if(bookmark){const id=Number(bookmark.dataset.bookmark);saved.has(id)?saved.delete(id):saved.add(id);updateSaved();if(currentPage==="trending")renderTrending();if(currentPage==="stars")renderStarsBoard();if(currentPage==="recommend")renderRecommend();if(currentPage==="library")renderLibrary();if($("#detailDrawer").classList.contains("open"))openDetail(id);return}
+ const addResearch=e.target.closest("[data-add-research]");if(addResearch){const id=Number(addResearch.dataset.addResearch);addToResearch(id);if($("#detailDrawer").classList.contains("open"))openDetail(id);return}
+ const saveResearch=e.target.closest("[data-save-research]");if(saveResearch){const id=Number(saveResearch.dataset.saveResearch),card=saveResearch.closest("[data-research-card]"),item=researchItems.get(id);if(item&&card){item.notes=card.querySelector("[data-research-note]").value;item.nextAction=card.querySelector("[data-research-next]").value;item.priority=card.querySelector("[data-research-priority]").value;researchItems.set(id,item);showToast("研究记录已保存（原型内存状态）")}return}
+ const removeResearch=e.target.closest("[data-remove-research]");if(removeResearch){researchItems.delete(Number(removeResearch.dataset.removeResearch));renderResearch();showToast("已从研究工作区移出；感兴趣标记会保留");return}
+ const cmp=e.target.closest("[data-compare]");if(cmp){const id=Number(cmp.dataset.compare);selected.has(id)?selected.delete(id):selected.add(id);renderTrending();updateCompareTray();return}
+ const open=e.target.closest("[data-open]");if(open)openDetail(Number(open.dataset.open));
+ const toast=e.target.closest("[data-toast]");if(toast)showToast(toast.dataset.toast);
+ const cat=e.target.closest("[data-category]");if(cat){category=cat.dataset.category;$$("[data-category]").forEach(x=>x.classList.toggle("active",x===cat));renderTrending()}
+ const starsTab=e.target.closest("[data-stars-scope]");if(starsTab){starsScope=starsTab.dataset.starsScope;starsPage=1;$$("[data-stars-scope]").forEach(x=>x.classList.toggle("active",x===starsTab));renderStarsBoard()}
+ const lib=e.target.closest("[data-library-filter]");if(lib){libraryFilter=lib.dataset.libraryFilter;$$("[data-library-filter]").forEach(x=>x.classList.toggle("active",x===lib));renderLibrary()}
+ const recTab=e.target.closest("[data-recommend-scope]");if(recTab){recommendationScope=recTab.dataset.recommendScope;$$("[data-recommend-scope]").forEach(x=>x.classList.toggle("active",x===recTab));renderRecommend()}
+ const researchTab=e.target.closest("[data-research-filter]");if(researchTab){researchFilter=researchTab.dataset.researchFilter;$$("[data-research-filter]").forEach(x=>x.classList.toggle("active",x===researchTab));renderResearch()}
+ const vm=e.target.closest("[data-view]");if(vm){viewMode=vm.dataset.view;$$("[data-view]").forEach(x=>x.classList.toggle("active",x===vm));renderTrending()}
+ const toggle=e.target.closest("[data-toggle]");if(toggle)toggle.classList.toggle("on");
+});
+$("#globalSearch").addEventListener("input",e=>{searchText=e.target.value;if(currentPage==="stars"){starsPage=1;renderStarsBoard()}else if(currentPage==="recommend")renderRecommend();else if(currentPage==="research")renderResearch();else if(currentPage==="library")renderLibrary();else if(currentPage==="trending")renderTrending();else setPage("trending",currentPeriod)});
+$("#languageFilter").addEventListener("change",e=>{languageFilter=e.target.value;renderTrending()});$("#topicFilter").addEventListener("change",e=>{topicFilter=e.target.value;renderTrending()});$("#sortFilter").addEventListener("change",renderTrending);$("#compareFilter").addEventListener("change",renderCompare);
+$("#collectBtn").addEventListener("click",doCollect);$("#trendCollect").addEventListener("click",doCollect);$("#logsRun").addEventListener("click",doCollect);
+$("#exportBtn").addEventListener("click",()=>exportCSV(projects,"gitscout-demo-projects.csv"));$("#trendExport").addEventListener("click",()=>exportCSV(projects.slice().sort((a,b)=>rankFor(a)-rankFor(b)),"github-trending-"+currentPeriod+".csv"));$("#compareExport").addEventListener("click",()=>exportCSV(projects,"gitscout-period-comparison.csv"));$("#libraryExport").addEventListener("click",()=>exportCSV(projects.filter(r=>saved.has(r.id)),"gitscout-interested-projects.csv"));$("#logsExport").addEventListener("click",()=>showToast("采集日志导出功能将在后端接入后启用"));
+["#starsLanguage","#starsTopic","#starsSort"].forEach(sel=>$(sel).addEventListener("change",()=>{starsPage=1;renderStarsBoard()}));
+$("#starsPageSize").addEventListener("change",e=>{starsPerPage=Number(e.target.value);starsPage=1;renderStarsBoard()});
+$("#starsPrev").addEventListener("click",()=>{starsPage=Math.max(1,starsPage-1);renderStarsBoard()});
+$("#starsNext").addEventListener("click",()=>{starsPage+=1;renderStarsBoard()});
+$("#snapshotPicker").addEventListener("change",applySnapshotSelection);
+$("#latestSnapshot").addEventListener("click",()=>{$("#snapshotPicker").selectedIndex=0;applySnapshotSelection()});
+$("#starsRefreshInterval").addEventListener("change",e=>showToast(e.target.value==="manual"?"已关闭自动刷新（原型设置）":`已设置每 ${e.target.value} 分钟刷新（原型设置）`));
+$("#starsExport").addEventListener("click",()=>exportCSV(projects.slice().sort((a,b)=>parseCount(b.stars)-parseCount(a.stars)),"gitscout-all-time-stars.csv"));
+$("#starsRefresh").addEventListener("click",()=>{const status=$("#starsSyncStatus");status.innerHTML="<i></i>采集请求已触发 · 等待 API 接入";$("#starsLastSync").textContent="待真实同步";showToast("已触发 Stars 总榜实时采集流程；当前原型尚未连接 GitHub API")});
+$("#recommendProfile").addEventListener("change",e=>{recommendationProfile=e.target.value;renderRecommend();showToast("已切换推荐权重方案")});
+["#recommendSort","#recommendLanguage"].forEach(sel=>$(sel).addEventListener("change",renderRecommend));
+$("#recommendRefresh").addEventListener("click",()=>{renderRecommend();showToast("推荐分数已按当前权重重新计算（演示数据）")});
+$("#recommendExport").addEventListener("click",()=>{const rows=projects.map(r=>({r,m:getRecommendationMetrics(r)})).sort((a,b)=>b.m.score-a.m.score);const csv=[["repository","score","stars_score","daily_score","weekly_score","monthly_score","daily_appearances","weekly_appearances","monthly_appearances"],...rows.map(x=>[x.r.name,x.m.score.toFixed(2),x.m.starsScore.toFixed(2),x.m.dailyScore.toFixed(2),x.m.weeklyScore.toFixed(2),x.m.monthlyScore.toFixed(2),x.r.appearances.daily,x.r.appearances.weekly,x.r.appearances.monthly])];const blob=new Blob(["\\ufeff"+csv.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gitscout-recommendations.csv";a.click();URL.revokeObjectURL(a.href);showToast("推荐榜单 CSV 已导出")});
+$("#researchExport").addEventListener("click",()=>{const rows=[["repository","stage","priority","notes","next_action"],...[...researchItems.entries()].map(([id,v])=>[projects.find(r=>r.id===id)?.name||id,v.stage,v.priority,v.notes,v.nextAction])];const blob=new Blob(["\\ufeff"+rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gitscout-research-list.csv";a.click();URL.revokeObjectURL(a.href);showToast("研究清单 CSV 已导出")});
+document.addEventListener("change",e=>{
+ const stage=e.target.closest("[data-research-stage]");if(stage){const id=Number(stage.dataset.researchStage),item=researchItems.get(id);if(item){item.stage=stage.value;researchItems.set(id,item);renderResearch();showToast("研究状态已更新")}return}
+ const priority=e.target.closest("[data-research-priority]");if(priority){const id=Number(priority.dataset.researchPriority),item=researchItems.get(id);if(item){item.priority=priority.value;researchItems.set(id,item)}}
+});
+$("#themeToggle").addEventListener("click",()=>{document.body.classList.toggle("dark");showToast(document.body.classList.contains("dark")?"已切换深色主题":"已切换浅色主题")});
+$("#helpBtn").addEventListener("click",()=>showToast("本原型包含总览、周期榜单、Stars 总榜、智能推荐、周期对比、感兴趣项目、项目研究、采集记录与设置页面"));
+$("#closeDrawer").addEventListener("click",closeDetail);$("#drawerBackdrop").addEventListener("click",closeDetail);
+$("#closeModal").addEventListener("click",closeCompareModal);$("#modalBackdrop").addEventListener("click",closeCompareModal);
+$("#openCompare").addEventListener("click",openCompareModal);$("#clearCompare").addEventListener("click",()=>{selected.clear();updateCompareTray();renderTrending()});
+$("#saveSettings").addEventListener("click",()=>showToast("设置已保存（仅本地原型状态）"));
+renderOverviewRows();renderTrending();renderStarsBoard();renderRecommend();renderCompare();renderLibrary();renderResearch();updateSaved();updateResearchCount();updateCompareTray();updatePeriodButtons();
+</script>
+</body>
+</html>
