@@ -1048,17 +1048,18 @@ def get_stars_scan(scan_id: int) -> dict[str, Any] | None:
         except json.JSONDecodeError:
             scan["query_plan"] = {}
         scan["incomplete_results"] = bool(scan["incomplete_results"])
-        scan["shards"] = [
-            dict(shard)
-            for shard in connection.execute(
-                """
-                SELECT id, shard_key, query_text, status, total_count, fetched_count,
-                       incomplete_results, started_at, finished_at, error_message
-                FROM stars_scan_shards WHERE scan_id = ? ORDER BY id ASC
-                """,
-                (scan_id,),
-            ).fetchall()
-        ]
+        scan["shards"] = []
+        for shard_row in connection.execute(
+            """
+            SELECT id, shard_key, query_text, status, total_count, fetched_count,
+                   incomplete_results, started_at, finished_at, error_message
+            FROM stars_scan_shards WHERE scan_id = ? ORDER BY id ASC
+            """,
+            (scan_id,),
+        ).fetchall():
+            shard = dict(shard_row)
+            shard["incomplete_results"] = bool(shard["incomplete_results"])
+            scan["shards"].append(shard)
         return scan
 
 
