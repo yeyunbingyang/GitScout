@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, Literal
 
+from pydantic import BaseModel, Field
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 
 from app.database.connection import get_connection
@@ -15,8 +16,44 @@ from app.services.trending_collector import (
     list_collection_jobs,
     utc_now,
 )
+from app.services.scheduler import list_schedules, save_schedule
 
 router = APIRouter(prefix="/collections", tags=["collections"])
+
+
+class ScheduleUpdate(BaseModel):
+    enabled: bool = False
+    time: str = Field(default="09:00", pattern=r"^(?:[01]\\d|2[0-3]):[0-5]\\d$")
+    timezone: str = "Asia/Shanghai"
+    weekday: int = Field(default=0, ge=0, le=6)
+    day_of_month: int = Field(default=1, ge=1, le=28)
+
+
+@router.get("/schedules")
+def get_collection_schedules() -> dict[str, Any]:
+    return {"items": list_schedules()}
+
+
+@router.put("/schedules/{period_type}")
+def update_collection_schedule(
+    period_type: Literal["daily", "weekly", "monthly"],
+    payload: ScheduleUpdate,
+) -> dict[str, Any]:
+    settings = {
+        "time": payload.time,
+        "weekday": payload.weekday,
+        "day_of_month": payload.day_of_month,
+    }
+    try:
+        schedule = save_schedule(
+            period_type,
+            enabled=payload.enabled,
+            settings=settings,
+            timezone_name=payload.timezone,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"schedule": schedule}
 
 
 @router.get("/jobs")
