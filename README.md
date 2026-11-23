@@ -80,6 +80,10 @@ npm run dev
 
 访问 `http://127.0.0.1:5173`。Vite 会把 `/api` 请求代理到 FastAPI。
 
+## 本地配置
+
+可选地将 `backend/.env.example` 复制到仓库根目录并命名为 `.env`。后端启动时会读取该文件；已经存在的系统环境变量优先级更高。GitHub Token 只配置在本地根目录 `.env`，不要提交真实 Token。
+
 ## 当前已实现
 
 - React 页面骨架与主要导航。
