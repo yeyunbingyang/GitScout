@@ -151,10 +151,14 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | `GET /collections/jobs` | 采集任务记录 |
 | `GET /collections/jobs/{id}` | 任务详情与执行日志 |
 | `POST /collections/jobs/{id}/retry` | 重试失败任务 |
-| `GET /collections/schedules` | 查询日 / 周 / 月调度设置 |
-| `PUT /collections/schedules/{period}` | 更新某个周期的调度计划 |
-| `GET /stars/leaderboard` | Stars 排名 |
+| `GET /collections/schedules` | 查询 Trending 与 Stars 调度设置 |
+| `PUT /collections/schedules/{period}` | 更新 Trending 某个周期的调度计划 |
+| `PUT /collections/schedules/stars` | 更新 Stars 每日调度计划 |
+| `GET /stars/leaderboard` | 查询 Stars 排名快照 |
+| `GET /stars/scans` | 查询历史 Stars 扫描 |
+| `GET /stars/scans/{id}` | 查询扫描与分片详情 |
 | `POST /stars/collect` | 手动触发 Stars 扫描 |
+| `POST /stars/scans/{id}/retry` | 重试失败或部分成功扫描 |
 | `GET /recommendations` | 推荐结果 |
 | `POST /recommendations/recalculate` | 重新计算推荐 |
 | `GET /research` | 研究工作区 |
