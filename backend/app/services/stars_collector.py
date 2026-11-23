@@ -422,10 +422,18 @@ async def collect_stars_repositories(
         remaining = max_results - len(repositories_by_id)
         target_count = min(total_count, remaining)
         fetched = 0
+        shard_incomplete = bool(first_payload.get("incomplete_results"))
         page_count = max(1, math.ceil(target_count / PER_PAGE))
+        page_error: str | None = None
         for page in range(1, page_count + 1):
-            payload = first_payload if page == 1 else await _fetch_page(client, query_text, page, state)
-            state.incomplete_results = state.incomplete_results or bool(payload.get("incomplete_results"))
+            try:
+                payload = first_payload if page == 1 else await _fetch_page(client, query_text, page, state)
+            except Exception as exc:
+                page_error = str(exc)[:800]
+                break
+            page_incomplete = bool(payload.get("incomplete_results"))
+            shard_incomplete = shard_incomplete or page_incomplete
+            state.incomplete_results = state.incomplete_results or page_incomplete
             page_items = payload.get("items") or []
             for raw_item in page_items:
                 if len(repositories_by_id) >= max_results:
@@ -445,18 +453,28 @@ async def collect_stars_repositories(
                 if total_count > fetched:
                     state.cap_reached = True
                 break
-        if fetched < target_count and not state.incomplete_results:
+        if fetched < target_count and page_error is None:
+            shard_incomplete = True
             state.incomplete_results = True
-        shard_status = "partial_success" if state.incomplete_results or fetched < total_count else "success"
+        if page_error:
+            state.failed_shards.append(str(shard_id))
+            _add_log(job_id, "ERROR", "Stars shard pagination failed", {"query": query_text, "error": page_error})
+        shard_status = (
+            "failed" if page_error and fetched == 0
+            else "partial_success" if page_error or shard_incomplete or fetched < total_count
+            else "success"
+        )
         _finish_shard(
             shard_id,
             shard_status,
             total_count,
             fetched,
-            state.incomplete_results,
-            "The configured top-N limit was reached before this shard was fully enumerated."
-            if state.cap_reached and fetched < total_count
-            else None,
+            shard_incomplete,
+            page_error or (
+                "The configured top-N limit was reached before this shard was fully enumerated."
+                if state.cap_reached and fetched < total_count
+                else None
+            ),
         )
 
     async def process_query(
@@ -550,6 +568,7 @@ async def collect_stars_repositories(
                 f"More than {SEARCH_RESULT_LIMIT} repositories share {star_low} stars "
                 "on the same creation date; this Search API shard cannot be split further."
             )
+            _finish_shard(shard_id, "failed", total_count, 0, True, message)
             state.failed_shards.append(shard_key)
             state.incomplete_results = True
             _add_log(job_id, "WARNING", "Stars shard could not be subdivided further", {"shard": shard_key, "error": message})
@@ -616,7 +635,7 @@ async def collect_stars_repositories(
         )
         remaining = max_results
 
-        if root_total > SEARCH_RESULT_LIMIT and remaining > SEARCH_RESULT_LIMIT and max_stars > min_stars:
+        if root_total > SEARCH_RESULT_LIMIT and remaining > SEARCH_RESULT_LIMIT:
             _finish_shard(
                 root_id,
                 "success",
@@ -625,21 +644,31 @@ async def collect_stars_repositories(
                 root_incomplete,
                 "Root query partitioned into non-overlapping Stars ranges.",
             )
-            midpoint = (min_stars + max_stars) // 2
-            await process_query(
-                client,
-                _query(midpoint + 1, max_stars, include_forks),
-                f"stars-{midpoint + 1}-{max_stars}",
-                midpoint + 1,
-                max_stars,
-            )
-            await process_query(
-                client,
-                _query(min_stars, midpoint, include_forks),
-                f"stars-{min_stars}-{midpoint}",
-                min_stars,
-                midpoint,
-            )
+            if max_stars > min_stars:
+                midpoint = (min_stars + max_stars) // 2
+                await process_query(
+                    client,
+                    _query(midpoint + 1, max_stars, include_forks),
+                    f"stars-{midpoint + 1}-{max_stars}",
+                    midpoint + 1,
+                    max_stars,
+                )
+                await process_query(
+                    client,
+                    _query(min_stars, midpoint, include_forks),
+                    f"stars-{min_stars}-{midpoint}",
+                    min_stars,
+                    midpoint,
+                )
+            else:
+                await process_date_range(
+                    client,
+                    min_stars,
+                    min_stars,
+                    MIN_REPOSITORY_CREATED,
+                    datetime.now(timezone.utc).date(),
+                    include_forks,
+                )
         else:
             coverage_total += root_total
             await consume_pages(client, root_query, root_payload, root_id, root_total)
