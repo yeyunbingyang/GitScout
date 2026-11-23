@@ -111,7 +111,7 @@ export default function CollectionJobsPage() {
                         <button className="text-button" onClick={() => void showDetails(job.id)}>
                           <FileText size={13} />详情
                         </button>
-                        {["failed", "partial_success"].includes(job.status) && (
+                        {["failed", "partial_success", "interrupted"].includes(job.status) && (
                           <button className="text-button" disabled={retrying === job.id} onClick={() => void retry(job)}>
                             <RotateCcw size={13} />{retrying === job.id ? "提交中" : "重试"}
                           </button>
