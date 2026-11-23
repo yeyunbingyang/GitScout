@@ -39,7 +39,7 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 
 ### 方式一：本地单地址运行
 
-1. 安装 Python 3.11+、Node.js 20+。
+1. 安装 Python 3.11、Node.js 20+。
 2. 首次构建前端：
 
 ```powershell
