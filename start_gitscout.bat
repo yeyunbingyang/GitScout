@@ -48,6 +48,6 @@ if not exist "%ROOT%.runtime\logs" mkdir "%ROOT%.runtime\logs"
 
 echo [3/3] Starting local service at http://127.0.0.1:8765
 echo Press Ctrl+C to stop GitScout.
-start "" http://127.0.0.1:8765
+start "" /b powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Start-Process 'http://127.0.0.1:8765'"
 cd /d "%BACKEND%"
 "%VENV%\Scripts\python.exe" -m uvicorn app.main:app --host 127.0.0.1 --port 8765 --workers 1
