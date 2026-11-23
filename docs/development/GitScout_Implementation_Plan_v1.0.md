@@ -98,7 +98,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 - 最新 Stars 扫描时间、覆盖数量和榜首仓库信息。
 - 历史快照比较：选择同周期两个不同批次，计算新增、掉榜、排名上升、下降和不变。
 - 比较支持关键词、语言、变化类型筛选、分页和完整结果 CSV 导出。
-- 项目详情：仓库主档、Topics、个人兴趣 / 研究状态、日周月最佳排名、Trending 历史、Stars 扫描历史和 Stars 观测走势。
+- 项目详情：仓库主档、Topics、个人兴趣 / 研究状态、日周月最佳排名与当前连续上榜次数、周期排名走势、Trending 历史、Stars 扫描历史和 Stars 观测走势。
 - 从趋势总览、Trending 榜单、Stars 总榜和项目库进入项目详情。
 - 新增 dashboard analytics、comparison、repository detail API 和对应集成测试；复用现有 SQLite 表，不新增数据库迁移。
 
