@@ -32,8 +32,10 @@ const timezones = [
 
 const weekdays = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
 
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleString("zh-CN", { hour12: false }) : "未安排";
+function formatDate(value: string | null, timezone: string): string {
+  return value
+    ? new Date(value).toLocaleString("zh-CN", { hour12: false, timeZone: timezone })
+    : "未安排";
 }
 
 function toForm(schedule: CollectionSchedule): ScheduleForm {
@@ -161,8 +163,8 @@ export default function CollectionSettingsPage() {
               <div className="schedule-footer">
                 <div>
                   <small>下次执行</small>
-                  <strong>{form.enabled ? formatDate(saved?.next_run_at ?? null) : "已关闭"}</strong>
-                  {saved?.last_run_at && <small>上次执行：{formatDate(saved.last_run_at)}</small>}
+                  <strong>{form.enabled ? formatDate(saved?.next_run_at ?? null, form.timezone) : "已关闭"}</strong>
+                  {saved?.last_run_at && <small>上次执行：{formatDate(saved.last_run_at, form.timezone)}</small>}
                 </div>
                 <button className="button button-primary" onClick={() => void save(period.value)} disabled={loading || saving !== null}>
                   {savedPeriod === period.value ? <Check size={14} /> : <Save size={14} />}
