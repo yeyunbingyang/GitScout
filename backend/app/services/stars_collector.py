@@ -729,6 +729,8 @@ def _upsert_repository(connection: Any, item: dict[str, Any], captured_at: str) 
         current_name = str(existing["full_name"])
         name_collision = by_id is not None and by_name is not None and int(by_id["id"]) != int(by_name["id"])
         persisted_name = current_name if name_collision else full_name
+        persisted_owner = current_name.split("/", 1)[0] if name_collision else item["owner"]
+        persisted_repo_name = current_name.split("/", 1)[-1] if name_collision else item["name"]
         connection.execute(
             """
             UPDATE repositories SET
