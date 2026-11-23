@@ -16,6 +16,7 @@ function label(status: string): string {
 }
 
 function periodName(jobType: string): string {
+  if (jobType === "stars_scan") return "Stars 总榜";
   const value = jobType.replace("trending_", "");
   return value === "daily" ? "日榜" : value === "weekly" ? "周榜" : value === "monthly" ? "月榜" : jobType;
 }
@@ -78,7 +79,7 @@ export default function CollectionJobsPage() {
   return (
     <div className="page-stack">
       <div className="section-heading">
-        <div><h3>Trending 采集任务</h3><p>记录每次真实采集、数据入库、失败原因和重试关系。</p></div>
+        <div><h3>Trending 采集任务</h3><p>统一记录 Trending 与 Stars 总榜采集、数据入库、失败原因和重试关系。</p></div>
         <button className="button button-quiet" onClick={() => void load()} disabled={loading}>
           <RefreshCw size={14} className={loading ? "spin" : ""} />刷新记录
         </button>
@@ -134,6 +135,16 @@ export default function CollectionJobsPage() {
           </div>
           {selectedJob.error_message && <div className="job-error-message">{selectedJob.error_message}</div>}
           {selectedJob.retry_of_job_id && <p className="job-retry-link">重试来源：{selectedJob.retry_of_job_id}</p>}
+          {selectedJob.stars_scan && (
+            <div className="stars-job-summary">
+              <strong>Stars 扫描覆盖</strong>
+              <span>{selectedJob.stars_scan.coverage_description || "暂无覆盖说明"}</span>
+              <small>
+                扫描 #{selectedJob.stars_scan.id} · {selectedJob.stars_scan.shards.length} 个分片
+                · {selectedJob.stars_scan.incomplete_results ? "API 返回不完整结果" : "API 未标记不完整"}
+              </small>
+            </div>
+          )}
           <div className="job-detail-stats">
             <span>请求 {selectedJob.request_count}</span>
             <span>返回 {selectedJob.fetched_count}</span>
