@@ -136,6 +136,7 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | `GET /trending/snapshots` | 历史快照列表 |
 | `GET /trending/snapshots/{id}` | 历史快照详情 |
 | `POST /trending/collect` | 手动触发日 / 周 / 月采集 |
+| `GET /collections/jobs` | 采集任务记录 |
 | `GET /collections/jobs/{id}` | 任务详情与执行日志 |
 | `POST /collections/jobs/{id}/retry` | 重试失败任务 |
 | `GET /collections/schedules` | 查询日 / 周 / 月调度设置 |
@@ -145,7 +146,6 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | `GET /recommendations` | 推荐结果 |
 | `POST /recommendations/recalculate` | 重新计算推荐 |
 | `GET /research` | 研究工作区 |
-| `GET /collections/jobs` | 采集任务记录 |
 
 耗时操作返回 job_id，前端轮询任务状态；首期不要求 WebSocket。
 
