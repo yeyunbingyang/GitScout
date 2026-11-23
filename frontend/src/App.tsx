@@ -10,6 +10,8 @@ import TrendingPage from "./pages/TrendingPage";
 import CollectionJobsPage from "./pages/CollectionJobsPage";
 import CollectionSettingsPage from "./pages/CollectionSettingsPage";
 import StarsPage from "./pages/StarsPage";
+import ComparisonPage from "./pages/ComparisonPage";
+import RepositoryDetailPage from "./pages/RepositoryDetailPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { api, type HealthResponse } from "./services/api";
 
@@ -43,7 +45,11 @@ function AppShell() {
   const location = useLocation();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [apiError, setApiError] = useState(false);
-  const meta = pageMeta[location.pathname] ?? pageMeta["/"];
+  const meta = pageMeta[location.pathname] ?? (
+    location.pathname.startsWith("/repositories/")
+      ? { title: "项目详情", subtitle: "查看仓库历史热度、周期排名与 Stars 变化" }
+      : pageMeta["/"]
+  );
 
   useEffect(() => {
     let active = true;
@@ -83,7 +89,7 @@ function AppShell() {
             <span className={apiError ? "connection-state offline" : "connection-state"}>
               <i />{apiError ? "后端未连接" : health ? "本地服务已连接" : "正在连接"}
             </span>
-            <span className="version-tag">STARS LEADERBOARD · 0.3.0</span>
+            <span className="version-tag">TREND ANALYTICS · 0.4.0</span>
           </div>
         </header>
         <div className="page-header"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></div>
@@ -91,10 +97,11 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/repositories" element={<RepositoriesPage />} />
+            <Route path="/repositories/:repositoryId" element={<RepositoryDetailPage />} />
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/stars" element={<StarsPage />} />
             <Route path="/recommendations" element={<PlaceholderPage title="综合推荐评分" description="按 Stars 30%、日榜 15%、周榜 30%、月榜 25% 的默认权重计算推荐分，并保留每次计算批次。" milestone="M5 · RECOMMENDATION ENGINE" />} />
-            <Route path="/compare" element={<PlaceholderPage title="跨周期排名矩阵" description="选择历史快照，对比项目新增、掉榜和排名变化。" milestone="M4 · TREND ANALYTICS" />} />
+            <Route path="/compare" element={<ComparisonPage />} />
             <Route path="/interested" element={<PlaceholderPage title="感兴趣项目库" description="轻量保存感兴趣项目；该标记与加入项目研究相互独立。" milestone="M6 · RESEARCH WORKSPACE" />} />
             <Route path="/research" element={<PlaceholderPage title="项目研究工作区" description="管理待研究、研究中、已完成和暂缓项目，记录目标、笔记、下一步行动与结论。" milestone="M6 · RESEARCH WORKSPACE" />} />
             <Route path="/collections" element={<CollectionJobsPage />} />
