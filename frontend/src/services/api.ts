@@ -29,6 +29,157 @@ export interface Repository {
   last_synced_at: string | null;
 }
 
+
+export interface DashboardAnalytics {
+  period_type: TrendingPeriod;
+  summary: {
+    repositories: number;
+    successful_trending_snapshots: number;
+    latest_period_items: number;
+    new_items_vs_previous: number;
+    cross_period_hot_projects: number;
+    interested_projects: number;
+    research_projects: number;
+  };
+  period_snapshots: Record<TrendingPeriod, {
+    latest: TrendingSnapshot | null;
+    previous: TrendingSnapshot | null;
+  }>;
+  trend_series: {
+    id: number;
+    period_key: string;
+    collected_at: string;
+    item_count: number;
+    average_stars: number | null;
+    total_stars_delta: number;
+  }[];
+  language_distribution: { name: string; value: number }[];
+  topic_distribution: { name: string; value: number }[];
+  cross_period_items: {
+    repository_id: number;
+    full_name: string;
+    description: string | null;
+    html_url: string;
+    language: string | null;
+    stars_count: number;
+    rank_daily: number | null;
+    rank_weekly: number | null;
+    rank_monthly: number | null;
+    period_count: number;
+  }[];
+  latest_stars_scan: {
+    id: number;
+    finished_at: string;
+    status: string;
+    fetched_count: number;
+    total_count: number;
+    incomplete_results: boolean | number;
+    coverage_description: string | null;
+  } | null;
+  latest_stars_top: { full_name: string; stars_count: number } | null;
+}
+
+export interface RepositoryProfile extends Repository {
+  license_spdx_id: string | null;
+  github_created_at: string | null;
+  github_updated_at: string | null;
+  pushed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  topics: string[];
+  interested: {
+    marked_at: string;
+    source_page: string | null;
+    tags_json: string;
+    notes: string | null;
+  } | null;
+  research: {
+    id: number;
+    status: "pending" | "in_progress" | "completed" | "paused";
+    priority: "high" | "medium" | "low";
+    research_goal: string | null;
+    next_action: string | null;
+    conclusion: string | null;
+    added_at: string;
+    started_at: string | null;
+    completed_at: string | null;
+    updated_at: string;
+  } | null;
+}
+
+export interface RepositoryDetailResponse {
+  repository: RepositoryProfile;
+  summary: {
+    trending_appearances: number;
+    stars_scan_observations: number;
+    best_rank_by_period: Partial<Record<TrendingPeriod, number>>;
+    first_observed_stars: number | null;
+    latest_observed_stars: number | null;
+    observed_stars_growth: number | null;
+    first_trending_at: string | null;
+    last_trending_at: string | null;
+  };
+  trending_history: {
+    snapshot_id: number;
+    period_type: TrendingPeriod;
+    period_key: string;
+    collected_at: string;
+    snapshot_status: string;
+    rank: number;
+    stars_count: number;
+    stars_delta: number;
+    forks_count: number;
+  }[];
+  stars_history: {
+    scan_id: number;
+    captured_at: string;
+    scan_status: string;
+    incomplete_results: number;
+    rank: number;
+    stars_count: number;
+    forks_count: number;
+  }[];
+  stats_history: {
+    captured_at: string;
+    source: string;
+    stars_count: number;
+    forks_count: number;
+    open_issues_count: number;
+  }[];
+}
+
+export type ComparisonChangeType = "all" | "new" | "dropped" | "up" | "down" | "unchanged";
+
+export interface TrendingComparisonResponse {
+  base_snapshot: TrendingSnapshot;
+  target_snapshot: TrendingSnapshot;
+  summary: {
+    new: number;
+    dropped: number;
+    up: number;
+    down: number;
+    unchanged: number;
+    total: number;
+  };
+  items: {
+    repository_id: number;
+    full_name: string;
+    owner: string;
+    name: string;
+    description: string | null;
+    html_url: string;
+    language: string | null;
+    base_rank: number | null;
+    target_rank: number | null;
+    rank_change: number | null;
+    change_type: Exclude<ComparisonChangeType, "all">;
+    stars_count: number;
+    stars_delta: number;
+    forks_count: number;
+  }[];
+  pagination: Pagination;
+}
+
 export interface Pagination {
   page: number;
   page_size: number;
@@ -237,6 +388,30 @@ function postJson<T>(path: string, body: unknown): Promise<T> {
 export const api = {
   health: () => request<HealthResponse>("/api/v1/health"),
   dashboardSummary: () => request<DashboardSummary>("/api/v1/dashboard/summary"),
+  dashboardAnalytics: (periodType: TrendingPeriod = "daily") =>
+    request<DashboardAnalytics>("/api/v1/dashboard/analytics?period_type=" + periodType),
+  repositoryDetail: (repositoryId: number) =>
+    request<RepositoryDetailResponse>("/api/v1/repositories/" + repositoryId),
+  compareTrending: (filters: {
+    baseSnapshotId: number;
+    targetSnapshotId: number;
+    changeType?: ComparisonChangeType;
+    q?: string;
+    language?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const params = new URLSearchParams({
+      base_snapshot_id: String(filters.baseSnapshotId),
+      target_snapshot_id: String(filters.targetSnapshotId),
+      change_type: filters.changeType ?? "all",
+      page: String(filters.page ?? 1),
+      page_size: String(filters.pageSize ?? 50),
+    });
+    if (filters.q) params.set("q", filters.q);
+    if (filters.language) params.set("language", filters.language);
+    return request<TrendingComparisonResponse>("/api/v1/trending/compare?" + params.toString());
+  },
   repositories: (page = 1) =>
     request<ListResponse<Repository>>("/api/v1/repositories?page=" + page + "&page_size=20"),
   trendingSnapshots: (periodType: TrendingPeriod) =>
