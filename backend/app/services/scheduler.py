@@ -16,6 +16,12 @@ from app.services.trending_collector import (
     execute_trending_job,
     utc_now,
 )
+from app.services.stars_collector import (
+    ActiveStarsScanError,
+    create_stars_scan_job,
+    execute_stars_scan,
+    validate_scan_options,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +29,12 @@ DEFAULTS: dict[str, dict[str, Any]] = {
     "daily": {"time": "09:00", "weekday": 0, "day_of_month": 1},
     "weekly": {"time": "09:00", "weekday": 0, "day_of_month": 1},
     "monthly": {"time": "09:00", "weekday": 0, "day_of_month": 1},
+}
+STARS_DEFAULT_SETTINGS: dict[str, Any] = {
+    "time": "09:00",
+    "max_results": 5000,
+    "min_stars": 100,
+    "include_forks": False,
 }
 DEFAULT_TIMEZONE = "Asia/Shanghai"
 _scheduler_tasks: set[asyncio.Task[Any]] = set()
@@ -101,6 +113,19 @@ def ensure_default_schedules() -> None:
                     json.dumps(settings),
                 ),
             )
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO collection_schedules (
+                name, job_type, enabled, timezone, next_run_at, settings_json
+            ) VALUES (?, 'stars_daily', 0, ?, ?, ?)
+            """,
+            (
+                "GitHub Stars Daily",
+                DEFAULT_TIMEZONE,
+                calculate_next_run("daily", STARS_DEFAULT_SETTINGS, DEFAULT_TIMEZONE, now),
+                json.dumps(STARS_DEFAULT_SETTINGS),
+            ),
+        )
 
 
 def list_schedules() -> list[dict[str, Any]]:
@@ -111,11 +136,12 @@ def list_schedules() -> list[dict[str, Any]]:
             SELECT id, name, job_type, enabled, interval_seconds, cron_expression,
                    timezone, next_run_at, last_run_at, settings_json
             FROM collection_schedules
-            WHERE job_type IN ('trending_daily', 'trending_weekly', 'trending_monthly')
+            WHERE job_type IN ('trending_daily', 'trending_weekly', 'trending_monthly', 'stars_daily')
             ORDER BY CASE job_type
                 WHEN 'trending_daily' THEN 1
                 WHEN 'trending_weekly' THEN 2
-                ELSE 3 END
+                WHEN 'trending_monthly' THEN 3
+                ELSE 4 END
             """
         ).fetchall()
 
@@ -181,14 +207,68 @@ def save_schedule(
     return next(item for item in list_schedules() if item["job_type"] == f"trending_{period_type}")
 
 
+def save_stars_schedule(
+    enabled: bool,
+    settings: dict[str, Any],
+    timezone_name: str,
+) -> dict[str, Any]:
+    try:
+        ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(f"Unknown timezone: {timezone_name}") from exc
+
+    max_results, min_stars = validate_scan_options(
+        int(settings.get("max_results", 5000)),
+        int(settings.get("min_stars", 100)),
+    )
+    normalized = {
+        "time": str(settings.get("time", "09:00")),
+        "max_results": max_results,
+        "min_stars": min_stars,
+        "include_forks": bool(settings.get("include_forks", False)),
+    }
+    next_run = (
+        calculate_next_run("daily", normalized, timezone_name)
+        if enabled
+        else None
+    )
+    now = utc_now()
+    with get_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO collection_schedules (
+                name, job_type, enabled, cron_expression, timezone, next_run_at,
+                settings_json, updated_at
+            ) VALUES ('GitHub Stars Daily', 'stars_daily', ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(job_type) DO UPDATE SET
+                enabled = excluded.enabled,
+                cron_expression = excluded.cron_expression,
+                timezone = excluded.timezone,
+                next_run_at = excluded.next_run_at,
+                settings_json = excluded.settings_json,
+                updated_at = excluded.updated_at
+            """,
+            (
+                1 if enabled else 0,
+                f"daily@{normalized['time']}",
+                timezone_name,
+                next_run,
+                json.dumps(normalized),
+                now,
+            ),
+        )
+    return next(item for item in list_schedules() if item["job_type"] == "stars_daily")
+
+
 def recover_interrupted_jobs() -> int:
     """Mark jobs left queued/running by a previous process as interrupted."""
     now = utc_now()
     with get_connection() as connection:
         rows = connection.execute(
             """
-            SELECT id FROM collection_jobs
-            WHERE job_type LIKE 'trending_%' AND status IN ('queued', 'running')
+            SELECT id, job_type, related_stars_scan_id FROM collection_jobs
+            WHERE (job_type LIKE 'trending_%' OR job_type = 'stars_scan')
+              AND status IN ('queued', 'running')
             """
         ).fetchall()
         for row in rows:
@@ -209,6 +289,15 @@ def recover_interrupted_jobs() -> int:
                 """,
                 (row["id"], now),
             )
+            if row["job_type"] == "stars_scan" and row["related_stars_scan_id"]:
+                connection.execute(
+                    """
+                    UPDATE stars_scans SET status = 'interrupted', finished_at = ?,
+                        error_summary = 'The local GitScout process stopped before this scan completed.'
+                    WHERE id = ?
+                    """,
+                    (now, row["related_stars_scan_id"]),
+                )
     return len(rows)
 
 
@@ -237,24 +326,47 @@ async def scheduler_loop(poll_seconds: int = 15) -> None:
         for schedule in due:
             job_type = schedule["job_type"]
             period_type = job_type.removeprefix("trending_")
+            settings = json.loads(schedule["settings_json"] or "{}")
             try:
-                settings = json.loads(schedule["settings_json"] or "{}")
-                job = create_trending_job(
-                    period_type,
-                    trigger_type="scheduled",
-                    schedule_id=int(schedule["id"]),
-                )
-                task = asyncio.create_task(execute_trending_job(job["id"], period_type))
+                if job_type.startswith("trending_"):
+                    period_type = job_type.removeprefix("trending_")
+                    job = create_trending_job(
+                        period_type,
+                        trigger_type="scheduled",
+                        schedule_id=int(schedule["id"]),
+                    )
+                    task = asyncio.create_task(execute_trending_job(job["id"], period_type))
+                elif job_type == "stars_daily":
+                    job = create_stars_scan_job(
+                        trigger_type="scheduled",
+                        max_results=int(settings.get("max_results", 5000)),
+                        min_stars=int(settings.get("min_stars", 100)),
+                        include_forks=bool(settings.get("include_forks", False)),
+                        schedule_id=int(schedule["id"]),
+                    )
+                    scan_id = int(job["related_stars_scan_id"])
+                    task = asyncio.create_task(
+                        execute_stars_scan(
+                            job["id"],
+                            scan_id,
+                            int(settings.get("max_results", 5000)),
+                            int(settings.get("min_stars", 100)),
+                            bool(settings.get("include_forks", False)),
+                        )
+                    )
+                else:
+                    logger.warning("Ignoring unsupported collection schedule: %s", job_type)
+                    continue
                 _keep_task(task)
-                logger.info("Scheduled %s collection job %s", period_type, job["id"])
-            except ActiveTrendingJobError:
-                logger.info("Skipped scheduled %s collection because another job is active", period_type)
+                logger.info("Scheduled %s collection job %s", job_type, job["id"])
+            except (ActiveTrendingJobError, ActiveStarsScanError):
+                logger.info("Skipped scheduled %s collection because another job is active", job_type)
             except Exception:
-                logger.exception("Could not dispatch scheduled %s collection", period_type)
-                settings = json.loads(schedule["settings_json"] or "{}")
+                logger.exception("Could not dispatch scheduled %s collection", job_type)
 
             try:
-                next_run = calculate_next_run(period_type, settings, schedule["timezone"], after=now)
+                schedule_period = "daily" if job_type == "stars_daily" else job_type.removeprefix("trending_")
+                next_run = calculate_next_run(schedule_period, settings, schedule["timezone"], after=now)
             except Exception:
                 logger.exception("Invalid schedule settings for %s; disabling schedule", job_type)
                 with get_connection() as connection:
