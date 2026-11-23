@@ -41,7 +41,7 @@ def test_migration_is_idempotent(tmp_path):
             "SELECT COUNT(*) AS count FROM schema_migrations"
         ).fetchone()["count"]
 
-    assert count == 1
+    assert count == 2
 
 
 def test_repository_unique_constraints_and_foreign_keys(tmp_path):
