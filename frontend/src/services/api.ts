@@ -126,24 +126,23 @@ export interface ListResponse<T> {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    headers: {
-      Accept: "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
+  const headers = new Headers(init?.headers);
+  headers.set("Accept", "application/json");
+  const response = await fetch(path, { ...init, headers });
 
   if (!response.ok) {
-    let message = "Request failed: " + response.status;
+    const body = await response.text();
+    let message = body || "Request failed: " + response.status;
     try {
-      const payload = await response.json();
-      message = typeof payload.detail === "string"
-        ? payload.detail
-        : payload.detail?.message ?? JSON.stringify(payload.detail ?? payload);
+      const payload = JSON.parse(body) as {
+        detail?: string | { message?: string } | unknown;
+      };
+      if (typeof payload.detail === "string") message = payload.detail;
+      else if (payload.detail && typeof payload.detail === "object" && "message" in payload.detail) {
+        message = String(payload.detail.message);
+      }
     } catch {
-      const body = await response.text();
-      if (body) message = body;
+      // Keep the raw response body as the most useful error message.
     }
     throw new Error(message);
   }
