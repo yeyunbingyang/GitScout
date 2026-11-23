@@ -277,6 +277,7 @@ def create_trending_job(
     period_type: str,
     trigger_type: str = "manual",
     retry_count: int = 0,
+    retry_of_job_id: str | None = None,
 ) -> dict[str, Any]:
     period_type = validate_period(period_type)
     if trigger_type not in {"manual", "scheduled", "startup"}:
@@ -301,10 +302,10 @@ def create_trending_job(
         connection.execute(
             """
             INSERT INTO collection_jobs (
-                id, job_type, trigger_type, status, progress, retry_count, created_at
-            ) VALUES (?, ?, ?, 'queued', 0, ?, ?)
+                id, job_type, trigger_type, status, progress, retry_count, retry_of_job_id, created_at
+            ) VALUES (?, ?, ?, 'queued', 0, ?, ?, ?)
             """,
-            (job_id, job_type, trigger_type, retry_count, created_at),
+            (job_id, job_type, trigger_type, retry_count, retry_of_job_id, created_at),
         )
         connection.execute(
             """
