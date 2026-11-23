@@ -1,0 +1,149 @@
+# GitScout 技术架构设计说明书
+
+- 产品：GitScout · 开源项目发现与研究平台
+- 文档版本：v1.0
+- 状态：首期技术基线已确认
+- 运行模式：Windows 本地 Web 工作台
+
+## 1. 架构决策
+
+| 层级 | 技术 | 职责 |
+|---|---|---|
+| 前端 | React + TypeScript + Vite | 页面、交互、图表与用户操作 |
+| 后端 | Python + FastAPI | REST API、业务规则、采集和持久化 |
+| 数据库 | SQLite | 唯一业务数据库，默认位于 `data/gitscout.db` |
+| 数据访问 | Python 标准库 `sqlite3` | 连接、事务、SQL 迁移 |
+| 请求与解析 | HTTPX + BeautifulSoup | GitHub REST API 与 Trending 页面 |
+| 任务调度 | Python `asyncio` | 单进程内定时任务和手动任务 |
+| ASGI 服务 | Uvicorn | 本地 API 和生产静态资源服务 |
+
+不引入 PostgreSQL、MySQL、MongoDB、Redis、Celery、RabbitMQ、Docker 或 Kubernetes。首期不引入 ORM；数据库版本通过受 Git 管理的 SQL 迁移文件维护。
+
+## 2. 本地运行形态
+
+### 开发模式
+
+- React / Vite：`http://127.0.0.1:5173`
+- FastAPI / Uvicorn：`http://127.0.0.1:8000`
+- Vite 将 `/api` 请求代理到 FastAPI。
+- CORS 只允许配置的本地开发 Origin。
+
+### 本地使用模式
+
+前端执行 `npm run build` 生成 `frontend/dist`，FastAPI 提供静态文件和 API。用户通过 `http://127.0.0.1:8765` 使用工作台。
+
+默认只绑定 `127.0.0.1`，不开放公网或局域网访问。正式运行使用单个 Uvicorn Worker，避免进程内调度器重复启动。
+
+## 3. 分层职责
+
+1. **React 前端**：负责趋势总览、周期榜单、Stars 总榜、推荐、比较、兴趣、研究、采集记录和设置页面；不直接请求 GitHub、不连接 SQLite、不持有 Token。
+2. **FastAPI API 层**：负责输入校验、响应格式、错误处理和 API 版本管理。
+3. **Service 层**：承载项目、榜单、推荐、研究、采集等业务规则。
+4. **Collector 层**：隔离 GitHub API 客户端与 Trending HTML 解析器。
+5. **Repository / Database 层**：集中处理 SQL、连接、事务和迁移。
+6. **asyncio 调度层**：触发采集与计算任务；任务状态持久化到 SQLite。
+
+## 4. 数据库设计
+
+SQLite 是唯一业务数据库，首期核心表如下：
+
+| 领域 | 表 |
+|---|---|
+| 项目主档 | `repositories`、`repository_topics`、`repository_stats` |
+| Trending | `trending_snapshots`、`trending_snapshot_items` |
+| Stars | `stars_scans`、`stars_scan_shards`、`stars_scan_items` |
+| 推荐 | `recommendation_profiles`、`recommendation_runs`、`recommendation_scores` |
+| 兴趣 | `interested_projects` |
+| 研究 | `research_projects`、`research_notes`、`research_tags`、`research_project_tags` |
+| 任务 | `collection_schedules`、`collection_jobs`、`collection_job_logs` |
+| 系统 | `app_settings`、`schema_migrations` |
+
+关键规则：
+
+- 同一 GitHub 仓库以 `github_repo_id` 为首选唯一标识，`full_name` 作为唯一备用约束。
+- 日 / 周 / 月每次采集都新增快照，不覆盖历史排名。
+- Stars 总榜独立于 Trending 项目集合。
+- 兴趣标记与研究关系相互独立。
+- 推荐计算保留算法版本、实际权重、统计窗口、数据截止时间和分项得分。
+- 时间统一存 ISO-8601 UTC 字符串，前端按本地时区显示。
+
+### SQLite 运行参数
+
+- `PRAGMA journal_mode=WAL`
+- `PRAGMA foreign_keys=ON`
+- `PRAGMA busy_timeout=5000`
+- `PRAGMA synchronous=NORMAL`
+
+所有网络请求期间不持有数据库写事务；采集写入采用短事务和单写入锁。每个请求 / 任务使用独立连接，结束后关闭。
+
+## 5. 采集方案
+
+### Trending 日 / 周 / 月
+
+数据来源：
+
+- `https://github.com/trending?since=daily`
+- `https://github.com/trending?since=weekly`
+- `https://github.com/trending?since=monthly`
+
+使用 HTTPX 获取页面，BeautifulSoup 解析仓库名、简介、语言、Stars、周期增量、Forks 和排名。解析器独立封装，并使用本地 HTML Fixture 做回归测试。每次采集创建快照；失败不得伪装为成功。
+
+### Stars 总榜
+
+使用 GitHub REST Search Repositories API，按 `sort=stars&order=desc` 查询。Search API 单次查询最多返回 1,000 条结果，且有独立速率限制。因此必须显示结果覆盖范围、`incomplete_results` 和分片完成状态。超过单次结果上限时按 Stars 区间等条件分片，合并后按 GitHub repository ID 去重。部分分片失败时标记为部分成功，不得称为全站完整榜单。
+
+Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流时遵守 `Retry-After` 与 `X-RateLimit-Reset`，采用退避重试。
+
+## 6. 任务调度与恢复
+
+不使用 Celery / Redis。FastAPI lifespan 启动一个 asyncio 调度循环，读取 SQLite 中的调度配置。手动触发和定时触发共用任务入口。
+
+任务状态包括 queued、running、success、partial_success、failed、cancelled、interrupted。通过幂等键防止重复执行；服务启动时识别异常退出留下的 running 任务并标记中断或按规则恢复。生产环境必须单 Worker。
+
+## 7. API 约定
+
+统一前缀 `/api/v1`，JSON 响应，列表统一分页。
+
+| API | 用途 |
+|---|---|
+| `GET /health` | 服务与数据库健康状态 |
+| `GET /dashboard/summary` | 首页概览统计 |
+| `GET /repositories` | 项目主档列表 |
+| `GET /trending` | 周期榜单 |
+| `GET /trending/snapshots` | 历史快照 |
+| `GET /stars/leaderboard` | Stars 排名 |
+| `POST /stars/collect` | 手动触发 Stars 扫描 |
+| `GET /recommendations` | 推荐结果 |
+| `POST /recommendations/recalculate` | 重新计算推荐 |
+| `GET /research` | 研究工作区 |
+| `GET /collections/jobs` | 采集任务记录 |
+
+耗时操作返回 job_id，前端轮询任务状态；首期不要求 WebSocket。
+
+## 8. 目录与数据边界
+
+```text
+GitScout/
+├── frontend/             # React 应用
+├── backend/              # FastAPI、SQL 迁移、测试
+├── data/                 # SQLite、备份、导出
+├── docs/                 # 需求、架构、开发文档
+├── prototype/            # 已确认 HTML 原型
+├── .runtime/logs/         # 可重建运行日志
+├── start_gitscout.bat
+└── README.md
+```
+
+数据库、Token、日志、备份、虚拟环境和 node_modules 不提交 Git。
+
+## 9. 当前实现边界
+
+本次 M0 / M1 已建立 React 页面骨架、FastAPI 健康检查、首页概览和项目库读取 API、SQLite 初始 schema 及迁移机制。Trending / Stars 真实采集、asyncio 定时调度、推荐计算、收藏和研究 CRUD 尚未实现，按开发计划后续阶段完成。
+
+## 10. 升级条件
+
+当出现多人协作、远程多实例、持续高并发写入或多采集 Worker 需求时，重新评估数据库与任务系统。本期不为尚未出现的负载提前增加基础设施。
+
+---
+
+文档版本：v1.0
