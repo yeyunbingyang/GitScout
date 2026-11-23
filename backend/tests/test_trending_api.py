@@ -60,19 +60,11 @@ def test_trending_collection_history_and_job_apis(tmp_path, monkeypatch):
         assert filtered.json()["pagination"]["total"] == 1
 
 
-def test_trending_collection_rejects_duplicate_active_job(tmp_path, monkeypatch):
+def test_trending_collection_rejects_unknown_period(tmp_path, monkeypatch):
     monkeypatch.setenv("GITSCOUT_DATA_DIR", str(tmp_path))
-
-    async def slow_fetch(period_type):
-        return HTML, f"https://github.com/trending?since={period_type}", 1
-
-    monkeypatch.setattr(trending_collector, "fetch_trending_html", slow_fetch)
-
     with TestClient(app) as client:
-        first = client.post("/api/v1/trending/collect", json={"period_type": "weekly"})
-        assert first.status_code == 202
-
-        # BackgroundTasks are completed by TestClient before the response returns,
-        # so the same period can be collected again after the first job is complete.
-        second = client.post("/api/v1/trending/collect", json={"period_type": "weekly"})
-        assert second.status_code == 202
+        response = client.post(
+            "/api/v1/trending/collect",
+            json={"period_type": "yearly"},
+        )
+    assert response.status_code == 422
