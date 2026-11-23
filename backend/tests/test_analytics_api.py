@@ -246,6 +246,11 @@ def test_repository_detail_returns_stars_and_trending_history(tmp_path, monkeypa
         "weekly": 1,
         "monthly": 2,
     }
+    assert payload["summary"]["current_appearance_streak_by_period"] == {
+        "daily": 2,
+        "weekly": 1,
+        "monthly": 1,
+    }
     assert payload["summary"]["observed_stars_growth"] == 100
     assert len(payload["stars_history"]) == 2
     assert len(payload["trending_history"]) == 4
