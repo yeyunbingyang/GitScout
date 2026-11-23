@@ -153,3 +153,21 @@ a { color: inherit; text-decoration: none; }
   .job-summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
   .table-pagination { gap: 8px; flex-wrap: wrap; }
 }
+
+.job-actions { display: flex; align-items: center; gap: 8px; }
+.job-detail-panel { padding: 18px; }
+.job-detail-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 13px; }
+.job-detail-heading h3 { margin: 5px 0 0; font-size: 13px; }
+.icon-button { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: #7e899a; cursor: pointer; }
+.job-error-message { padding: 10px 12px; border: 1px solid #f3d5d2; border-radius: 7px; color: #a94b46; background: #fff5f4; font-size: 10px; line-height: 1.6; }
+.job-retry-link { color: #8c82d9; font-size: 10px; }
+.job-detail-stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+.job-detail-stats span { padding: 6px 8px; border-radius: 5px; background: #f5f6fa; color: #778397; font-size: 9px; }
+.job-log-list { border-top: 1px solid var(--line); }
+.job-log-row { display: flex; align-items: flex-start; gap: 10px; padding: 11px 0; border-bottom: 1px solid #f0f2f6; }
+.log-level { min-width: 48px; color: #3b9a78; font-size: 9px; font-weight: 700; }
+.log-level.warning { color: #a27b3b; }.log-level.error { color: #c25a55; }
+.job-log-row strong,.job-log-row small,.job-log-row code { display: block; }
+.job-log-row strong { color: #536074; font-size: 10px; font-weight: 550; }
+.job-log-row small { color: #a0a8b6; font-size: 9px; margin-top: 3px; }
+.job-log-row code { margin-top: 5px; color: #8892a2; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 9px; }
