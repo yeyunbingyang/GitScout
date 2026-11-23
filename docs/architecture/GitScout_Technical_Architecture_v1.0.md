@@ -101,6 +101,15 @@ SQLite 是唯一业务数据库，首期核心表如下：
 - Search API 请求默认节流：有 Token 时约 2.1 秒一次；无 Token 时约 6.1 秒一次。尊重 `Retry-After` 与 `X-RateLimit-Reset`，并对短暂网络错误和服务端错误有限重试。
 - Stars 扫描是有明确 Top-N 和最低 Stars 阈值的排行榜，不宣称覆盖 GitHub 全站所有仓库。
 
+### M4 趋势分析实现
+
+- `GET /dashboard/analytics` 只读取 SQLite：返回所选周期最新 / 上一批快照、最近 12 次快照平均 Stars 走势、当前快照语言与 Topic 分布、三个周期各自最新快照的 Top 100 交叉矩阵，以及最新 Stars 扫描摘要。
+- 跨周期热门项目以各周期最新快照 Top 100 为计算边界；不把未进入采集范围解释为零热度。
+- `GET /trending/compare` 要求两个不同且同周期的有效快照，按 repository_id 做并集比较，区分 new / dropped / up / down / unchanged；支持关键词、语言、变化类型筛选和分页。
+- `GET /repositories/{id}` 聚合仓库主档、Topics、个人兴趣 / 研究状态、Trending 上榜历史、Stars 扫描历史和 repository_stats 历史观测；所有数据都来自本地数据库。
+- 对比 CSV 由前端按当前筛选条件分页拉取完整结果后生成，不增加后端导出服务。
+- M4 复用现有 `trending_snapshots`、`trending_snapshot_items`、`stars_scans`、`stars_scan_items` 和 `repository_stats`，不需要新增迁移。
+
 ### 本地调度实现
 
 - 使用 FastAPI lifespan 启动一个 asyncio scheduler loop，不引入 Celery / Redis / APScheduler。
@@ -142,8 +151,10 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | API | 用途 |
 |---|---|
 | `GET /health` | 服务与数据库健康状态 |
-| `GET /dashboard/summary` | 首页概览统计 |
+| `GET /dashboard/summary` | 首页基础概览统计 |
+| `GET /dashboard/analytics?period_type={daily|weekly|monthly}` | 趋势总览聚合分析 |
 | `GET /repositories` | 项目主档列表 |
+| `GET /repositories/{id}` | 项目详情、历史排名与 Stars 观测 |
 | `GET /trending` | 周期榜单 |
 | `GET /trending/snapshots` | 历史快照列表 |
 | `GET /trending/snapshots/{id}` | 历史快照详情 |
@@ -155,6 +166,7 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | `PUT /collections/schedules/{period}` | 更新 Trending 某个周期的调度计划 |
 | `PUT /collections/schedules/stars` | 更新 Stars 每日调度计划 |
 | `GET /stars/leaderboard` | 查询 Stars 排名快照 |
+| `GET /trending/compare` | 比较同周期的两次历史快照 |
 | `GET /stars/scans` | 查询历史 Stars 扫描 |
 | `GET /stars/scans/{id}` | 查询扫描与分片详情 |
 | `POST /stars/collect` | 手动触发 Stars 扫描 |
@@ -183,7 +195,7 @@ GitScout/
 
 ## 9. 当前实现边界
 
-M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度。M2 / M3 的 CI 与 Windows 本机联网验收仍待确认。推荐计算、周期对比、收藏和研究 CRUD 按后续阶段完成。
+M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度；M4 已实现趋势总览聚合、同周期快照比较和仓库详情历史。M2 / M3 CI 已通过，M4 CI 与 Windows 本机数据验收待确认。推荐计算、收藏和研究 CRUD 按后续阶段完成。
 
 ## 10. 升级条件
 
