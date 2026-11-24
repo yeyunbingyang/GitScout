@@ -533,14 +533,16 @@ def create_recommendation_run(profile_id: int | None = None) -> dict[str, Any]:
                     }
                 )
 
-            scored.sort(
-                key=lambda item: (
+            def sort_key(item: dict[str, Any]) -> tuple[Any, ...]:
+                last_appearance = _parse_datetime(item["last_appearance_at"])
+                return (
                     -item["raw_total"],
                     item["stars_rank"],
-                    -(item["last_appearance_at"] or ""),
+                    -last_appearance.timestamp() if last_appearance else float("inf"),
                     str(item["repository"]["full_name"]).casefold(),
                 )
-            )
+
+            scored.sort(key=sort_key)
             for rank, item in enumerate(scored, start=1):
                 scores = item["scores"]
                 connection.execute(
