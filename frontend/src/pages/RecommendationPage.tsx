@@ -5,6 +5,7 @@ import {
   Download, Filter, History, RefreshCw, Search, Sparkles, Star,
   TrendingUp,
 } from "lucide-react";
+import RepositoryWorkspaceActions from "../components/RepositoryWorkspaceActions";
 import {
   api,
   type RecommendationCategory,
@@ -435,7 +436,7 @@ export default function RecommendationPage() {
                   <thead>
                     <tr>
                       <th>排名 / 项目</th><th>综合分</th><th>推荐等级</th>
-                      <th>Stars</th><th>日榜</th><th>周榜</th><th>月榜</th><th>推荐理由</th>
+                      <th>Stars</th><th>日榜</th><th>周榜</th><th>月榜</th><th>推荐理由</th><th>工作区</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -467,6 +468,15 @@ export default function RecommendationPage() {
                           {item.coverage.available_dimensions.length < 4 && (
                             <small className="recommendation-na-note">部分指标样本不足，已按可用权重重新归一化</small>
                           )}
+                        </td>
+                        <td className="recommendation-workspace-cell">
+                          <RepositoryWorkspaceActions
+                            repositoryId={item.repository_id}
+                            interested={item.interested}
+                            researchStatus={item.research_status}
+                            sourcePage="recommendations"
+                            compact
+                          />
                         </td>
                       </tr>
                     ))}
