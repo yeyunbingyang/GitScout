@@ -1,4 +1,6 @@
 """Repository library and historical repository detail APIs."""
+import json
+
 from fastapi import APIRouter, HTTPException, Query
 
 from app.database.connection import get_connection
@@ -157,6 +159,26 @@ def get_repository_detail(repository_id: int) -> dict[str, object]:
             """,
             (repository_id,),
         ).fetchone()
+        research_tags = []
+        research_notes_count = 0
+        if research_row is not None:
+            research_tags = [
+                dict(row)
+                for row in connection.execute(
+                    """
+                    SELECT t.id, t.name, t.color
+                    FROM research_project_tags rpt
+                    JOIN research_tags t ON t.id = rpt.tag_id
+                    WHERE rpt.research_project_id = ?
+                    ORDER BY t.name COLLATE NOCASE
+                    """,
+                    (research_row["id"],),
+                ).fetchall()
+            ]
+            research_notes_count = connection.execute(
+                "SELECT COUNT(*) AS count FROM research_notes WHERE research_project_id = ?",
+                (research_row["id"],),
+            ).fetchone()["count"]
 
     trending_history = [dict(row) for row in trending_rows]
     stars_history = [dict(row) for row in stars_rows]
@@ -177,8 +199,18 @@ def get_repository_detail(repository_id: int) -> dict[str, object]:
     )
 
     repository["topics"] = topics
-    repository["interested"] = dict(interested_row) if interested_row else None
-    repository["research"] = dict(research_row) if research_row else None
+    interested = dict(interested_row) if interested_row else None
+    if interested is not None:
+        try:
+            interested["tags"] = json.loads(interested.get("tags_json") or "[]")
+        except (TypeError, json.JSONDecodeError):
+            interested["tags"] = []
+    repository["interested"] = interested
+    research = dict(research_row) if research_row else None
+    if research is not None:
+        research["tags"] = research_tags
+        research["notes_count"] = research_notes_count
+    repository["research"] = research
     return {
         "repository": repository,
         "summary": {
