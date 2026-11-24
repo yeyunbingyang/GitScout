@@ -120,6 +120,7 @@ def _interested_detail(connection: sqlite3.Connection, repository_id: int) -> di
     if row is None:
         return None
     item = dict(row)
+    item["id"] = item["repository_id"]
     item["tags"] = _decode_tags(item.pop("tags_json"))
     return item
 
@@ -170,12 +171,15 @@ def _research_detail(connection: sqlite3.Connection, research_id: int) -> dict[s
         return None
     result = dict(row)
     result["repository"] = {
+        "id": result["repository_id"],
+        **{
         key: result.pop(key)
         for key in (
             "github_repo_id", "full_name", "owner", "name", "description",
             "html_url", "language", "stars_count", "forks_count",
             "open_issues_count", "last_synced_at",
         )
+        },
     }
     result["tags"] = _research_tags(connection, research_id)
     result["notes"] = _research_notes(connection, research_id)
@@ -253,6 +257,7 @@ def list_interested_projects(
         items = []
         for row in rows:
             item = dict(row)
+            item["id"] = item["repository_id"]
             item["tags"] = _decode_tags(item.pop("tags_json"))
             items.append(item)
 
