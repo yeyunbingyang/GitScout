@@ -91,6 +91,7 @@ export interface RepositoryProfile extends Repository {
     marked_at: string;
     source_page: string | null;
     tags_json: string;
+    tags: string[];
     notes: string | null;
   } | null;
   research: {
@@ -105,6 +106,65 @@ export interface RepositoryProfile extends Repository {
     completed_at: string | null;
     updated_at: string;
   } | null;
+}
+
+
+export type ResearchStatus = "pending" | "in_progress" | "completed" | "paused";
+export type ResearchPriority = "high" | "medium" | "low";
+
+export interface InterestedProject extends Repository {
+  marked_at: string;
+  source_page: string | null;
+  tags: string[];
+  notes: string | null;
+}
+
+export interface ResearchTag {
+  id: number;
+  name: string;
+  color: string | null;
+}
+
+export interface ResearchNote {
+  id: number;
+  title: string;
+  content: string;
+  note_type: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResearchProject extends Repository {
+  id: number;
+  repository_id: number;
+  status: ResearchStatus;
+  priority: ResearchPriority;
+  research_goal: string | null;
+  next_action: string | null;
+  conclusion: string | null;
+  added_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  updated_at: string;
+  tags: ResearchTag[];
+  notes_count: number;
+}
+
+export interface ResearchProjectDetail {
+  id: number;
+  repository_id: number;
+  status: ResearchStatus;
+  priority: ResearchPriority;
+  research_goal: string | null;
+  next_action: string | null;
+  conclusion: string | null;
+  added_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  updated_at: string;
+  repository: Repository;
+  tags: ResearchTag[];
+  notes: ResearchNote[];
 }
 
 export interface RepositoryDetailResponse {
@@ -555,6 +615,120 @@ export const api = {
     request<DashboardAnalytics>("/api/v1/dashboard/analytics?period_type=" + periodType),
   repositoryDetail: (repositoryId: number) =>
     request<RepositoryDetailResponse>("/api/v1/repositories/" + repositoryId),
+
+  searchRepositories: (q: string, page = 1) => {
+    const params = new URLSearchParams({ q, page: String(page), page_size: "20" });
+    return request<ListResponse<Repository>>("/api/v1/repositories?" + params.toString());
+  },
+  interestedProjects: (filters: {
+    q?: string;
+    language?: string;
+    tag?: string;
+    sort?: "marked_at" | "stars" | "name";
+    page?: number;
+    pageSize?: number;
+  } = {}) => {
+    const params = new URLSearchParams({
+      page: String(filters.page ?? 1),
+      page_size: String(filters.pageSize ?? 30),
+      sort: filters.sort ?? "marked_at",
+    });
+    if (filters.q) params.set("q", filters.q);
+    if (filters.language) params.set("language", filters.language);
+    if (filters.tag) params.set("tag", filters.tag);
+    return request<ListResponse<InterestedProject>>("/api/v1/interested?" + params.toString());
+  },
+  markInterested: (payload: {
+    repository_id: number;
+    source_page?: string;
+    tags?: string[];
+    notes?: string | null;
+  }) => postJson<{ item: InterestedProject; created: boolean }>("/api/v1/interested", payload),
+  updateInterested: (repositoryId: number, payload: {
+    source_page?: string | null;
+    tags?: string[];
+    notes?: string | null;
+  }) => request<{ item: InterestedProject }>(
+    "/api/v1/interested/" + repositoryId,
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+  ),
+  removeInterested: (repositoryId: number) =>
+    request<{ deleted: boolean; repository_id: number }>(
+      "/api/v1/interested/" + repositoryId,
+      { method: "DELETE" },
+    ),
+  researchProjects: (filters: {
+    q?: string;
+    status?: ResearchStatus;
+    priority?: ResearchPriority;
+    tag?: string;
+    sort?: "updated_at" | "added_at" | "priority";
+    page?: number;
+    pageSize?: number;
+  } = {}) => {
+    const params = new URLSearchParams({
+      page: String(filters.page ?? 1),
+      page_size: String(filters.pageSize ?? 30),
+      sort: filters.sort ?? "updated_at",
+    });
+    if (filters.q) params.set("q", filters.q);
+    if (filters.status) params.set("research_status", filters.status);
+    if (filters.priority) params.set("priority", filters.priority);
+    if (filters.tag) params.set("tag", filters.tag);
+    return request<ListResponse<ResearchProject>>("/api/v1/research?" + params.toString());
+  },
+  createResearchProject: (payload: {
+    repository_id: number;
+    status?: ResearchStatus;
+    priority?: ResearchPriority;
+    research_goal?: string | null;
+    next_action?: string | null;
+    conclusion?: string | null;
+  }) => postJson<{ item: ResearchProjectDetail }>("/api/v1/research", payload),
+  researchProject: (researchId: number) =>
+    request<{ item: ResearchProjectDetail }>("/api/v1/research/" + researchId),
+  updateResearchProject: (researchId: number, payload: {
+    status?: ResearchStatus;
+    priority?: ResearchPriority;
+    research_goal?: string | null;
+    next_action?: string | null;
+    conclusion?: string | null;
+  }) => request<{ item: ResearchProjectDetail }>(
+    "/api/v1/research/" + researchId,
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+  ),
+  deleteResearchProject: (researchId: number) =>
+    request<{ deleted: boolean; research_id: number }>(
+      "/api/v1/research/" + researchId,
+      { method: "DELETE" },
+    ),
+  setResearchTags: (researchId: number, tags: string[]) =>
+    request<{ item: ResearchProjectDetail }>(
+      "/api/v1/research/" + researchId + "/tags",
+      { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tags }) },
+    ),
+  createResearchNote: (researchId: number, payload: {
+    title?: string;
+    content: string;
+    note_type?: string;
+  }) => postJson<{ item: ResearchNote }>(
+    "/api/v1/research/" + researchId + "/notes",
+    payload,
+  ),
+  updateResearchNote: (researchId: number, noteId: number, payload: {
+    title?: string;
+    content?: string;
+    note_type?: string;
+  }) => request<{ item: ResearchNote }>(
+    "/api/v1/research/" + researchId + "/notes/" + noteId,
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+  ),
+  deleteResearchNote: (researchId: number, noteId: number) =>
+    request<{ deleted: boolean; note_id: number }>(
+      "/api/v1/research/" + researchId + "/notes/" + noteId,
+      { method: "DELETE" },
+    ),
+
   compareTrending: (filters: {
     baseSnapshotId: number;
     targetSnapshotId: number;
