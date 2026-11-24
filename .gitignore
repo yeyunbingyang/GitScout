@@ -22,6 +22,9 @@ frontend/dist/
 # Local data and runtime
 data/*.db
 data/*.db-*
+data/system_settings.json
+data/restore_pending.json
+data/*.tmp
 data/backups/
 data/exports/
 .runtime/
