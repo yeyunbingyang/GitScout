@@ -4,6 +4,7 @@ import {
   ArrowDown, ArrowUp, Download, Filter, RefreshCw, Search,
   TrendingDown, TrendingUp, Minus, Plus,
 } from "lucide-react";
+import RepositoryIdentity from "../components/RepositoryIdentity";
 import {
   api,
   type ComparisonChangeType,
@@ -269,8 +270,8 @@ export default function ComparisonPage() {
                     {result.items.map((item) => (
                       <tr key={item.repository_id}>
                         <td className="trending-project-cell">
-                          <Link className="repo-link" to={"/repositories/" + item.repository_id}>{item.full_name}</Link>
-                          <small>{item.description || "暂无项目简介"}</small>
+                          <RepositoryIdentity fullName={item.full_name} description={item.description || "暂无项目简介"}
+                            to={"/repositories/" + item.repository_id} variant="table" />
                         </td>
                         <td>{item.language || "—"}</td>
                         <td>{rankText(item.base_rank)}</td>

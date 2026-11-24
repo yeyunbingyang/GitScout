@@ -4,6 +4,7 @@ import {
   ArrowRight, BookOpen, Check, Download, ExternalLink, FileText,
   Lightbulb, Plus, Save, Search, Tag, Trash2, X,
 } from "lucide-react";
+import RepositoryIdentity from "../components/RepositoryIdentity";
 import {
   api,
   type ResearchNote,
@@ -374,8 +375,8 @@ export default function ResearchPage() {
                   onClick={() => setSelectedId(item.id)}>
                   <span className={"research-status-dot status-" + item.status} />
                   <span className="research-project-row-copy">
-                    <strong>{item.full_name}</strong>
-                    <small>{item.research_goal || item.description || "尚未填写研究目标"}</small>
+                    <RepositoryIdentity fullName={item.full_name} owner={item.owner} name={item.name}
+                      description={item.research_goal || item.description || "尚未填写研究目标"} variant="compact" />
                     <span className="research-project-row-meta">
                       <i className={"research-priority priority-" + item.priority}>{priorityLabel(item.priority)}</i>
                       <i>{statusLabel(item.status)}</i>
@@ -404,8 +405,8 @@ export default function ResearchPage() {
               <div className="research-detail-heading">
                 <div>
                   <span className="eyebrow">RESEARCH #{detail.id}</span>
-                  <h2>{detail.repository.full_name}</h2>
-                  <p>{detail.repository.description || "暂无项目简介"}</p>
+                  <RepositoryIdentity fullName={detail.repository.full_name} owner={detail.repository.owner}
+                    name={detail.repository.name} description={detail.repository.description || "暂无项目简介"} variant="hero" />
                 </div>
                 <div className="research-detail-heading-actions">
                   <a className="button button-quiet" href={detail.repository.html_url} target="_blank" rel="noreferrer"><ExternalLink size={13} />GitHub</a>
@@ -495,7 +496,9 @@ export default function ResearchPage() {
             <div className="workspace-picker-results">
               {pickerItems.map((repository) => (
                 <div className="workspace-picker-item" key={repository.id}>
-                  <div><Link to={"/repositories/" + repository.id} onClick={() => setPickerOpen(false)}>{repository.full_name}</Link><small>{repository.description || "暂无项目简介"} · {repository.language || "未知语言"}</small></div>
+                  <RepositoryIdentity fullName={repository.full_name} owner={repository.owner} name={repository.name}
+                    description={repository.description || "暂无项目简介"} to={"/repositories/" + repository.id}
+                    variant="compact" meta={<span>{repository.language || "未知语言"}</span>} />
                   <button className="button button-quiet" disabled={addingRepositoryId === repository.id} onClick={() => void addResearch(repository)}>
                     <Plus size={12} />{addingRepositoryId === repository.id ? "加入中…" : "加入研究"}
                   </button>

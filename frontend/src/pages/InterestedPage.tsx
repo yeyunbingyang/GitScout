@@ -4,6 +4,7 @@ import {
   BookOpen, Bookmark, Check, Download, ExternalLink, Filter, Pencil, Plus, Search,
   Star, Trash2, X,
 } from "lucide-react";
+import RepositoryIdentity from "../components/RepositoryIdentity";
 import {
   api,
   type InterestedProject,
@@ -229,11 +230,9 @@ export default function InterestedPage() {
             {items.map((item) => (
               <article className="workspace-project-item" key={item.repository_id}>
                 <div className="workspace-project-main">
-                  <div className="workspace-project-title">
-                    <Link className="repo-link" to={"/repositories/" + item.repository_id}>{item.full_name}</Link>
-                    <span className="workspace-language">{item.language || "未知语言"}</span>
-                  </div>
-                  <p>{item.description || "暂无项目简介"}</p>
+                  <RepositoryIdentity fullName={item.full_name} owner={item.owner} name={item.name}
+                    description={item.description || "暂无项目简介"} to={"/repositories/" + item.repository_id}
+                    variant="card" meta={<span className="workspace-language">{item.language || "未知语言"}</span>} />
                   <div className="workspace-project-meta">
                     <span><Star size={12} />{item.stars_count.toLocaleString("zh-CN")} Stars</span>
                     <span>标记于 {formatDate(item.marked_at)}</span>
@@ -290,7 +289,9 @@ export default function InterestedPage() {
                 const alreadyMarked = markedIds.has(repository.id);
                 return (
                   <div className="workspace-picker-item" key={repository.id}>
-                    <div><Link to={"/repositories/" + repository.id} onClick={() => setPickerOpen(false)}>{repository.full_name}</Link><small>{repository.description || "暂无项目简介"} · {repository.language || "未知语言"}</small></div>
+                    <RepositoryIdentity fullName={repository.full_name} owner={repository.owner} name={repository.name}
+                      description={repository.description || "暂无项目简介"} to={"/repositories/" + repository.id}
+                      variant="compact" meta={<span>{repository.language || "未知语言"}</span>} />
                     <button className="button button-quiet" disabled={alreadyMarked || addingId === repository.id} onClick={() => void addInterest(repository)}>
                       {alreadyMarked ? <><Check size={12} />已标记</> : <><Plus size={12} />{addingId === repository.id ? "添加中…" : "添加"}</>}
                     </button>

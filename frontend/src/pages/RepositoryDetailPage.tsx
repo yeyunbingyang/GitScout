@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  ArrowLeft, ExternalLink, GitFork, Github, History, Star,
+  ArrowLeft, ExternalLink, GitFork, History, Star,
   TrendingDown, TrendingUp,
 } from "lucide-react";
 import { api, type RepositoryDetailResponse, type TrendingPeriod } from "../services/api";
+import RepositoryIdentity from "../components/RepositoryIdentity";
 import RepositoryWorkspaceActions from "../components/RepositoryWorkspaceActions";
 
 function formatNumber(value: number): string {
@@ -168,11 +169,10 @@ export default function RepositoryDetailPage() {
       </div>
 
       <section className="surface-card repository-hero">
-        <div className="repository-avatar"><Github size={28} /></div>
+        <div className="repository-avatar"><img src="/assets/gitscout/repository-mark.svg" alt="" /></div>
         <div className="repository-hero-copy">
-          <span className="eyebrow">{repository.owner}</span>
-          <h2>{repository.full_name}</h2>
-          <p>{repository.description || "暂无项目简介"}</p>
+          <RepositoryIdentity fullName={repository.full_name} owner={repository.owner} name={repository.name}
+            description={repository.description || "暂无项目简介"} variant="hero" />
           <div className="repository-topic-list">
             {repository.topics.map((topic) => <span key={topic}>{topic}</span>)}
           </div>
