@@ -5,6 +5,45 @@ export interface HealthResponse {
   schema_version: string | null;
 }
 
+export interface BackupSettings {
+  auto_backup_enabled: boolean;
+  interval_hours: number;
+  retention_count: number;
+}
+
+export interface BackupItem {
+  filename: string;
+  kind: "manual" | "auto" | "pre-restore";
+  created_at: string;
+  size_bytes: number;
+  valid: boolean | null;
+  schema_version: string | null;
+  repositories: number | null;
+}
+
+export interface SystemInfo {
+  data_dir: string;
+  database_path: string;
+  database_exists: boolean;
+  database_size_bytes: number;
+  backup_dir: string;
+  github_token_configured: boolean;
+  pending_restore: {
+    filename: string | null;
+    queued_at: string | null;
+    safety_backup: string | null;
+    invalid?: boolean;
+  } | null;
+}
+
+export interface SystemStatusResponse {
+  app_version: string;
+  schema_version: string | null;
+  info: SystemInfo;
+  backup_settings: BackupSettings;
+  backups: BackupItem[];
+}
+
 export interface DashboardSummary {
   repositories: number;
   successful_trending_snapshots: number;
@@ -618,6 +657,31 @@ function postJson<T>(path: string, body: unknown): Promise<T> {
 
 export const api = {
   health: () => request<HealthResponse>("/api/v1/health"),
+  systemStatus: () => request<SystemStatusResponse>("/api/v1/system"),
+  backupSettings: () => request<{ settings: BackupSettings }>("/api/v1/system/backup-settings"),
+  updateBackupSettings: (payload: BackupSettings) =>
+    request<{ settings: BackupSettings }>("/api/v1/system/backup-settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  backups: () => request<{ items: BackupItem[] }>("/api/v1/system/backups"),
+  createBackup: () => postJson<{ item: BackupItem }>("/api/v1/system/backups", {}),
+  verifyBackup: (filename: string) =>
+    postJson<{ result: { filename: string; valid: boolean; integrity_check: string; schema_version: string | null; repositories: number; size_bytes: number } }>(
+      "/api/v1/system/backups/" + encodeURIComponent(filename) + "/verify",
+      {},
+    ),
+  deleteBackup: (filename: string) =>
+    request<{ deleted: boolean; filename: string }>(
+      "/api/v1/system/backups/" + encodeURIComponent(filename),
+      { method: "DELETE" },
+    ),
+  queueBackupRestore: (filename: string) =>
+    postJson<{ restore: { filename: string; queued_at: string; safety_backup: string; restart_required: boolean } }>(
+      "/api/v1/system/backups/" + encodeURIComponent(filename) + "/restore",
+      { confirm: true },
+    ),
   dashboardSummary: () => request<DashboardSummary>("/api/v1/dashboard/summary"),
   dashboardAnalytics: (periodType: TrendingPeriod = "daily") =>
     request<DashboardAnalytics>("/api/v1/dashboard/analytics?period_type=" + periodType),
