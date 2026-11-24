@@ -104,7 +104,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 验收：核心页面全部使用真实 SQLite 数据；查看历史快照不重新触发 GitHub 请求；比较仅接受同周期有效快照；缺失排名明确表示未进入该次采集范围，而非热度为零。
 
-### M5 · 推荐引擎（实现已提交，CI 验收中）
+### M5 · 推荐引擎（CI 已通过，Windows 本机数据验证待确认）
 
 严格遵循 PRD v0.5.1 第 16 节默认权重：
 
@@ -158,7 +158,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 ## 8. 下一迭代建议
 
-M2 / M3 / M4 的 GitHub Actions CI 均已通过，Windows 本机真实联网和历史数据验收待确认；M5 实现与测试已提交，GitHub Actions CI 验收中。下一阶段进入 M6：实现感兴趣项目的独立标记、标签 / 备注维护和项目研究工作区 CRUD。
+M2 / M3 / M4 的 GitHub Actions CI 均已通过，Windows 本机真实联网和历史数据验收待确认；M5 实现与测试已通过 GitHub Actions CI。下一阶段进入 M6：实现感兴趣项目的独立标记、标签 / 备注维护和项目研究工作区 CRUD。
 
 ---
 
