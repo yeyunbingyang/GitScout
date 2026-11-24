@@ -193,6 +193,8 @@ def test_interested_and_research_filters_and_pagination(tmp_path, monkeypatch):
         )
         research_tag = client.get("/api/v1/research", params={"tag": "frontend"})
         research_priority = client.get("/api/v1/research", params={"priority": "high"})
+        interested_with_research = client.get("/api/v1/interested", params={"research": "added"})
+        interested_without_research = client.get("/api/v1/interested", params={"research": "not_added"})
 
     assert interested_tag.json()["pagination"]["total"] == 1
     assert interested_tag.json()["items"][0]["full_name"] == "octo/alpha"
@@ -203,6 +205,9 @@ def test_interested_and_research_filters_and_pagination(tmp_path, monkeypatch):
     assert research_status.json()["items"][0]["full_name"] == "octo/alpha"
     assert research_tag.json()["items"][0]["full_name"] == "octo/beta"
     assert research_priority.json()["items"][0]["full_name"] == "octo/alpha"
+    assert interested_with_research.json()["pagination"]["total"] == 2
+    assert interested_without_research.json()["pagination"]["total"] == 1
+    assert interested_without_research.json()["items"][0]["full_name"] == "octo/gamma"
 
 
 def test_workspace_validates_missing_repositories_and_missing_records(tmp_path, monkeypatch):
