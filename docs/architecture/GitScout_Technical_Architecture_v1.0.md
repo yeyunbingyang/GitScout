@@ -136,6 +136,18 @@ SQLite 是唯一业务数据库，首期核心表如下：
 - 感兴趣与研究页分别提供搜索、筛选、编辑、批量数据导出；研究导出会按项目拉取详情并包含笔记内容。
 - 迁移 0005 仅增加查询索引；M6 复用 0001 已有数据表，不重建或搬迁用户数据。
 
+### M7 Windows 本地运行与数据安全实现
+
+- 初始化入口：setup_gitscout.bat 调用 PowerShell 脚本检查 Python 3.11 / Node.js 20+，创建 Python venv、安装依赖、构建 React，并生成本地 .env。
+- 启动入口：start_gitscout.bat 调用 PowerShell 启动器；服务以隐藏单 Worker 进程运行，固定绑定 127.0.0.1:8765；启动器检查端口、PID 和 /api/v1/health 后再打开浏览器。
+- 停止入口：stop_gitscout.bat 根据 PID 文件及 WMI 命令行特征确认目标进程，不通过端口号盲目结束进程。
+- 日志输出分为 stdout / stderr，位于 .runtime/logs；单文件超过约 20 MB 时轮转，保留最近 10 组。
+- 备份服务使用 sqlite3.Connection.backup 创建在线一致性快照，纳入 WAL 中已提交的数据；临时备份通过 integrity_check 和 schema_migrations 检查后再原子重命名。
+- 自动备份策略保存在 data/system_settings.json，默认启用、24 小时检查一次、保留 14 份自动备份；服务启动补做逾期备份，运行期间每小时检查。手动与 pre-restore 备份不自动清理。
+- 恢复通过 data/restore_pending.json 延迟执行：API 先验证备份并创建恢复前安全备份；下一次进程启动时、数据库连接建立前，复制到临时数据库、校验后替换主库，再运行 SQL 迁移。
+- 备份文件名必须属于受控 backups 目录；API 不接受任意本地路径；待恢复目标不可删除。
+- 系统设置页面只返回 GitHub Token 是否配置，不返回 Token 明文。数据目录继续通过 .env 设置，不在运行时 UI 中热迁移。
+
 ### 本地调度实现
 
 - 使用 FastAPI lifespan 启动一个 asyncio scheduler loop，不引入 Celery / Redis / APScheduler。
@@ -203,6 +215,15 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | `GET /recommendations/runs/latest` | 查询最新成功推荐结果 |
 | `GET /recommendations/runs/{id}` | 查询指定批次结果，支持类别、关键词和分页筛选 |
 | `GET /research` | 研究工作区 |
+| `GET /system` | 本地系统状态、路径、Schema 和 Token 配置状态 |
+| `GET /system/backup-settings` | 读取自动备份策略 |
+| `PATCH /system/backup-settings` | 更新自动备份策略 |
+| `GET /system/backups` | 列出数据库备份 |
+| `POST /system/backups` | 创建手动 SQLite 在线备份 |
+| `POST /system/backups/{filename}/verify` | 校验备份完整性和 GitScout Schema |
+| `GET /system/backups/{filename}/download` | 下载备份文件 |
+| `DELETE /system/backups/{filename}` | 删除备份文件 |
+| `POST /system/backups/{filename}/restore` | 创建恢复前安全备份并安排下次启动恢复 |
 
 耗时操作返回 job_id，前端轮询任务状态；首期不要求 WebSocket。
 
@@ -215,8 +236,14 @@ GitScout/
 ├── data/                 # SQLite、备份、导出
 ├── docs/                 # 需求、架构、开发文档
 ├── prototype/            # 已确认 HTML 原型
+├── scripts/               # Windows PowerShell 初始化、启动、停止、备份和恢复
+├── data/                  # SQLite、备份、本地系统设置与恢复标记
 ├── .runtime/logs/         # 可重建运行日志
+├── setup_gitscout.bat
 ├── start_gitscout.bat
+├── stop_gitscout.bat
+├── backup_gitscout.bat
+├── restore_gitscout.bat
 └── README.md
 ```
 
@@ -224,7 +251,7 @@ GitScout/
 
 ## 9. 当前实现边界
 
-M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度；M4 已实现趋势总览聚合、同周期快照比较和仓库详情历史；M5 已实现推荐评分引擎、权重预设、批次留痕和推荐工作台。M2 / M3 / M4 CI 已通过；M5 GitHub Actions CI 已通过；M6 兴趣与研究工作区已实现，CI 验收中。Windows 本机真实数据验收仍待确认。M6 感兴趣与研究 CRUD、M7 本地备份恢复按后续阶段完成。
+M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度；M4 已实现趋势总览聚合、同周期快照比较和仓库详情历史；M5 已实现推荐评分引擎、权重预设、批次留痕和推荐工作台；M6 已实现感兴趣与研究工作区。M2 至 M6 GitHub Actions CI 已通过；M7 Windows 本地运行、备份和恢复已实现，CI 与 Windows 本机验收待确认。
 
 ## 10. 升级条件
 
