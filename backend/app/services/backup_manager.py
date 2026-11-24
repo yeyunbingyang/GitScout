@@ -89,7 +89,10 @@ def _safe_backup_path(filename: str) -> Path:
 def _integrity_check(path: Path) -> dict[str, Any]:
     if not path.is_file() or path.stat().st_size == 0:
         raise ValueError("Backup database is missing or empty")
-    connection = sqlite3.connect(str(path), timeout=30)
+    try:
+        connection = sqlite3.connect(str(path), timeout=30)
+    except sqlite3.DatabaseError as exc:
+        raise ValueError("Backup is not a valid SQLite database") from exc
     try:
         result = connection.execute("PRAGMA integrity_check").fetchone()
         integrity = str(result[0]) if result else "no result"
