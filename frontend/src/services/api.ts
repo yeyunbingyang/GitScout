@@ -134,7 +134,7 @@ export interface ResearchNote {
   updated_at: string;
 }
 
-export interface ResearchProject extends Repository {
+export interface ResearchProject extends Omit<Repository, "id"> {
   id: number;
   repository_id: number;
   status: ResearchStatus;
