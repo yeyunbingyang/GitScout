@@ -8,11 +8,11 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 ## 当前版本
 
 - 产品需求基线：**v0.5.1**
-- 技术工程版本：**0.6.0 · Research Workspace**
+- 技术工程版本：**0.7.0 · Windows Local Delivery**
 - 品牌：**GitScout**
 - 运行模式：**Windows 本地 Web 工作台**
 - 技术栈：**React + TypeScript + FastAPI + SQLite**
-- 当前开发阶段：**M6 · 感兴趣与研究工作区**
+- 当前开发阶段：**M7 · Windows 本地交付与数据安全**
 
 ## 文档
 
@@ -22,6 +22,7 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 | [HTML 交互原型](prototype/GitScout_v0.5.1.html) | v0.5.1 可直接在浏览器打开的交互原型 |
 | [技术架构设计说明书 v1.0](docs/architecture/GitScout_Technical_Architecture_v1.0.md) | 正式技术选型、运行形态、数据库和接口边界 |
 | [开发实施计划 v1.0](docs/development/GitScout_Implementation_Plan_v1.0.md) | 阶段、任务、测试和验收计划 |
+| [Windows 本地运行与数据安全手册](docs/operations/GitScout_Windows_Operations_v1.0.md) | 初始化、启动、停止、备份、恢复和故障诊断 |
 
 ## 技术选型
 
@@ -56,7 +57,7 @@ cd ..
 http://127.0.0.1:8765
 ```
 
-FastAPI 会提供前端构建产物和 API。默认只监听本机回环地址。
+FastAPI 会提供前端构建产物和 API。默认只监听本机回环地址；服务以隐藏后台进程运行，日志写入 .runtime/logs/。
 
 ### 方式二：前后端开发模式
 
@@ -177,9 +178,22 @@ Stars 扫描默认目标为 Top 5,000、最低 100 Stars。它是有边界的公
 - Windows 本地启动入口。
 - 数据库迁移与约束测试。
 
+
+### M7 · Windows 本地交付与数据安全
+
+- 一键初始化：检查 Python 3.11 / Node.js 20+，创建虚拟环境、安装依赖、构建前端。
+- 一键启动：检测端口、健康检查、隐藏后台服务进程、自动打开浏览器。
+- 一键停止：根据 PID 和命令行特征识别 GitScout 进程，避免误杀其他服务。
+- 日志管理：标准输出 / 错误输出分离，单文件超过约 20 MB 时轮转并保留最近 10 组。
+- 系统设置页面：查看版本、Schema、数据库大小、数据目录、备份目录和 Token 配置状态。
+- SQLite 在线备份：手动备份、自动备份、备份下载、完整性校验和删除。
+- 自动备份默认每 24 小时执行一次，保留最近 14 份自动备份；手动备份与恢复前安全备份不自动清理。
+- 延迟恢复：恢复前先校验并创建安全备份，在下次服务启动时替换数据库并执行迁移。
+- 新增 Windows 运维手册，说明安装、启动、停止、数据迁移、Token 配置、备份恢复和常见故障。
+
 ## 尚未接入
 
-M4 趋势分析和 M5 推荐引擎已通过 GitHub Actions CI；M6 感兴趣与研究工作区已实现，自动化 CI 验收中。Windows 本机真实数据验证待进行；M7 本地备份恢复仍待开发。所有正式分析页面只使用本地真实采集数据，不以演示数据填充。
+M7 的 GitHub Actions CI 验收与 Windows 本机首次安装、真实数据恢复演练仍需分别完成。所有正式分析页面只使用本地真实采集数据，不以演示数据填充。
 
 ## 数据与安全
 
@@ -199,6 +213,6 @@ M4 趋势分析和 M5 推荐引擎已通过 GitHub Actions CI；M6 感兴趣与�
 | M3 · Stars 总榜采集与分片审计 | CI 通过，Windows 本机联网验收待确认 |
 | M4 · 榜单与趋势分析 | CI 通过，Windows 本机数据验证待确认 |
 | M5 · 智能推荐 | CI 通过，Windows 本机数据验证待确认 |
-| M6 · 感兴趣与项目研究 | 实现已提交，CI 验收中；Windows 本机验收待确认 |
-| M7 · 本地交付与备份恢复 | 待开发 |
+| M6 · 感兴趣与项目研究 | GitHub Actions CI 通过；Windows 本机验收待确认 |
+| M7 · 本地交付与备份恢复 | 实现已提交，CI 验收中；Windows 本机验收待确认 |
 
