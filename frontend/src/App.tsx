@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
   Activity, BarChart3, Bookmark, Boxes, CircleHelp, Clock3, Compass,
-  Github, Layers3, Lightbulb, Settings2, Sparkles,
+  Github, HardDrive, Layers3, Lightbulb, Settings2, Sparkles,
 } from "lucide-react";
 import DashboardPage from "./pages/DashboardPage";
 import RepositoriesPage from "./pages/RepositoriesPage";
@@ -15,6 +15,7 @@ import RepositoryDetailPage from "./pages/RepositoryDetailPage";
 import RecommendationPage from "./pages/RecommendationPage";
 import InterestedPage from "./pages/InterestedPage";
 import ResearchPage from "./pages/ResearchPage";
+import SystemSettingsPage from "./pages/SystemSettingsPage";
 import { api, type HealthResponse } from "./services/api";
 
 const navigation = [
@@ -28,6 +29,7 @@ const navigation = [
   { to: "/repositories", label: "项目库", icon: Boxes },
   { to: "/collections", label: "采集记录", icon: Clock3 },
   { to: "/settings", label: "采集设置", icon: Settings2 },
+  { to: "/system", label: "系统设置", icon: HardDrive },
 ];
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
@@ -41,6 +43,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/repositories": { title: "项目库", subtitle: "统一管理所有发现过的 GitHub 仓库" },
   "/collections": { title: "采集记录", subtitle: "查看采集任务、执行状态与运行日志" },
   "/settings": { title: "采集设置", subtitle: "配置采集频率、数据保存和本地运行" },
+  "/system": { title: "系统设置", subtitle: "管理本地运行环境、SQLite 备份与数据恢复" },
 };
 
 function AppShell() {
@@ -91,7 +94,7 @@ function AppShell() {
             <span className={apiError ? "connection-state offline" : "connection-state"}>
               <i />{apiError ? "后端未连接" : health ? "本地服务已连接" : "正在连接"}
             </span>
-            <span className="version-tag">RESEARCH WORKSPACE · 0.6.0</span>
+            <span className="version-tag">LOCAL WORKSPACE · 0.7.0</span>
           </div>
         </header>
         <div className="page-header"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></div>
@@ -108,6 +111,7 @@ function AppShell() {
             <Route path="/research" element={<ResearchPage />} />
             <Route path="/collections" element={<CollectionJobsPage />} />
             <Route path="/settings" element={<CollectionSettingsPage />} />
+            <Route path="/system" element={<SystemSettingsPage />} />
           </Routes>
         </div>
         <footer className="app-footer"><span>GitScout · Discover · Track · Recommend · Research</span><span>本地数据优先 · SQLite</span></footer>
