@@ -440,6 +440,8 @@ export interface TrendingItem {
   stars_delta: number;
   forks_count: number;
   topics: string[];
+  interested: boolean;
+  research_status: ResearchStatus | null;
 }
 
 export interface TrendingResponse {
@@ -558,6 +560,8 @@ export interface StarsLeaderboardItem {
   stars_count: number;
   forks_count: number;
   topics: string[];
+  interested: boolean;
+  research_status: ResearchStatus | null;
 }
 
 export interface StarsLeaderboardResponse {
