@@ -17,6 +17,7 @@ from app.services.recommendation_engine import (
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
 RecommendationCategory = Literal["all", "priority", "emerging", "stable"]
+RecommendationDimension = Literal["all", "stars", "daily", "weekly", "monthly"]
 
 
 class RecommendationRunCreate(BaseModel):
@@ -79,6 +80,8 @@ def calculate_recommendations(payload: RecommendationRunCreate) -> dict[str, Any
 def get_latest_recommendations(
     category: RecommendationCategory = Query(default="all"),
     q: str | None = Query(default=None, max_length=200),
+    language: str | None = Query(default=None, max_length=80),
+    dimension: RecommendationDimension = Query(default="all"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
 ) -> dict[str, Any]:
@@ -89,6 +92,8 @@ def get_latest_recommendations(
         run_id,
         category=category,
         q=q,
+        language=language,
+        dimension=dimension,
         page=page,
         page_size=page_size,
     )
@@ -100,6 +105,8 @@ def get_recommendation_run(
     run_id: int,
     category: RecommendationCategory = Query(default="all"),
     q: str | None = Query(default=None, max_length=200),
+    language: str | None = Query(default=None, max_length=80),
+    dimension: RecommendationDimension = Query(default="all"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
 ) -> dict[str, Any]:
@@ -107,6 +114,8 @@ def get_recommendation_run(
         run_id,
         category=category,
         q=q,
+        language=language,
+        dimension=dimension,
         page=page,
         page_size=page_size,
     )
