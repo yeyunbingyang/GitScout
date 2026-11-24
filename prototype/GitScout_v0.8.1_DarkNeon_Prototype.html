@@ -417,26 +417,9 @@ function repositoryDetailBody(){
     +'<div class="card">'+cardHead("项目资料","仓库元信息与技术标签")+'<div class="project-meta"><span class="chip">'+(r.lang||'未知语言')+'</span>'+tags+'</div><div class="note">原型数据仅用于演示详情页布局；正式 React 页面读取 SQLite 中的仓库主档与历史快照。</div></div></div>'
     +'<div class="card">'+cardHead("工作区状态","关注与研究相互独立")+'<div class="project-card"><div><h4>感兴趣项目</h4><p>加入个人关注清单，便于后续持续跟踪</p></div><span class="pill">'+(watched?'已关注':'未关注')+'</span></div><div class="project-card"><div><h4>项目研究</h4><p>独立维护研究目标、下一步行动、结论与笔记</p></div><div class="mini-actions"><button class="btn soft" type="button" onclick="openResearch(&quot;'+r.repo+'&quot;)">打开研究</button></div></div></div></div>';
 }
-function filterProjects(v){document.querySelectorAll("#projectList .project-card").forEach(el=>el.style.display=el.dataset.search.includes(v.toLowerCase())?"flex":"none")}
+
 function projectItem(p){return `<div class="project-card" data-search="${(p.repo+" "+p.desc+" "+p.tags.join(" ")).toLowerCase()}"><div><h4><a class="repo" href="https://github.com/${p.repo}" target="_blank">${p.repo} ↗</a></h4><p>${p.desc}</p><div class="project-meta"><span class="chip">${p.lang}</span><span class="chip">${p.stars} Stars</span>${p.tags.map(t=>`<span class="chip">${t}</span>`).join("")}</div></div><div class="mini-actions"><button onclick="openRepository(&quot;${p.repo}&quot;)">详情</button><button onclick="openResearch(&quot;${p.repo}&quot;)">加入研究</button></div></div>`}
-function setPeriod(p){period=p;render()}
-function toggleInterest(repo){
-  const index=projects.findIndex(p=>p.repo===repo);
-  if(index>=0){projects.splice(index,1);toast("已取消关注："+repo);}
-  else{
-    const source=allRepos.find(p=>p.repo===repo);
-    if(source)projects.push({...source,tags:source.tags||source.topics||[],status:"关注中"});
-    toast("已标记关注："+repo);
-  }
-  render();
-}
-function toast(msg){let t=document.createElement("div");t.textContent=msg;t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#202a40;color:white;padding:11px 16px;border-radius:8px;font-size:12px;z-index:40;box-shadow:0 8px 25px #0003";document.body.append(t);setTimeout(()=>t.remove(),2200)}
-function showModal(title,body,confirmText,fn){$("#modalTitle").textContent=title;$("#modalBody").innerHTML=body;$("#modalConfirm").textContent=confirmText;$("#modalConfirm").onclick=()=>{fn&&fn();closeModal()};$("#modalBg").classList.add("show")}
-function closeModal(){$("#modalBg").classList.remove("show")}
-function showImport(){showModal("导入当前关注项目清单",'<div class="notice">检测到 JSON 清单：<b>current_followed_projects.json</b><br>包含 9 个仓库。此处为原型交互，不会修改实际 SQLite 数据库。</div><div class="form-row"><label>导入策略</label><select><option>按仓库唯一标识去重，新增缺失项目</option><option>仅预览，不写入</option></select></div><p>分类、简介和关注日期将一并导入；已有研究记录不会被覆盖。</p>',"演示导入",()=>toast("原型演示：9 个项目已加入列表预览"))}
-function newResearch(){showModal("新建研究项目",'<div class="form-row"><label>GitHub 仓库</label><input placeholder="owner/repository"></div><div class="form-row"><label>研究目标</label><textarea placeholder="希望弄清楚什么？"></textarea></div><div class="form-row"><label>优先级</label><select><option>高</option><option>中</option><option>低</option></select></div>',"创建研究",()=>toast("研究草稿已创建（演示）"))}
-function openResearch(name){showModal("研究详情 · "+name,'<div class="form-row"><label>研究目标</label><textarea>分析项目核心架构、关键实现、可复用能力与接入方式。</textarea></div><div class="form-row"><label>下一步行动</label><input value="阅读 README 与核心源码"></div><div class="form-row"><label>研究笔记</label><textarea placeholder="Markdown 笔记……"></textarea></div>',"保存笔记",()=>toast("研究记录已保存（演示）"))}
-function confirmRestore(){showModal("确认安排数据库恢复",'<div class="notice">恢复会在下一次启动时执行。系统将先创建恢复前安全备份，再校验目标数据库。</div><div class="form-row"><label>确认短语</label><input placeholder="输入 RESTORE"></div>',"安排恢复",()=>toast("已安排延迟恢复（演示）"))}
+
 render();
 </script>
 </body></html>

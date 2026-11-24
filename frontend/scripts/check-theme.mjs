@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Script } from "node:vm";
 
 const frontendDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(frontendDir, "..");
@@ -54,6 +55,14 @@ for (const route of routes) {
   const file = resolve(frontendDir, "src", "pages", component + ".tsx");
   assert.ok(existsSync(file), "Missing page component: " + component);
 }
+const inlineScripts = [...prototype.matchAll(/<script[^>]*>([\\s\\S]*?)<\\/script>/gi)].map((match) => match[1]).filter((source) => source.trim());
+assert.equal(inlineScripts.length, 1, "Expected one standalone prototype script");
+new Script(inlineScripts[0]);
+const functionNames = [...inlineScripts[0].matchAll(/function\\s+([A-Za-z_$][\\w$]*)\\s*\\(/g)].map((match) => match[1]);
+const functionCounts = new Map();
+for (const name of functionNames) functionCounts.set(name, (functionCounts.get(name) || 0) + 1);
+const duplicateFunctions = [...functionCounts.entries()].filter(([, count]) => count > 1).map(([name]) => name);
+assert.deepEqual(duplicateFunctions, [], "Prototype must not redeclare helper functions");
 assert.ok(prototype.includes('"repository-detail":()=>repositoryDetailBody()'), "Prototype repository detail view is missing");
 assert.ok(prototype.includes("function openRepository(repo)"), "Prototype repository detail entry point is missing");
 assert.ok(prototype.includes("--ink:var(--gs-text)"), "Prototype legacy text token alias is missing");
