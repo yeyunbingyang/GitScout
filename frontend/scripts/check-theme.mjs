@@ -11,7 +11,10 @@ const read = (path) => readFileSync(resolve(repoRoot, path), "utf8");
 const theme = read("frontend/src/theme.css");
 const main = read("frontend/src/main.tsx");
 const app = read("frontend/src/App.tsx");
-const prototype = read("prototype/GitScout_v0.8.1_DarkNeon_Prototype.html");
+const prototype = read("prototype/GitScout_v0.8.2_EditorialIdentity_Prototype.html");
+const identity = read("frontend/src/components/RepositoryIdentity.tsx");
+const rankBadge = read("frontend/src/components/ProjectRankBadge.tsx");
+const repositoryPage = read("frontend/src/pages/RepositoriesPage.tsx");
 
 const tokens = {
   "--gs-bg": "#070c16",
@@ -70,4 +73,11 @@ assert.ok(prototype.includes('"repository-detail":()=>repositoryDetailBody()'), 
 assert.ok(prototype.includes("function openRepository(repo)"), "Prototype repository detail entry point is missing");
 assert.ok(prototype.includes("--ink:var(--gs-text)"), "Prototype legacy text token alias is missing");
 
-console.log("GitScout design-system check passed: tokens, overrides, route files and prototype parity.");
+assert.ok(identity.includes("repository-identity-owner") && identity.includes("repository-identity-accent"), "Editorial identity component is incomplete");
+assert.ok(rankBadge.includes("crown-gold.svg") && rankBadge.includes("crown-silver.svg") && rankBadge.includes("crown-bronze.svg"), "Ranking medal assets are not wired");
+assert.ok(repositoryPage.includes("repository-library-layout") && repositoryPage.includes("Stars 排名"), "Repository library layout is missing");
+for (const asset of ["brand-mark.svg","repository-mark.svg","layers-mark.svg","crown-gold.svg","crown-silver.svg","crown-bronze.svg","neon-waves.svg"]) {
+  assert.ok(existsSync(resolve(repoRoot, "frontend/public/assets/gitscout", asset)), "Missing GitScout visual asset: " + asset);
+}
+assert.ok(prototype.includes("repository-identity-owner") && prototype.includes("GitScout v0.8.2"), "Editorial HTML prototype is missing");
+console.log("GitScout v0.8.2 check passed: dark tokens, editorial identity, icon assets and prototype parity.");
