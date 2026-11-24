@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 import {
   AlertTriangle, ArrowDown, ArrowUp, Award, Clock3, Database,
   Download, Filter, History, RefreshCw, Search, Sparkles, Star,
