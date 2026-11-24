@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, BookOpen, Check, ExternalLink, FileText, Filter,
+  ArrowRight, BookOpen, Check, ExternalLink, FileText,
   Lightbulb, Plus, Save, Search, Tag, Trash2, X,
 } from "lucide-react";
 import {
@@ -255,17 +255,15 @@ export default function ResearchPage() {
         priority: "medium",
       });
       setPickerOpen(false);
-      setSelectedId(response.item.id);
       setPage(1);
       await loadItems();
+      setSelectedId(response.item.id);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "加入研究工作区失败");
     } finally {
       setAddingRepositoryId(null);
     }
   }
-
-  const selectedListItem = items.find((item) => item.id === selectedId) ?? null;
 
   return (
     <div className="page-stack workspace-page">
