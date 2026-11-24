@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   ExternalLink, Filter, Github, RefreshCw, RotateCcw, Search, ShieldCheck,
 } from "lucide-react";
+import RepositoryWorkspaceActions from "../components/RepositoryWorkspaceActions";
 import {
   api,
   type CollectionJob,
@@ -327,7 +328,7 @@ export default function StarsPage() {
         ) : (
           <div className="table-scroll">
             <table>
-              <thead><tr><th>排名</th><th>GitHub 仓库</th><th>语言</th><th>Stars</th><th>Forks</th></tr></thead>
+              <thead><tr><th>排名</th><th>GitHub 仓库</th><th>语言</th><th>Stars</th><th>Forks</th><th>工作区</th></tr></thead>
               <tbody>
                 {result.items.map((item) => (
                   <tr key={item.repository_id}>
@@ -343,6 +344,13 @@ export default function StarsPage() {
                     <td>{item.language || "—"}</td>
                     <td className="number-cell stars-count-cell">{number(item.stars_count)}</td>
                     <td className="number-cell">{number(item.forks_count)}</td>
+                    <td className="workspace-action-cell"><RepositoryWorkspaceActions
+                      repositoryId={item.repository_id}
+                      interested={item.interested}
+                      researchStatus={item.research_status}
+                      sourcePage="stars"
+                      compact
+                    /></td>
                   </tr>
                 ))}
               </tbody>
