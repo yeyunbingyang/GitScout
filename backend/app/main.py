@@ -10,9 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1 import collections, comparison, dashboard, health, recommendations, repositories, stars, trending, workspace
+from app.api.v1 import collections, comparison, dashboard, health, recommendations, repositories, stars, system, trending, workspace
 from app.core.config import APP_NAME, APP_VERSION, LOG_LEVEL, PROJECT_ROOT, get_cors_origins
 from app.database.connection import initialize_database
+from app.services.backup_manager import apply_pending_restore, maybe_create_automatic_backup
 from app.services.scheduler import (
     ensure_default_schedules,
     recover_interrupted_jobs,
@@ -27,21 +28,46 @@ logging.basicConfig(
 logger = logging.getLogger("gitscout")
 
 
+async def backup_maintenance_loop() -> None:
+    """Create due automatic SQLite backups while the local service is running."""
+    while True:
+        await asyncio.sleep(3600)
+        try:
+            item = maybe_create_automatic_backup()
+            if item:
+                logger.info("Automatic backup completed: %s", item["filename"])
+        except Exception:
+            logger.exception("Automatic SQLite backup failed")
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    restored = apply_pending_restore()
+    if restored:
+        logger.warning("Restored SQLite database from %s", restored["filename"])
     database_path = initialize_database()
     interrupted = recover_interrupted_jobs()
     ensure_default_schedules()
     logger.info("SQLite initialized at %s", database_path)
     if interrupted:
         logger.warning("Marked %s interrupted collection job(s) after restart", interrupted)
+    try:
+        backup = maybe_create_automatic_backup()
+        if backup:
+            logger.info("Initial automatic backup completed: %s", backup["filename"])
+    except Exception:
+        logger.exception("Initial automatic SQLite backup failed")
     scheduler_task = asyncio.create_task(scheduler_loop(), name="gitscout-collection-scheduler")
+    backup_task = asyncio.create_task(backup_maintenance_loop(), name="gitscout-backup-maintenance")
     try:
         yield
     finally:
         scheduler_task.cancel()
+        backup_task.cancel()
         with suppress(asyncio.CancelledError):
             await scheduler_task
+        with suppress(asyncio.CancelledError):
+            await backup_task
         await stop_scheduler_tasks()
         recover_interrupted_jobs()
         logger.info("GitScout API stopped")
@@ -72,6 +98,7 @@ app.include_router(collections.router, prefix="/api/v1")
 app.include_router(recommendations.router, prefix="/api/v1")
 app.include_router(workspace.interested_router, prefix="/api/v1")
 app.include_router(workspace.research_router, prefix="/api/v1")
+app.include_router(system.router, prefix="/api/v1")
 
 frontend_dist = PROJECT_ROOT / "frontend" / "dist"
 assets_dir = frontend_dist / "assets"
