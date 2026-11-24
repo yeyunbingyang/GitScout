@@ -109,6 +109,7 @@ def _interested_detail(connection: sqlite3.Connection, repository_id: int) -> di
     row = connection.execute(
         """
         SELECT ip.repository_id, ip.marked_at, ip.source_page, ip.tags_json, ip.notes,
+               (SELECT rp.status FROM research_projects rp WHERE rp.repository_id = r.id LIMIT 1) AS research_status,
                r.github_repo_id, r.full_name, r.owner, r.name, r.description, r.html_url,
                r.language, r.stars_count, r.forks_count, r.open_issues_count, r.last_synced_at
         FROM interested_projects ip
@@ -200,6 +201,7 @@ def list_interested_projects(
     q: str | None = Query(default=None, max_length=120),
     language: str | None = Query(default=None, max_length=80),
     tag: str | None = Query(default=None, max_length=40),
+    research: Literal["all", "added", "not_added"] = Query(default="all"),
     sort: Literal["marked_at", "stars", "name"] = Query(default="marked_at"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=30, ge=1, le=100),
@@ -223,6 +225,10 @@ def list_interested_projects(
             """
         )
         parameters.append(tag.strip())
+    if research == "added":
+        conditions.append("EXISTS (SELECT 1 FROM research_projects rp WHERE rp.repository_id = r.id)")
+    elif research == "not_added":
+        conditions.append("NOT EXISTS (SELECT 1 FROM research_projects rp WHERE rp.repository_id = r.id)")
     where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
     order_clause = {
         "marked_at": "ip.marked_at DESC, r.stars_count DESC",
@@ -245,7 +251,8 @@ def list_interested_projects(
             SELECT ip.repository_id, ip.marked_at, ip.source_page, ip.tags_json, ip.notes,
                    r.github_repo_id, r.full_name, r.owner, r.name, r.description,
                    r.html_url, r.language, r.stars_count, r.forks_count,
-                   r.open_issues_count, r.last_synced_at
+                   r.open_issues_count, r.last_synced_at,
+                   (SELECT rp.status FROM research_projects rp WHERE rp.repository_id = r.id LIMIT 1) AS research_status
             FROM interested_projects ip
             JOIN repositories r ON r.id = ip.repository_id
             {where_clause}
