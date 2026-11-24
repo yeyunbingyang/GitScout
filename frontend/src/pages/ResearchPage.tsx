@@ -260,7 +260,7 @@ export default function ResearchPage() {
         });
         all.push(...response.items);
       }
-      const detailed = [];
+      const detailed: ResearchProjectDetail[] = [];
       for (const item of all) {
         const response = await api.researchProject(item.id);
         detailed.push(response.item);
