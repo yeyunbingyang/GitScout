@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
-  Bookmark, Check, ExternalLink, Filter, Pencil, Plus, Search,
+  BookOpen, Bookmark, Check, Download, ExternalLink, Filter, Pencil, Plus, Search,
   Star, Trash2, X,
 } from "lucide-react";
 import {
@@ -25,6 +25,7 @@ export default function InterestedPage() {
   const [query, setQuery] = useState("");
   const [language, setLanguage] = useState("");
   const [tag, setTag] = useState("");
+  const [researchFilter, setResearchFilter] = useState<"all" | "added" | "not_added">("all");
   const [sort, setSort] = useState<"marked_at" | "stars" | "name">("marked_at");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export default function InterestedPage() {
   const [pickerItems, setPickerItems] = useState<Repository[]>([]);
   const [pickerLoading, setPickerLoading] = useState(false);
   const [addingId, setAddingId] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   async function loadItems() {
     setLoading(true);
@@ -46,6 +48,7 @@ export default function InterestedPage() {
         q: query.trim(),
         language: language.trim(),
         tag: tag.trim(),
+        research: researchFilter,
         sort,
         page,
         pageSize: 30,
@@ -100,6 +103,55 @@ export default function InterestedPage() {
     }
   }
 
+  async function addToResearch(item: InterestedProject) {
+    setSavingId(item.repository_id);
+    setError(null);
+    try {
+      await api.createResearchProject({ repository_id: item.repository_id });
+      await loadItems();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "加入研究工作区失败");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  async function exportAll() {
+    setExporting(true);
+    setError(null);
+    try {
+      const first = await api.interestedProjects({
+        q: query.trim(), language: language.trim(), tag: tag.trim(),
+        research: researchFilter, sort, page: 1, pageSize: 100,
+      });
+      const all = [...first.items];
+      for (let current = 2; current <= first.pagination.total_pages; current += 1) {
+        const response = await api.interestedProjects({
+          q: query.trim(), language: language.trim(), tag: tag.trim(),
+          research: researchFilter, sort, page: current, pageSize: 100,
+        });
+        all.push(...response.items);
+      }
+      const header = ["仓库", "语言", "Stars", "标签", "备注", "感兴趣标记时间", "研究状态", "GitHub URL"];
+      const rows = all.map((item) => [
+        item.full_name, item.language ?? "", item.stars_count, item.tags.join("；"),
+        item.notes ?? "", item.marked_at, item.research_status ?? "尚未加入研究", item.html_url,
+      ]);
+      const quote = (value: string | number) => '"' + String(value).replace(/"/g, '""') + '"';
+      const csv = "\uFEFF" + [header, ...rows].map((row) => row.map(quote).join(",")).join("\r\n");
+      const url = window.URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "gitscout-interested-projects.csv";
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "导出感兴趣项目失败");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   async function searchPicker(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPickerLoading(true);
@@ -146,6 +198,9 @@ export default function InterestedPage() {
           <label className="workspace-search"><Search size={14} /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="搜索仓库名称或简介…" /></label>
           <label><span>语言</span><input value={language} onChange={(event) => { setLanguage(event.target.value); setPage(1); }} placeholder="Python" /></label>
           <label><span>标签</span><input value={tag} onChange={(event) => { setTag(event.target.value); setPage(1); }} placeholder="AI" /></label>
+          <label><span>研究状态</span><select value={researchFilter} onChange={(event) => { setResearchFilter(event.target.value as typeof researchFilter); setPage(1); }}>
+            <option value="all">全部</option><option value="not_added">尚未加入研究</option><option value="added">已加入研究</option>
+          </select></label>
           <label><span>排序</span><select value={sort} onChange={(event) => { setSort(event.target.value as typeof sort); setPage(1); }}>
             <option value="marked_at">最近标记</option><option value="stars">Stars 最高</option><option value="name">名称</option>
           </select></label>
@@ -155,7 +210,10 @@ export default function InterestedPage() {
 
       <div className="workspace-list-heading">
         <div><h3>我的感兴趣项目</h3><p>共 {total.toLocaleString("zh-CN")} 个项目 · 与研究工作区独立</p></div>
-        <span className="count-chip">{total} 项</span>
+        <div className="workspace-list-heading-actions">
+          <button className="button button-quiet" onClick={() => void exportAll()} disabled={exporting || total === 0}><Download size={13} />{exporting ? "导出中…" : "导出 CSV"}</button>
+          <span className="count-chip">{total} 项</span>
+        </div>
       </div>
 
       <section className="surface-card workspace-list-card">
@@ -181,10 +239,12 @@ export default function InterestedPage() {
                     <span>标记于 {formatDate(item.marked_at)}</span>
                     {item.source_page && <span>来源：{item.source_page}</span>}
                   </div>
+                  <div className="workspace-project-status">{item.research_status ? <Link to="/research"><BookOpen size={11} />已加入研究 · {item.research_status === "in_progress" ? "研究中" : item.research_status === "completed" ? "已完成" : item.research_status === "paused" ? "暂缓" : "待研究"}</Link> : <span>尚未加入研究</span>}</div>
                   {item.tags.length > 0 && <div className="workspace-tags">{item.tags.map((value) => <span key={value}>{value}</span>)}</div>}
                   {item.notes && editingId !== item.repository_id && <div className="workspace-note-preview">{item.notes}</div>}
                 </div>
                 <div className="workspace-project-actions">
+                  {!item.research_status ? <button className="button button-quiet" disabled={savingId === item.repository_id} onClick={() => void addToResearch(item)}><BookOpen size={13} />加入研究</button> : <Link className="button button-workspace-active" to="/research"><BookOpen size={13} />已加入研究</Link>}
                   <button className="button button-quiet" onClick={() => editingId === item.repository_id ? setEditingId(null) : beginEdit(item)}>
                     <Pencil size={13} />{editingId === item.repository_id ? "收起" : "编辑"}
                   </button>
