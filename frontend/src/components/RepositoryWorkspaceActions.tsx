@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bookmark, BookmarkCheck, BookOpen, Plus, Check, LoaderCircle } from "lucide-react";
+import { Bookmark, BookmarkCheck, BookOpen, Plus, LoaderCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api, type ResearchStatus } from "../services/api";
 
