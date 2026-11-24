@@ -183,6 +183,7 @@ export interface TrendingComparisonResponse {
 
 
 export type RecommendationCategory = "all" | "priority" | "emerging" | "stable";
+export type RecommendationDimension = "all" | "stars" | "daily" | "weekly" | "monthly";
 
 export interface RecommendationProfile {
   id: number;
@@ -318,6 +319,8 @@ export interface RecommendationRunResponse {
     category: RecommendationCategory;
     category_label: string;
     query: string;
+    language: string;
+    dimension: RecommendationDimension;
   };
 }
 
@@ -587,6 +590,8 @@ export const api = {
   latestRecommendationRun: (filters: {
     category?: RecommendationCategory;
     q?: string;
+    language?: string;
+    dimension?: RecommendationDimension;
     page?: number;
     pageSize?: number;
   } = {}) => {
@@ -596,6 +601,8 @@ export const api = {
       page_size: String(filters.pageSize ?? 50),
     });
     if (filters.q) params.set("q", filters.q);
+    if (filters.language) params.set("language", filters.language);
+    if (filters.dimension) params.set("dimension", filters.dimension);
     return request<RecommendationRunResponse>(
       "/api/v1/recommendations/runs/latest?" + params.toString(),
     );
@@ -605,6 +612,8 @@ export const api = {
     filters: {
       category?: RecommendationCategory;
       q?: string;
+      language?: string;
+      dimension?: RecommendationDimension;
       page?: number;
       pageSize?: number;
     } = {},
@@ -615,6 +624,8 @@ export const api = {
       page_size: String(filters.pageSize ?? 50),
     });
     if (filters.q) params.set("q", filters.q);
+    if (filters.language) params.set("language", filters.language);
+    if (filters.dimension) params.set("dimension", filters.dimension);
     return request<RecommendationRunResponse>(
       "/api/v1/recommendations/runs/" + runId + "?" + params.toString(),
     );
