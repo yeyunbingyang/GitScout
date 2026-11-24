@@ -30,5 +30,6 @@ if (-not $details -or $details.CommandLine -notmatch "app\.main:app" -or $detail
 }
 
 Stop-Process -Id $processId -Force
+try { Wait-Process -Id $processId -Timeout 15 -ErrorAction SilentlyContinue } catch { }
 Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
 Write-Host "GitScout has been stopped." -ForegroundColor Green
