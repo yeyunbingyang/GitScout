@@ -99,3 +99,16 @@ def test_backup_settings_are_persisted_and_normalized(monkeypatch, tmp_path):
         "retention_count": 3,
     }
     assert get_backup_settings() == settings
+
+
+def test_corrupt_backup_is_rejected(monkeypatch, tmp_path):
+    monkeypatch.setenv("GITSCOUT_DATA_DIR", str(tmp_path))
+    backup_dir = tmp_path / "backups"
+    backup_dir.mkdir(parents=True)
+    corrupt = backup_dir / "gitscout-manual-corrupt.db"
+    corrupt.write_bytes(b"this is not a SQLite database")
+
+    import pytest
+
+    with pytest.raises(ValueError, match="valid SQLite database"):
+        verify_backup(corrupt.name)
