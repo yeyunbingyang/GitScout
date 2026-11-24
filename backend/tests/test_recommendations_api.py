@@ -326,11 +326,23 @@ def test_recommendation_filters_and_pagination_are_applied_to_saved_scores(tmp_p
             f"/api/v1/recommendations/runs/{run_id}",
             params={"q": "gamma", "page_size": 1},
         )
+        language_filtered = client.get(
+            f"/api/v1/recommendations/runs/{run_id}",
+            params={"language": "TypeScript"},
+        )
+        dimension_filtered = client.get(
+            f"/api/v1/recommendations/runs/{run_id}",
+            params={"dimension": "daily"},
+        )
 
     assert [item["full_name"] for item in emerging.json()["items"]] == ["octo/gamma"]
     assert [item["full_name"] for item in stable.json()["items"]] == ["octo/beta"]
     assert [item["full_name"] for item in searched.json()["items"]] == ["octo/gamma"]
     assert searched.json()["pagination"]["total"] == 1
+    assert [item["full_name"] for item in language_filtered.json()["items"]] == ["octo/gamma"]
+    assert language_filtered.json()["filters"]["language"] == "TypeScript"
+    assert [item["full_name"] for item in dimension_filtered.json()["items"]] == ["octo/gamma"]
+    assert dimension_filtered.json()["filters"]["dimension"] == "daily"
 
 
 def test_latest_recommendations_returns_empty_state_before_first_run(tmp_path, monkeypatch):
