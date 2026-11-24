@@ -51,7 +51,13 @@ def _empty_run_response() -> dict[str, Any]:
         },
         "items": [],
         "pagination": {"page": 1, "page_size": 50, "total": 0, "total_pages": 0},
-        "filters": {"category": "all", "category_label": "全部推荐", "query": ""},
+        "filters": {
+            "category": "all",
+            "category_label": "全部推荐",
+            "query": "",
+            "language": "",
+            "dimension": "all",
+        },
     }
 
 
