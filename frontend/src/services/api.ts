@@ -115,6 +115,7 @@ export type ResearchStatus = "pending" | "in_progress" | "completed" | "paused";
 export type ResearchPriority = "high" | "medium" | "low";
 
 export interface InterestedProject extends Repository {
+  repository_id: number;
   marked_at: string;
   source_page: string | null;
   tags: string[];
