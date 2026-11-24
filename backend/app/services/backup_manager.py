@@ -117,6 +117,8 @@ def _integrity_check(path: Path) -> dict[str, Any]:
                 if "repositories" in tables else 0
             ),
         }
+    except sqlite3.DatabaseError as exc:
+        raise ValueError("Backup is not a valid SQLite database") from exc
     finally:
         connection.close()
 
