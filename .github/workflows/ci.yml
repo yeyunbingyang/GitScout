@@ -45,6 +45,8 @@ jobs:
           node-version: "20"
       - name: Install frontend dependencies
         run: npm install
+      - name: Check UI design system consistency
+        run: npm run check:theme
       - name: Build React application
         run: npm run build
 

@@ -509,3 +509,77 @@ p, small { color: var(--gs-muted); }
 .log-level.error { color: #ff9aa9; }
 .log-level.warning { color: #f0c27d; }
 .log-level.success { color: #65dfb6; }
+
+
+/* v0.8.1 source-audit fixes: remove remaining light-only descendants and controls */
+tbody td strong, .table-card td strong { color: #eaf2ff; }
+.job-summary-card > strong, .recommendation-summary-card > strong { color: #edf4ff; }
+.job-summary-card > span, .recommendation-summary-card > span { color: #91a6c3; }
+.job-summary-card > small, .recommendation-summary-card > small { color: #8fa3c0; }
+.job-detail-stats span {
+  color: #a9bdd8;
+  background: rgba(39, 60, 89, .56);
+  border: 1px solid rgba(130, 168, 218, .14);
+}
+.schedule-fields input, .schedule-fields select,
+.compare-selectors-row select, .recommendation-dimension-filter select,
+.workspace-inline-editor input, .workspace-inline-editor textarea,
+.research-form-grid input, .research-form-grid select, .research-form-grid textarea,
+.research-tag-editor input, .research-note-form input, .research-note-form textarea,
+.research-note-edit input, .research-note-edit textarea {
+  color: #dce8fb;
+  background: rgba(7, 16, 31, .72);
+  border-color: rgba(130, 168, 218, .22);
+}
+.workspace-search {
+  color: #9bb0cb;
+  background: rgba(7, 16, 31, .72);
+  border-color: rgba(130, 168, 218, .22);
+}
+.workspace-note-preview { color: #a9bdd8; }
+.stars-api-note {
+  color: #b9b1ff;
+  background: rgba(25, 39, 67, .7);
+  border-color: rgba(151, 130, 255, .2);
+}
+.analytics-topic-list i {
+  color: #a9a4ed;
+  background: rgba(112, 103, 226, .15);
+}
+.compare-intro h3 { color: #edf4ff; }
+.compare-change-dropped, .compare-change-down { background: rgba(181, 65, 91, .14); }
+.compare-empty > span {
+  color: #b9b1ff;
+  background: rgba(112, 103, 226, .15);
+}
+.recommendation-weight-chip {
+  color: #c4d3e8;
+  background: rgba(17, 32, 53, .65);
+  border-color: rgba(130, 168, 218, .17);
+}
+.recommendation-warning strong { color: #e5efff; }
+.recommendation-warning span, .recommendation-warning small { color: #a9bdd8; }
+.button-workspace-active {
+  color: #8fe6ff !important;
+  background: rgba(40, 147, 194, .15) !important;
+  border-color: rgba(76, 194, 245, .3) !important;
+}
+.research-project-row.active {
+  background: rgba(62, 126, 191, .12);
+  border-color: rgba(111, 179, 255, .25);
+}
+.research-note-item {
+  color: #c3d2e8;
+  background: rgba(17, 32, 53, .64);
+  border-color: rgba(130, 168, 218, .17);
+}
+.system-token-instructions > code {
+  color: #9fe7ff;
+  background: rgba(7, 16, 31, .78);
+  border: 1px solid rgba(130, 168, 218, .16);
+}
+.status-pill.warning {
+  color: #f0c27d;
+  background: rgba(135, 91, 32, .14);
+  border-color: rgba(240, 189, 118, .22);
+}

@@ -8,7 +8,7 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 ## 当前版本
 
 - 产品需求基线：**v0.5.1**
-- 技术工程版本：**0.8.0 · Dark Neon Glass UI**
+- 技术工程版本：**0.8.1 · Dark Neon Glass UI / UI QA**
 - 当前 UI 设计系统：**Dark Neon Glass · 深色霓虹玻璃拟态**
 - 品牌：**GitScout**
 - 运行模式：**Windows 本地 Web 工作台**
@@ -20,8 +20,9 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 | 资源 | 说明 |
 |---|---|
 | [需求说明书](docs/requirements/GitScout_PRD_v0.5.1.md) | 产品功能、业务规则、数据要求和原型说明 |
-| [HTML 交互原型 v0.8.0](prototype/GitScout_v0.8.0_DarkNeon_Prototype.html) | Dark Neon Glass 独立交互原型；v0.5.1 原型作为历史基线保留 |
+| [HTML 交互原型 v0.8.1](prototype/GitScout_v0.8.1_DarkNeon_Prototype.html) | Dark Neon Glass 独立交互原型；v0.5.1 原型作为历史基线保留 |
 | [Dark Neon Glass 设计系统](docs/design/GitScout_Dark_Neon_Glass_Design_System_v0.8.0.md) | React 与 HTML 共用的颜色 Token、组件、状态和布局规范 |
+| [UI 视觉与交互验收 v0.8.1](docs/qa/GitScout_UI_QA_v0.8.1.md) | 全路由核对、主题修复、自动化检查与人工验收清单 |
 | [技术架构设计说明书 v1.0](docs/architecture/GitScout_Technical_Architecture_v1.0.md) | 正式技术选型、运行形态、数据库和接口边界 |
 | [开发实施计划 v1.0](docs/development/GitScout_Implementation_Plan_v1.0.md) | 阶段、任务、测试和验收计划 |
 | [Windows 本地运行与数据安全手册](docs/operations/GitScout_Windows_Operations_v1.0.md) | 初始化、启动、停止、备份、恢复和故障诊断 |
