@@ -105,6 +105,8 @@ export interface RepositoryProfile extends Repository {
     started_at: string | null;
     completed_at: string | null;
     updated_at: string;
+    tags: ResearchTag[];
+    notes_count: number;
   } | null;
 }
 
