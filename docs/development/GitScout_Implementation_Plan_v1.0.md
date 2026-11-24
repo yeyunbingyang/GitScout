@@ -124,7 +124,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 验收：同一数据、算法版本和权重可复现同一结果；新计算批次不覆盖旧结果；不足样本不按 0 分处理；失败或部分成功快照不进入有效分母。
 
-### M6 · 兴趣与研究（实现已提交，CI 验收中）
+### M6 · 兴趣与研究（GitHub Actions CI 已通过）
 
 - 新增 /api/v1/interested 与 /api/v1/research 路由；复用 0001 初始 schema 中的 interested_projects、research_projects、research_notes、research_tags 和 research_project_tags 表。
 - 新增 0005_workspace_indexes.sql，为兴趣列表、研究状态 / 优先级、笔记和标签查询添加索引。
@@ -139,13 +139,37 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 验收：服务重启后收藏和研究数据仍然存在；取消兴趣不删除研究记录；重复加入不产生重复记录；笔记、标签和状态修改均可回读。
 
-### M7 · 本地交付
+### M7 · 本地交付（实现已提交，CI 验收中）
 
-- Windows 环境检查和启动入口。
-- 日志轮转、异常提示和 Token 安全。
-- SQLite 安全备份、恢复和 integrity_check。
-- 完成前后端单元测试、API 集成测试和关键用户流程测试。
-- 更新 README、安装教程和常见问题。
+#### Windows 启动与运行
+
+- setup_gitscout.bat / scripts/setup_gitscout.ps1：检查 Python 3.11、Node.js 20+；创建 backend/.venv；安装依赖；构建 React；创建 .env 和本地目录。
+- start_gitscout.bat / scripts/start_gitscout.ps1：首次运行自动初始化；检查端口冲突；隐藏后台启动 Uvicorn 单 Worker；轮询健康检查；成功后打开浏览器。
+- stop_gitscout.bat / scripts/stop_gitscout.ps1：校验 PID 和进程命令行后停止服务，不按端口强制杀进程。
+- 标准输出 / 错误输出写入 .runtime/logs；日志超过约 20 MB 时轮转，保留最近 10 组。
+
+#### SQLite 备份与恢复
+
+- backup_manager.py 使用 sqlite3.Connection.backup 在线备份，纳入 WAL 已提交数据；备份临时文件校验通过后再原子重命名。
+- 自动备份默认启用，每 24 小时检查一次；服务启动时补做逾期备份，运行期间每小时检查；默认保留最近 14 份自动备份。
+- 手动备份、恢复前安全备份不受自动保留策略清理。
+- 备份支持列表、下载、SQLite integrity_check、schema_migrations 检查、删除。
+- 恢复采用延迟执行：校验目标备份、先创建 pre-restore 安全备份、写入 restore_pending.json；下次启动在数据库初始化和调度器启动之前恢复，再执行迁移。
+- 恢复目标只能从受控 backups 目录选择，不接受用户任意路径；待恢复文件不可删除。
+
+#### 系统设置与文档
+
+- 新增 /api/v1/system，提供系统信息、备份策略和备份管理 API。
+- 新增 /system 页面，展示版本、Schema、数据库大小、数据路径、Token 配置状态、自动备份策略和备份历史。
+- GitHub Token 只显示是否配置，不返回明文；数据目录修改仍通过 .env 手动配置，避免 UI 修改路径时误迁移数据。
+- 新增 Windows 运维手册，更新 README、目录与运行约定。
+
+验收：
+
+- 自动化：备份 / 校验 / 下载 / 删除 / 恢复队列 / 启动恢复、自动备份间隔与保留策略均有测试。
+- Windows：首次初始化、启动健康检查、重复启动、停止、日志轮转、手动备份和恢复演练。
+- 端到端：启动 → 采集 → 推荐 → 感兴趣 → 研究 → 手动备份 → 停止 → 恢复 → 再启动 → 数据一致。
+- 安全：监听地址为 127.0.0.1；Token 不出现在 API 响应；路径穿越不能读取或删除备份目录之外的文件。
 
 ## 6. 测试策略
 
@@ -163,7 +187,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 ## 8. 下一迭代建议
 
-M2 / M3 / M4 的 GitHub Actions CI 均已通过，Windows 本机真实联网和历史数据验收待确认；M5 实现与测试已通过 GitHub Actions CI；M6 兴趣与研究工作区实现和测试已提交，GitHub Actions CI 验收中。下一阶段进入 M7：Windows 本地交付、数据库安全备份 / 恢复、启动脚本、日志与完整端到端验收。
+M2 / M3 / M4 的 GitHub Actions CI 均已通过，Windows 本机真实联网和历史数据验收待确认；M5 与 M6 GitHub Actions CI 已通过。M7 的 Windows 启动、SQLite 备份恢复、系统设置和运维文档已提交，等待 GitHub Actions CI 与 Windows 本机实测。
 
 ---
 
