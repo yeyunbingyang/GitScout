@@ -507,3 +507,22 @@ a { color: inherit; text-decoration: none; }
   .recommendation-search { min-width:0; }
   .recommendation-results-heading { align-items:flex-start; }
 }
+
+.recommendation-filter-controls { display:flex; align-items:center; gap:9px; min-width:0; }
+.recommendation-search { min-width:350px; }
+.recommendation-search .recommendation-language-input { flex:0 0 112px; }
+.recommendation-search .recommendation-language-input input { min-width:0; }
+.recommendation-dimension-filter { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.recommendation-dimension-filter span { color:#929cad; font-size:8px; }
+.recommendation-dimension-filter select { height:32px; padding:0 8px; border:1px solid #e7eaf1; border-radius:7px; color:#536074; background:#fff; font-size:9px; }
+@media (max-width: 980px) {
+  .recommendation-filter-controls { width:100%; justify-content:space-between; }
+  .recommendation-search { min-width:0; flex:1; }
+}
+@media (max-width: 680px) {
+  .recommendation-filter-controls { align-items:stretch; flex-direction:column; }
+  .recommendation-search { display:grid; grid-template-columns:1fr 1fr auto; min-width:0; }
+  .recommendation-search .recommendation-language-input { flex-basis:auto; }
+  .recommendation-dimension-filter { justify-content:space-between; }
+  .recommendation-dimension-filter select { flex:1; }
+}
