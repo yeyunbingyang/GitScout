@@ -139,7 +139,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 验收：服务重启后收藏和研究数据仍然存在；取消兴趣不删除研究记录；重复加入不产生重复记录；笔记、标签和状态修改均可回读。
 
-### M7 · 本地交付（实现已提交，CI 验收中）
+### M7 · 本地交付（后端 / 前端 / Windows CI 已通过）
 
 #### Windows 启动与运行
 
@@ -187,7 +187,7 @@ PostgreSQL、Redis、Celery、Docker、微服务、多用户权限、远程公�
 
 ## 8. 下一迭代建议
 
-M2 / M3 / M4 的 GitHub Actions CI 均已通过，Windows 本机真实联网和历史数据验收待确认；M5 与 M6 GitHub Actions CI 已通过。M7 的 Windows 启动、SQLite 备份恢复、系统设置和运维文档已提交，等待 GitHub Actions CI 与 Windows 本机实测。
+M2 / M3 / M4 的 GitHub Actions CI 均已通过，Windows 本机真实联网和历史数据验收待确认；M5 与 M6 GitHub Actions CI 已通过。M7 的后端测试、前端构建和 Windows GitHub Actions 首次初始化 / 启动 / 健康检查 / 备份校验 / 延迟恢复 / 重启验证均已通过。用户本机首次安装、现有真实数据库备份和恢复演练仍待确认。
 
 ---
 
