@@ -125,6 +125,17 @@ SQLite 是唯一业务数据库，首期核心表如下：
 - `GET /recommendations/profiles`、`POST /recommendations/runs`、`GET /recommendations/runs/latest`、`GET /recommendations/runs/{id}` 提供真实 API；推荐页接入预设切换、批次历史、类别、语言、主要贡献维度筛选、关键词搜索和 CSV 导出。
 - M5 新增迁移仅为三套默认预设和查询索引；复用初始 schema 已存在的 recommendation_profiles / recommendation_runs / recommendation_scores 表。
 
+### M6 兴趣与研究工作区实现
+
+- 兴趣与研究使用独立业务关系：`interested_projects.repository_id` 唯一标记兴趣；`research_projects.repository_id` 唯一标记研究关系。二者不互相级联。
+- 兴趣标签沿用 `tags_json` 保存；研究标签通过 `research_tags` 与 `research_project_tags` 多对多关联；研究笔记存放在 `research_notes`。
+- `/interested` API 提供列表 / 详情 / 幂等标记 / PATCH / DELETE；列表支持关键词、语言、标签、研究成员状态、排序和分页。
+- `/research` API 提供列表 / 创建 / 详情 / PATCH / DELETE；标签使用 PUT 整体替换；笔记支持 POST / PATCH / DELETE。
+- 状态转换自动维护 `started_at` / `completed_at`；从已完成重新打开时清除完成时间，保留首次开始时间。
+- M5 推荐、Trending、Stars 和仓库详情 API 均提供兴趣 / 研究状态，前端使用统一的快捷操作组件。
+- 感兴趣与研究页分别提供搜索、筛选、编辑、批量数据导出；研究导出会按项目拉取详情并包含笔记内容。
+- 迁移 0005 仅增加查询索引；M6 复用 0001 已有数据表，不重建或搬迁用户数据。
+
 ### 本地调度实现
 
 - 使用 FastAPI lifespan 启动一个 asyncio scheduler loop，不引入 Celery / Redis / APScheduler。
@@ -213,7 +224,7 @@ GitScout/
 
 ## 9. 当前实现边界
 
-M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度；M4 已实现趋势总览聚合、同周期快照比较和仓库详情历史；M5 已实现推荐评分引擎、权重预设、批次留痕和推荐工作台。M2 / M3 / M4 CI 已通过；M5 GitHub Actions CI 已通过，Windows 本机真实数据验收仍待确认。M6 感兴趣与研究 CRUD、M7 本地备份恢复按后续阶段完成。
+M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度；M4 已实现趋势总览聚合、同周期快照比较和仓库详情历史；M5 已实现推荐评分引擎、权重预设、批次留痕和推荐工作台。M2 / M3 / M4 CI 已通过；M5 GitHub Actions CI 已通过；M6 兴趣与研究工作区已实现，CI 验收中。Windows 本机真实数据验收仍待确认。M6 感兴趣与研究 CRUD、M7 本地备份恢复按后续阶段完成。
 
 ## 10. 升级条件
 
