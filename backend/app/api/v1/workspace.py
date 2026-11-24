@@ -264,6 +264,10 @@ def mark_interested(payload: InterestedMark) -> dict[str, Any]:
     tags = _clean_tags(payload.tags)
     with get_connection() as connection:
         _require_repository(connection, payload.repository_id)
+        existing = connection.execute(
+            "SELECT 1 FROM interested_projects WHERE repository_id = ?",
+            (payload.repository_id,),
+        ).fetchone()
         connection.execute(
             """
             INSERT OR IGNORE INTO interested_projects (
@@ -278,7 +282,7 @@ def mark_interested(payload: InterestedMark) -> dict[str, Any]:
             ),
         )
         item = _interested_detail(connection, payload.repository_id)
-    return {"item": item, "created": item is not None}
+    return {"item": item, "created": existing is None}
 
 
 @interested_router.get("/{repository_id}")
@@ -556,6 +560,9 @@ def create_research_note(
     research_id: int,
     payload: ResearchNoteCreate,
 ) -> dict[str, Any]:
+    note_content = payload.content.strip()
+    if not note_content:
+        raise HTTPException(status_code=422, detail="Note content cannot be empty.")
     with get_connection() as connection:
         exists = connection.execute(
             "SELECT 1 FROM research_projects WHERE id = ?",
@@ -568,7 +575,7 @@ def create_research_note(
             INSERT INTO research_notes (research_project_id, title, content, note_type)
             VALUES (?, ?, ?, ?)
             """,
-            (research_id, payload.title.strip(), payload.content.strip(), payload.note_type.strip() or "general"),
+            (research_id, payload.title.strip(), note_content, payload.note_type.strip() or "general"),
         )
         note = connection.execute(
             """
@@ -602,7 +609,9 @@ def update_research_note(
                     raise HTTPException(status_code=422, detail="Note content cannot be empty.")
             if field == "title" and value is not None:
                 value = value.strip()
-            if field == "note_type" and value is not None:
+            if value is None:
+                raise HTTPException(status_code=422, detail=f"{field} cannot be null.")
+            if field == "note_type":
                 value = value.strip() or "general"
             updates.append(f"{field} = ?")
             values.append(value)
