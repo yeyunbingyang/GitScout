@@ -676,6 +676,8 @@ def get_recommendation_run_detail(
     *,
     category: str = "all",
     q: str | None = None,
+    language: str | None = None,
+    dimension: str = "all",
     page: int = 1,
     page_size: int = 50,
 ) -> dict[str, Any] | None:
@@ -739,6 +741,7 @@ def get_recommendation_run_detail(
         "candidate_sources": window_config.get("candidate_sources", []),
     }
     normalized_query = (q or "").strip().casefold()
+    normalized_language = (language or "").strip().casefold()
     filtered = [
         item
         for item in all_items
@@ -748,6 +751,11 @@ def get_recommendation_run_detail(
             or normalized_query in item["full_name"].casefold()
             or normalized_query in (item["description"] or "").casefold()
         )
+        and (
+            not normalized_language
+            or normalized_language == (item["language"] or "").casefold()
+        )
+        and (dimension == "all" or dimension in item["reason_codes"])
     ]
     offset = (page - 1) * page_size
     total = len(filtered)
@@ -769,5 +777,7 @@ def get_recommendation_run_detail(
             "category": category,
             "category_label": CATEGORY_LABELS.get(category, category),
             "query": q or "",
+            "language": language or "",
+            "dimension": dimension,
         },
     }
