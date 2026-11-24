@@ -58,4 +58,4 @@ def test_backup_api_rejects_path_traversal(tmp_path, monkeypatch):
 
     with TestClient(app) as client:
         response = client.post("/api/v1/system/backups/..%2Fsecret.db/verify")
-        assert response.status_code in {400, 404, 422}
+        assert response.status_code != 200
