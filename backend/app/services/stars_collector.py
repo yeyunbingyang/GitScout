@@ -1143,6 +1143,7 @@ def list_stars_leaderboard(
     items = []
     for row in rows:
         item = dict(row)
+        item["interested"] = bool(item["interested"])
         item["topics"] = [value for value in (item.pop("topics") or "").split(",") if value]
         items.append(item)
     return {
