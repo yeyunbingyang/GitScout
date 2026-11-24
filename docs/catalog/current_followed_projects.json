@@ -1,0 +1,265 @@
+{
+  "schema_version": "1.0.0",
+  "list_id": "current-followed-projects",
+  "title": "GitScout 当前关注项目",
+  "description": "由用户手动整理的 GitHub 项目关注清单。此文件作为版本化清单保存，不代表项目已导入 GitScout 的感兴趣或研究数据库。",
+  "updated_at": "2026-11-24",
+  "source": "user_curated",
+  "project_count": 9,
+  "projects": [
+    {
+      "id": "mvanhorn-last30days-skill",
+      "name": "last30days-skill",
+      "repository": "mvanhorn/last30days-skill",
+      "url": "https://github.com/mvanhorn/last30days-skill",
+      "description": "AI agent skill that researches any topic across Reddit, X, YouTube, HN, Polymarket, and the web - then synthesizes a grounded summary",
+      "summary_zh": "面向 AI Agent 的研究技能，可跨 Reddit、X、YouTube、Hacker News、Polymarket 与网页检索，并综合生成有依据的主题摘要。",
+      "language": "Python",
+      "default_branch": "main",
+      "topics": [
+        "agent-skills",
+        "artificial-intelligence",
+        "automation",
+        "bot",
+        "command-line",
+        "data-science",
+        "dsh",
+        "dsh-plugin",
+        "golang",
+        "instagram",
+        "llms",
+        "nlp",
+        "osint",
+        "polymarket",
+        "python3",
+        "reddit",
+        "terminal",
+        "tiktok",
+        "twitter",
+        "youtube"
+      ],
+      "focus_areas": [
+        "AI 研究",
+        "趋势情报",
+        "Agent Skill"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "cathrynlavery-diagram-design",
+      "name": "diagram-design",
+      "repository": "cathrynlavery/diagram-design",
+      "url": "https://github.com/cathrynlavery/diagram-design",
+      "description": "Editorial diagram design for Claude Code, Codex, GitHub Copilot, Cursor, Factory Droid, Qoder, and Pi. 52 diagram types. Self-contained HTML + SVG. No shadows. No Mermaid slop.",
+      "summary_zh": "为多种编程 Agent 提供图表设计能力，包含 52 种图表类型，使用独立 HTML 与 SVG 进行呈现。",
+      "language": "HTML",
+      "default_branch": "main",
+      "topics": [
+        "agent-skills",
+        "claude-code",
+        "codex",
+        "data-visualization",
+        "diagrams",
+        "drawio",
+        "mermaid",
+        "svg"
+      ],
+      "focus_areas": [
+        "图表设计",
+        "数据可视化",
+        "Agent Skill"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "hkuds-cli-anything",
+      "name": "CLI-Anything",
+      "repository": "HKUDS/CLI-Anything",
+      "url": "https://github.com/HKUDS/CLI-Anything",
+      "description": "CLI-Anything: Making ALL Software Agent-Native -- CLI-Hub: https://clianything.cc/",
+      "summary_zh": "致力于让各类软件具备 Agent 原生 CLI 接口，使 AI Agent 能够通过命令行调用和操作软件。",
+      "language": "Python",
+      "default_branch": "main",
+      "topics": [],
+      "focus_areas": [
+        "Agent 工具化",
+        "CLI",
+        "软件自动化"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "chromedevtools-chrome-devtools-mcp",
+      "name": "chrome-devtools-mcp",
+      "repository": "ChromeDevTools/chrome-devtools-mcp",
+      "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "description": "Chrome DevTools for coding agents",
+      "summary_zh": "面向编程 Agent 的 Chrome DevTools MCP 服务，可将浏览器开发者工具能力提供给 AI Agent。",
+      "language": "TypeScript",
+      "default_branch": "main",
+      "topics": [
+        "browser",
+        "chrome",
+        "chrome-devtools",
+        "debugging",
+        "devtools",
+        "mcp",
+        "mcp-server",
+        "puppeteer"
+      ],
+      "focus_areas": [
+        "浏览器调试",
+        "MCP",
+        "开发者工具"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "milind-soni-openmausbot",
+      "name": "OpenMausBot",
+      "repository": "milind-soni/OpenMausBot",
+      "url": "https://github.com/milind-soni/OpenMausBot",
+      "description": "Open-source Grok Bot alternative with a virtual machine that bots can use",
+      "summary_zh": "开源的 Grok Bot 替代方案，提供 Bot 可以使用的虚拟机环境。",
+      "language": "TypeScript",
+      "default_branch": "main",
+      "topics": [
+        "ai-agents",
+        "claude-code",
+        "codex",
+        "computer-use",
+        "docker",
+        "electron",
+        "grok",
+        "grok-bot",
+        "grok-bot-alternative",
+        "self-hosted",
+        "typescript"
+      ],
+      "focus_areas": [
+        "Computer Use",
+        "桌面 Agent",
+        "自托管"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "jakeschincariol-instagram-agent-skill",
+      "name": "instagram-agent-skill",
+      "repository": "Jakeschincariol/instagram-agent-skill",
+      "url": "https://github.com/Jakeschincariol/instagram-agent-skill",
+      "description": "Thirteen Claude skills that run an Instagram account: Reels off 26 scored hook formulas, a viral research skill, a caption linter, and a humanizer. Free, MIT.",
+      "summary_zh": "一组用于 Instagram 账号运营的 Claude Skills，涵盖 Reels 选题、热门内容研究、文案检查与润色。",
+      "language": "Python",
+      "default_branch": "main",
+      "topics": [],
+      "focus_areas": [
+        "社交媒体自动化",
+        "Instagram",
+        "Agent Skill"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "kajisho5-ffmpeg-skill",
+      "name": "ffmpeg-skill",
+      "repository": "kajisho5/ffmpeg-skill",
+      "url": "https://github.com/kajisho5/ffmpeg-skill",
+      "description": "Local video editor for coding agents: 42 FFmpeg tools with a machine-readable contract and an MCP server, for Claude Code, Cursor and Codex. Cut, captions, reframe, loudness, platform exports. No cloud, no API keys.",
+      "summary_zh": "面向编程 Agent 的本地视频编辑工具集，提供 42 项 FFmpeg 工具和 MCP Server，支持剪辑、字幕、画幅调整、响度处理及平台格式导出。",
+      "language": "Python",
+      "default_branch": "main",
+      "topics": [
+        "agent-skills",
+        "ai-agents",
+        "audio-processing",
+        "captions",
+        "claude-code",
+        "codex",
+        "coding-agent",
+        "cursor",
+        "ffmpeg",
+        "gemini-cli-extension",
+        "loudness-normalization",
+        "mcp",
+        "mcp-server",
+        "model-context-protocol",
+        "python",
+        "subtitles",
+        "transcoding",
+        "video",
+        "video-editing",
+        "whisper"
+      ],
+      "focus_areas": [
+        "音视频处理",
+        "FFmpeg",
+        "MCP"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "heygen-com-hyperframes",
+      "name": "hyperframes",
+      "repository": "heygen-com/hyperframes",
+      "url": "https://github.com/heygen-com/hyperframes",
+      "description": "Open-source AI video editor: edit your own footage, or create and remake any video with Claude Code, Codex or the free Studio app. Write HTML, render MP4. By HeyGen.",
+      "summary_zh": "开源 AI 视频编辑器，可通过 HTML 编写视频并渲染为 MP4，支持 AI Agent 辅助创作与编辑工作流。",
+      "language": "TypeScript",
+      "default_branch": "main",
+      "topics": [
+        "agent-skills",
+        "ai",
+        "ai-agents",
+        "ai-video",
+        "ai-video-editor",
+        "animation",
+        "claude-code",
+        "ffmpeg",
+        "gsap",
+        "html",
+        "html-to-video",
+        "mcp",
+        "motion-graphics",
+        "puppeteer",
+        "remotion-alternative",
+        "rendering",
+        "typescript",
+        "video-editing",
+        "video-editor",
+        "video-generation"
+      ],
+      "focus_areas": [
+        "AI 视频生成",
+        "视频编辑",
+        "Motion Graphics"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    },
+    {
+      "id": "vercel-labs-agent-browser",
+      "name": "agent-browser",
+      "repository": "vercel-labs/agent-browser",
+      "url": "https://github.com/vercel-labs/agent-browser",
+      "description": "Browser automation CLI for AI agents",
+      "summary_zh": "面向 AI Agent 的浏览器自动化 CLI 工具。",
+      "language": "Rust",
+      "default_branch": "main",
+      "topics": [],
+      "focus_areas": [
+        "浏览器自动化",
+        "Agent CLI"
+      ],
+      "status": "following",
+      "added_at": "2026-11-24"
+    }
+  ]
+}
