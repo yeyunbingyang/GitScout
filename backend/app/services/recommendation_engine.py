@@ -152,6 +152,8 @@ def _category_matches(
 
 
 def _reason_text(code: str, coverage: dict[str, Any]) -> str:
+    if code == "low_signal":
+        return "当前可用热度信号较弱"
     if code == "stars":
         stars = coverage.get("stars", {})
         return (
