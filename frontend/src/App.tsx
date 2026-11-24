@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
   Activity, BarChart3, Bookmark, Boxes, CircleHelp, Clock3, Compass,
-  Github, HardDrive, Layers3, Lightbulb, Settings2, Sparkles,
+  HardDrive, Layers3, Lightbulb, Settings2, Sparkles,
 } from "lucide-react";
 import DashboardPage from "./pages/DashboardPage";
 import RepositoriesPage from "./pages/RepositoriesPage";
@@ -70,7 +70,7 @@ function AppShell() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-lockup">
-          <div className="brand-symbol"><Github size={21} /></div>
+          <div className="brand-symbol"><img src="/assets/gitscout/brand-mark.svg" alt="" /></div>
           <div><strong>GitScout</strong><span>开源项目发现与研究平台</span></div>
         </div>
         <div className="workspace-label">WORKSPACE</div>
@@ -97,7 +97,7 @@ function AppShell() {
             <span className="version-tag">LOCAL WORKSPACE · 0.8.1</span>
           </div>
         </header>
-        <div className="page-header"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></div>
+        <div className="page-header"><div className="page-heading-lockup"><span className="page-heading-mark"><img src="/assets/gitscout/layers-mark.svg" alt="" /></span><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></div></div>
         <div className="page-content">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
