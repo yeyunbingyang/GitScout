@@ -693,3 +693,13 @@ a { color: inherit; text-decoration: none; }
   .research-detail-actions { flex-direction:column; }
   .research-detail-actions .button { justify-content:center; }
 }
+
+.workspace-list-heading-actions,.research-list-heading-actions { display:flex; align-items:center; gap:6px; }
+.workspace-list-heading-actions .button,.research-list-heading-actions .button { padding:6px 8px; font-size:8px; }
+.workspace-project-status { margin-top:7px; color:#a0a7b4; font-size:8px; }
+.workspace-project-status a { display:inline-flex; align-items:center; gap:4px; color:#7772b9; }
+.workspace-project-status svg { color:#8c86cf; }
+.workspace-action-cell { min-width:112px; }
+.workspace-action-cell .repository-workspace-actions { align-items:flex-start; }
+.research-tag-filter { width:100%; min-width:0; height:30px; padding:0 8px; border:1px solid #e7eaf1; border-radius:6px; outline:0; color:#69758a; font-size:8px; }
+.research-tag-filter:focus { border-color:#aaa6e6; box-shadow:0 0 0 2px #f0efff; }
