@@ -33,7 +33,7 @@ async def backup_maintenance_loop() -> None:
     while True:
         await asyncio.sleep(3600)
         try:
-            item = maybe_create_automatic_backup()
+            item = await asyncio.to_thread(maybe_create_automatic_backup)
             if item:
                 logger.info("Automatic backup completed: %s", item["filename"])
         except Exception:
