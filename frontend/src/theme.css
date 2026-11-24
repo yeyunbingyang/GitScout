@@ -386,3 +386,74 @@ button:disabled { opacity: .48; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Page-specific glass panels that previously used light-only fills */
+.recommendation-category-tabs, .recommendation-controls, .recommendation-window-grid > div,
+.recommendation-run-meta > div, .recommendation-reasons-cell > span,
+.recommendation-dimension-filter, .recommendation-project-meta,
+.repository-best-ranks > div, .repository-stat-card, .repository-first-last,
+.repository-state-row, .stars-coverage, .stars-job-summary, .stars-metrics-grid > div,
+.stars-shards-panel, .stars-scan-heading, .system-overview-card,
+.system-path-list, .system-path-list > div, .table-pagination,
+.workspace-language, .workspace-project-status, .research-priority,
+.research-tag-filter, .research-filter-pair, .recommendation-weight-row,
+.recommendation-profile-description, .snapshot-panel, .snapshot-main,
+.snapshot-actions, .next-card, .notice-line, .source-note {
+  color: var(--gs-text-soft);
+  background-color: rgba(17, 32, 53, .58);
+  border-color: rgba(130, 168, 218, .17);
+}
+.recommendation-category-tabs { background: rgba(4, 12, 24, .55); }
+.recommendation-category-tabs .period-tab { color: #91a6c3; }
+.recommendation-reasons-cell > span { color: #b9b1ff; background: rgba(112, 103, 226, .15); }
+.recommendation-run-meta > div, .recommendation-window-grid > div,
+.repository-best-ranks > div, .repository-stat-card, .stars-metrics-grid > div {
+  background: linear-gradient(145deg, rgba(24, 42, 68, .72), rgba(13, 25, 43, .78));
+  border: 1px solid rgba(130, 168, 218, .17);
+}
+.recommendation-run-meta strong, .recommendation-window-grid strong,
+.repository-stat-card strong, .repository-best-ranks strong { color: #eaf2ff; }
+.recommendation-run-meta span, .recommendation-window-grid span,
+.repository-stat-card > span, .repository-best-ranks span { color: #879bb7; }
+.recommendation-dimension-filter span, .recommendation-project-meta,
+.repository-first-last span, .repository-state-row,
+.stars-coverage, .stars-metrics-grid span, .stars-scan-heading p { color: #8fa3c0; }
+.repository-avatar { color: #7ce4ff; background: linear-gradient(145deg, rgba(31,170,226,.18), rgba(132,95,255,.2)); border: 1px solid rgba(93,177,255,.18); }
+.repository-back-row, .repository-back-row a { color: #8eb9df; }
+.repository-first-last { border-top-color: rgba(131, 166, 211, .13); }
+.repository-state-row { border-bottom-color: rgba(131, 166, 211, .13); }
+.repository-state-row strong { color: #dbe8fa; }
+.stars-fork-setting, .stars-fork-toggle { color: #a6b9d2; }
+.stars-fork-setting input, .stars-fork-toggle input, .switch-control input { accent-color: #55c8ee; }
+.stars-query-code { color: #9fe7ff; }
+.stars-scan-actions select, .snapshot-actions select, .trending-filters select, .filter-input {
+  color: #dce8fb;
+  background: rgba(7, 16, 31, .72);
+  border: 1px solid rgba(130, 168, 218, .22);
+}
+.stars-shard-error { color: #ff9aa9; }
+.stars-shards-panel summary { color: #dce8fb; }
+.stars-shards-panel summary:hover { background: rgba(62, 126, 191, .08); }
+.system-security-note { color: #85d9ba; }
+.system-pending-restore, .system-restore-note { color: #f0c27d; background: rgba(135, 91, 32, .14); border-color: rgba(240, 189, 118, .22); }
+.system-overview-card > span, .system-path-list > div > span:first-child { color: #8da1bd; }
+.system-overview-card strong, .system-path-list code { color: #dceaff; }
+.system-path-list > div { border-bottom-color: rgba(130, 168, 218, .13); }
+.table-pagination { border-top-color: rgba(130, 168, 218, .15); }
+.workspace-language { color: #b9b1ff; background: rgba(112, 103, 226, .15); }
+.workspace-project-status { color: #8da1bd; }
+.workspace-project-status a { color: #7ad9ff; }
+.research-priority.priority-high { color: #ff9aa9; background: rgba(181, 65, 91, .14); }
+.research-priority.priority-medium { color: #f0c27d; background: rgba(135, 91, 32, .14); }
+.research-priority.priority-low { color: #75dfb8; background: rgba(32, 125, 94, .14); }
+.research-status-dot.status-in_progress { background: #56d7f3; box-shadow: 0 0 9px rgba(86, 215, 243, .55); }
+.research-status-dot.status-completed { background: #43d9a6; box-shadow: 0 0 9px rgba(67, 217, 166, .5); }
+.research-status-dot.status-pending { background: #f0bd76; }
+.research-status-dot.status-paused { background: #8295b2; }
+.switch-control { color: #c1d1e8; }
+.switch-control input:checked + span { background: linear-gradient(90deg, #27c5dc, #8267ff); }
+.snapshot-eyebrow { color: #91a9c8; }
+.snapshot-main strong, .snapshot-main b { color: #eaf2ff; }
+.snapshot-actions { background: transparent; }
+.next-card { border: 1px solid rgba(130, 168, 218, .17); }
+.notice-line { color: #a9c0df; }
