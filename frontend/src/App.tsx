@@ -12,6 +12,7 @@ import CollectionSettingsPage from "./pages/CollectionSettingsPage";
 import StarsPage from "./pages/StarsPage";
 import ComparisonPage from "./pages/ComparisonPage";
 import RepositoryDetailPage from "./pages/RepositoryDetailPage";
+import RecommendationPage from "./pages/RecommendationPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { api, type HealthResponse } from "./services/api";
 
@@ -32,7 +33,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "趋势总览", subtitle: "开源项目发现与研究工作台" },
   "/trending": { title: "周期榜单", subtitle: "在同一入口切换日榜、周榜和月榜" },
   "/stars": { title: "Stars 总榜", subtitle: "独立采集 GitHub 当前 Stars 排名" },
-  "/recommendations": { title: "智能推荐", subtitle: "基于 Stars 与日周月上榜表现计算推荐分" },
+  "/recommendations": { title: "智能推荐", subtitle: "基于 Stars 与日周月上榜表现生成可解释的推荐评分" },
   "/compare": { title: "周期趋势对比", subtitle: "追踪项目在不同周期的排名变化" },
   "/interested": { title: "感兴趣项目", subtitle: "保存值得持续关注的项目" },
   "/research": { title: "项目研究", subtitle: "管理研究状态、目标、笔记与结论" },
@@ -89,7 +90,7 @@ function AppShell() {
             <span className={apiError ? "connection-state offline" : "connection-state"}>
               <i />{apiError ? "后端未连接" : health ? "本地服务已连接" : "正在连接"}
             </span>
-            <span className="version-tag">TREND ANALYTICS · 0.4.0</span>
+            <span className="version-tag">RECOMMENDATION ENGINE · 0.5.0</span>
           </div>
         </header>
         <div className="page-header"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></div>
@@ -100,7 +101,7 @@ function AppShell() {
             <Route path="/repositories/:repositoryId" element={<RepositoryDetailPage />} />
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/stars" element={<StarsPage />} />
-            <Route path="/recommendations" element={<PlaceholderPage title="综合推荐评分" description="按 Stars 30%、日榜 15%、周榜 30%、月榜 25% 的默认权重计算推荐分，并保留每次计算批次。" milestone="M5 · RECOMMENDATION ENGINE" />} />
+            <Route path="/recommendations" element={<RecommendationPage />} />
             <Route path="/compare" element={<ComparisonPage />} />
             <Route path="/interested" element={<PlaceholderPage title="感兴趣项目库" description="轻量保存感兴趣项目；该标记与加入项目研究相互独立。" milestone="M6 · RESEARCH WORKSPACE" />} />
             <Route path="/research" element={<PlaceholderPage title="项目研究工作区" description="管理待研究、研究中、已完成和暂缓项目，记录目标、笔记、下一步行动与结论。" milestone="M6 · RESEARCH WORKSPACE" />} />
