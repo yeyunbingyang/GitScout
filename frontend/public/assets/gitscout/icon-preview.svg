@@ -2,15 +2,20 @@
 <defs>
   <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#142844"/><stop offset="1" stop-color="#0b1528"/></linearGradient>
   <linearGradient id="stroke" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#48d5ef"/><stop offset=".55" stop-color="#548dff"/><stop offset="1" stop-color="#9673ff"/></linearGradient>
-  <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <linearGradient id="brand" x1="8" y1="8" x2="56" y2="56"><stop stop-color="#4be2f0"/><stop offset=".52" stop-color="#6598ff"/><stop offset="1" stop-color="#b17bff"/></linearGradient>
+  <linearGradient id="gold" x1="4" y1="4" x2="28" y2="29"><stop stop-color="#fff1a6"/><stop offset=".48" stop-color="#ffd15f"/><stop offset="1" stop-color="#d78b27"/></linearGradient>
+  <linearGradient id="silver" x1="4" y1="4" x2="28" y2="29"><stop stop-color="#fff"/><stop offset=".5" stop-color="#dbe7f5"/><stop offset="1" stop-color="#8298b5"/></linearGradient>
+  <linearGradient id="bronze" x1="4" y1="4" x2="28" y2="29"><stop stop-color="#ffd3a7"/><stop offset=".5" stop-color="#d9905b"/><stop offset="1" stop-color="#96502e"/></linearGradient>
+  <linearGradient id="waves" x1="100" y1="520" x2="1080" y2="100"><stop stop-color="#4bdcf0" stop-opacity="0"/><stop offset=".42" stop-color="#4bdcf0" stop-opacity=".72"/><stop offset=".72" stop-color="#8d76ff" stop-opacity=".78"/><stop offset="1" stop-color="#8d76ff" stop-opacity="0"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
 <rect width="1200" height="560" rx="28" fill="#070c16"/>
-<path d="M0 0H1200V560H0Z" fill="url(#panel)" opacity=".32"/>
+<rect width="1200" height="560" rx="28" fill="url(#panel)" opacity=".32"/>
 <text x="54" y="58" fill="#edf4ff" font-size="28" font-family="Inter,Arial,sans-serif" font-weight="700">GitScout · Visual Asset Set</text>
 <text x="55" y="86" fill="#8fa3c0" font-size="13" font-family="Inter,Arial,sans-serif" letter-spacing="2">EDITORIAL IDENTITY · v0.8.2</text>
-<g fill="#91a7c5" font-size="14" font-family="Inter,Arial,sans-serif">
- <text x="95" y="148">品牌标记</text><text x="335" y="148">页面层级</text><text x="575" y="148">仓库档案</text>
- <text x="815" y="148">排行徽章</text><text x="1030" y="148">背景光效</text>
+<g fill="#91a7c5" font-size="13" font-family="Inter,Arial,sans-serif" letter-spacing="1.2">
+ <text x="95" y="148">BRAND MARK</text><text x="330" y="148">LAYERS</text><text x="555" y="148">REPOSITORY</text>
+ <text x="795" y="148">TOP-3 MEDALS</text><text x="1020" y="148">AMBIENT WAVES</text>
 </g>
 <g>
  <rect x="50" y="170" width="190" height="180" rx="18" fill="#0a1426" stroke="#29486c"/>
@@ -20,18 +25,29 @@
  <rect x="990" y="170" width="160" height="180" rx="18" fill="#0a1426" stroke="#29486c"/>
 </g>
 <g filter="url(#glow)">
- <image href="brand-mark.svg" x="105" y="210" width="80" height="80"/>
- <image href="layers-mark.svg" x="335" y="210" width="80" height="80"/>
- <image href="repository-mark.svg" x="565" y="210" width="80" height="80"/>
+ <g transform="translate(105 210) scale(1.25)">
+  <path d="M14 21 23 10l8 8h2l8-8 9 11v17c0 10-7 17-18 21-11-4-18-11-18-21V21Z" stroke="url(#brand)" stroke-width="3.5" stroke-linejoin="round" fill="none"/>
+  <path d="M23 34c2.2-2.8 5.1-4.2 9-4.2s6.8 1.4 9 4.2M25 43h.1M39 43h.1M28 49c2.5 1.3 5.5 1.3 8 0" stroke="url(#brand)" stroke-width="3" stroke-linecap="round" fill="none"/>
+ </g>
+ <g transform="translate(335 210) scale(1.66)" fill="none" stroke="url(#stroke)" stroke-width="2.8">
+  <path d="m24 5 19 10-19 10L5 15 24 5Z"/><path d="m5 24 19 10 19-10M5 33l19 10 19-10" stroke-linecap="round"/>
+ </g>
+ <g transform="translate(565 210) scale(1.66)" fill="none" stroke="url(#brand)" stroke-width="2.6">
+  <rect x="8" y="5.5" width="32" height="37" rx="5.5"/><path d="M15 15h18M15 22h18M15 29h11M15 36h15" stroke-linecap="round"/>
+ </g>
 </g>
 <g>
- <image href="crown-gold.svg" x="765" y="220" width="44" height="44"/>
- <image href="crown-silver.svg" x="822" y="220" width="44" height="44"/>
- <image href="crown-bronze.svg" x="879" y="220" width="44" height="44"/>
+ <g transform="translate(765 220) scale(1.35)"><path d="m5 12 6 4 5-9 5 9 6-4-2 14H7L5 12Z" fill="url(#gold)" stroke="#ffe7a0" stroke-width="1.4"/><path d="M9 29h14" stroke="#d78b27" stroke-width="2" stroke-linecap="round"/></g>
+ <g transform="translate(822 220) scale(1.35)"><path d="m5 12 6 4 5-9 5 9 6-4-2 14H7L5 12Z" fill="url(#silver)" stroke="#eaf2ff" stroke-width="1.4"/><path d="M9 29h14" stroke="#8298b5" stroke-width="2" stroke-linecap="round"/></g>
+ <g transform="translate(879 220) scale(1.35)"><path d="m5 12 6 4 5-9 5 9 6-4-2 14H7L5 12Z" fill="url(#bronze)" stroke="#f4bd91" stroke-width="1.4"/><path d="M9 29h14" stroke="#96502e" stroke-width="2" stroke-linecap="round"/></g>
  <text x="787" y="302" fill="#f3d27d" font-size="12" font-family="Inter,Arial,sans-serif">#1</text>
  <text x="844" y="302" fill="#dce6f5" font-size="12" font-family="Inter,Arial,sans-serif">#2</text>
  <text x="901" y="302" fill="#d9a17b" font-size="12" font-family="Inter,Arial,sans-serif">#3</text>
- <image href="neon-waves.svg" x="1000" y="225" width="140" height="78"/>
+ <g transform="translate(990 215) scale(.13 .19)" fill="none" stroke="url(#waves)">
+  <path d="M-20 500C190 430 260 350 430 370s245 120 430 42 250-188 390-160" stroke-width="12"/>
+  <path d="M-20 545C190 475 260 395 430 415s245 120 430 42 250-188 390-160" stroke-width="8" opacity=".52"/>
+  <path d="M-20 590C190 520 260 440 430 460s245 120 430 42 250-188 390-160" stroke-width="6" opacity=".3"/>
+ </g>
 </g>
 <g fill="#d7e6fa" font-size="12" font-family="Inter,Arial,sans-serif">
  <text x="75" y="390">brand-mark.svg</text><text x="300" y="390">layers-mark.svg</text><text x="525" y="390">repository-mark.svg</text>
