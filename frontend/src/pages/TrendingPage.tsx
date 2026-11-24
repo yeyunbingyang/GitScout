@@ -4,6 +4,7 @@ import {
   Activity, ArrowDown, ArrowUp, ExternalLink, Filter, RefreshCw, Search,
 } from "lucide-react";
 import RepositoryWorkspaceActions from "../components/RepositoryWorkspaceActions";
+import RepositoryIdentity from "../components/RepositoryIdentity";
 import {
   api,
   type CollectionJob,
@@ -52,15 +53,13 @@ function TrendingRow({ item }: { item: TrendingItem }) {
     <tr>
       <td><span className="rank-number">{String(item.rank).padStart(2, "0")}</span></td>
       <td className="trending-project-cell">
-        <Link to={"/repositories/" + item.repository_id} className="repo-link">{item.full_name}</Link>
-        <a href={item.html_url} target="_blank" rel="noreferrer" className="repo-external-link" aria-label="打开 GitHub 仓库">
-          <ExternalLink size={12} />
-        </a>
-        <small>{item.description || "暂无项目简介"}</small>
+        <div className="trending-project-head">
+          <RepositoryIdentity fullName={item.full_name} owner={item.owner} name={item.name}
+            description={item.description || "暂无项目简介"} to={"/repositories/" + item.repository_id} variant="table" />
+          <a href={item.html_url} target="_blank" rel="noreferrer" className="repo-external-link" aria-label="打开 GitHub 仓库"><ExternalLink size={12} /></a>
+        </div>
         {item.topics.length > 0 && (
-          <div className="topic-list">
-            {item.topics.slice(0, 4).map((topic) => <span key={topic}>{topic}</span>)}
-          </div>
+          <div className="topic-list">{item.topics.slice(0, 4).map((topic) => <span key={topic}>{topic}</span>)}</div>
         )}
       </td>
       <td>{item.language || "—"}</td>

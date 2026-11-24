@@ -6,6 +6,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import RepositoryWorkspaceActions from "../components/RepositoryWorkspaceActions";
+import RepositoryIdentity from "../components/RepositoryIdentity";
 import {
   api,
   type RecommendationCategory,
@@ -444,11 +445,9 @@ export default function RecommendationPage() {
                       <tr key={item.repository_id}>
                         <td className="recommendation-project-cell">
                           <span className="recommendation-rank">#{item.rank}</span>
-                          <div>
-                            <Link className="repo-link" to={"/repositories/" + item.repository_id}>{item.full_name}</Link>
-                            <small>{item.description || "暂无项目简介"}</small>
-                            <span className="recommendation-project-meta">{item.language || "未知语言"} · {number(item.stars_count)} Stars</span>
-                          </div>
+                          <RepositoryIdentity fullName={item.full_name} owner={item.owner} name={item.name}
+                            description={item.description || "暂无项目简介"} to={"/repositories/" + item.repository_id}
+                            variant="table" meta={<span className="recommendation-project-meta">{item.language || "未知语言"} · {number(item.stars_count)} Stars</span>} />
                         </td>
                         <td><strong className="recommendation-total-score">{item.total_score.toFixed(1)}</strong></td>
                         <td><span className={gradeClass(item.grade)}>{item.grade_label}</span></td>

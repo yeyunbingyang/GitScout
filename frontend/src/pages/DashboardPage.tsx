@@ -5,6 +5,7 @@ import {
   Database, FolderSearch, RefreshCw, Sparkles, Telescope,
 } from "lucide-react";
 import { api, type DashboardAnalytics, type TrendingPeriod } from "../services/api";
+import RepositoryIdentity from "../components/RepositoryIdentity";
 
 const periodOptions: { value: TrendingPeriod; label: string }[] = [
   { value: "daily", label: "日榜" },
@@ -184,7 +185,7 @@ export default function DashboardPage() {
           {analytics?.latest_stars_top && (
             <div className="analytics-top-repo">
               <span>Stars 榜首</span>
-              <strong>{analytics.latest_stars_top.full_name}</strong>
+              <RepositoryIdentity fullName={analytics.latest_stars_top.full_name} variant="compact" />
               <b>{formatNumber(analytics.latest_stars_top.stars_count)} ★</b>
             </div>
           )}
@@ -231,8 +232,8 @@ export default function DashboardPage() {
                 {analytics.cross_period_items.map((item) => (
                   <tr key={item.repository_id}>
                     <td className="trending-project-cell">
-                      <Link className="repo-link" to={"/repositories/" + item.repository_id}>{item.full_name}</Link>
-                      <small>{item.description || "暂无项目简介"}</small>
+                      <RepositoryIdentity fullName={item.full_name} description={item.description || "暂无项目简介"}
+                        to={"/repositories/" + item.repository_id} variant="table" />
                     </td>
                     <td>{item.language || "—"}</td>
                     <td>{item.rank_daily ? "#" + item.rank_daily : "—"}</td>
