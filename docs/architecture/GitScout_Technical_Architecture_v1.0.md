@@ -122,7 +122,7 @@ SQLite 是唯一业务数据库，首期核心表如下：
 - 推荐等级阈值：85 优先研究、75 强烈推荐、65 值得关注、50 观察，其余低优先级。新兴潜力默认日榜分数不低于 60 且 Stars 分数不高于 70；长期稳定默认周榜和月榜分数均不低于 60。
 - Stars 数据完整性单独展示：最近一次完整 Stars 扫描超过 7 天标记为过期；最近扫描为部分成功或 incomplete_results=true 时标记不完整。过期 / 不完整提示不会被隐藏，也不把旧扫描伪装为实时数据。
 - `recommendation_runs` 保存算法版本、权重、窗口配置、候选规模、数据截止时间和执行状态；`recommendation_scores` 保存四项子分、总分、排名、理由码和样本覆盖。新计算创建新批次，不覆盖旧记录。
-- `GET /recommendations/profiles`、`POST /recommendations/runs`、`GET /recommendations/runs/latest`、`GET /recommendations/runs/{id}` 提供真实 API；推荐页接入预设切换、批次历史、类别筛选、搜索和 CSV 导出。
+- `GET /recommendations/profiles`、`POST /recommendations/runs`、`GET /recommendations/runs/latest`、`GET /recommendations/runs/{id}` 提供真实 API；推荐页接入预设切换、批次历史、类别、语言、主要贡献维度筛选、关键词搜索和 CSV 导出。
 - M5 新增迁移仅为三套默认预设和查询索引；复用初始 schema 已存在的 recommendation_profiles / recommendation_runs / recommendation_scores 表。
 
 ### 本地调度实现
