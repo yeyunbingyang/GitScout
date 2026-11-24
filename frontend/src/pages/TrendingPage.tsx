@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Activity, ArrowDown, ArrowUp, ExternalLink, Filter, RefreshCw, Search,
 } from "lucide-react";
+import RepositoryWorkspaceActions from "../components/RepositoryWorkspaceActions";
 import {
   api,
   type CollectionJob,
@@ -66,6 +67,13 @@ function TrendingRow({ item }: { item: TrendingItem }) {
       <td className="number-cell">{formatNumber(item.stars_count)}</td>
       <td className="number-cell delta-cell">+{formatNumber(item.stars_delta)}</td>
       <td className="number-cell">{formatNumber(item.forks_count)}</td>
+      <td className="workspace-action-cell"><RepositoryWorkspaceActions
+        repositoryId={item.repository_id}
+        interested={item.interested}
+        researchStatus={item.research_status}
+        sourcePage="trending"
+        compact
+      /></td>
     </tr>
   );
 }
@@ -293,7 +301,7 @@ export default function TrendingPage() {
         ) : (
           <div className="table-scroll">
             <table>
-              <thead><tr><th>排名</th><th>项目</th><th>语言</th><th>Stars</th><th>本期增量</th><th>Forks</th></tr></thead>
+              <thead><tr><th>排名</th><th>项目</th><th>语言</th><th>Stars</th><th>本期增量</th><th>Forks</th><th>工作区</th></tr></thead>
               <tbody>{result.items.map((item) => <TrendingRow key={item.repository_id} item={item} />)}</tbody>
             </table>
           </div>
