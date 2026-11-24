@@ -1126,6 +1126,8 @@ def list_stars_leaderboard(
             SELECT i.rank, i.stars_count, i.forks_count, i.language,
                    r.id AS repository_id, r.github_repo_id, r.full_name, r.owner, r.name,
                    r.description, r.html_url,
+                   EXISTS(SELECT 1 FROM interested_projects ip WHERE ip.repository_id = r.id) AS interested,
+                   (SELECT rp.status FROM research_projects rp WHERE rp.repository_id = r.id LIMIT 1) AS research_status,
                    GROUP_CONCAT(DISTINCT t.topic) AS topics
             FROM stars_scan_items i
             JOIN repositories r ON r.id = i.repository_id
