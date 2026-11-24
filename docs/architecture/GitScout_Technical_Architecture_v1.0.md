@@ -110,6 +110,21 @@ SQLite 是唯一业务数据库，首期核心表如下：
 - 对比 CSV 由前端按当前筛选条件分页拉取完整结果后生成，不增加后端导出服务。
 - M4 复用现有 `trending_snapshots`、`trending_snapshot_items`、`stars_scans`、`stars_scan_items` 和 `repository_stats`，不需要新增迁移。
 
+
+### M5 推荐引擎实现
+
+- 候选池由最近一次成功 Stars 扫描的项目，以及最近成功日榜 30 次、周榜 12 次、月榜 12 次快照中的项目并集构成；按 repositories.id / GitHub repository_id 去重。
+- Stars 子分在当前候选池按 stars_count 降序排名，使用 PRD 百分位公式 `100 × (N - rank + 1) / N`；相同 Stars 数量以规范化 full_name 和 repository 主键稳定打破并列。
+- 日 / 周 / 月子分分别按最近 30 / 12 / 12 次成功快照中的上榜次数除以有效快照数计算。仅 `status='success'` 的快照进入分母。
+- 日榜 / 周榜 / 月榜最低有效样本数分别为 10 / 4 / 3；未达门槛时子分保存为 NULL（N/A），总分按可用指标权重重新归一化。最终总分保存一位小数，排序使用未四舍五入原始值。
+- 默认权重 30 / 15 / 30 / 25；另提供趋势发现优先 20 / 25 / 35 / 20、长期价值优先 40 / 10 / 25 / 25。每批次固化 weights_json，不因后续预设变化而改变旧结果。
+- 并列排序依次按未舍入综合分、Stars 候选池排名、最近一次上榜时间和仓库 full_name；理由码由加权贡献最高的可用指标生成。
+- 推荐等级阈值：85 优先研究、75 强烈推荐、65 值得关注、50 观察，其余低优先级。新兴潜力默认日榜分数不低于 60 且 Stars 分数不高于 70；长期稳定默认周榜和月榜分数均不低于 60。
+- Stars 数据完整性单独展示：最近一次完整 Stars 扫描超过 7 天标记为过期；最近扫描为部分成功或 incomplete_results=true 时标记不完整。过期 / 不完整提示不会被隐藏，也不把旧扫描伪装为实时数据。
+- `recommendation_runs` 保存算法版本、权重、窗口配置、候选规模、数据截止时间和执行状态；`recommendation_scores` 保存四项子分、总分、排名、理由码和样本覆盖。新计算创建新批次，不覆盖旧记录。
+- `GET /recommendations/profiles`、`POST /recommendations/runs`、`GET /recommendations/runs/latest`、`GET /recommendations/runs/{id}` 提供真实 API；推荐页接入预设切换、批次历史、类别筛选、搜索和 CSV 导出。
+- M5 新增迁移仅为三套默认预设和查询索引；复用初始 schema 已存在的 recommendation_profiles / recommendation_runs / recommendation_scores 表。
+
 ### 本地调度实现
 
 - 使用 FastAPI lifespan 启动一个 asyncio scheduler loop，不引入 Celery / Redis / APScheduler。
@@ -171,8 +186,11 @@ Token 仅由后端读取，不进入前端、URL、Git 仓库或日志。限流�
 | `GET /stars/scans/{id}` | 查询扫描与分片详情 |
 | `POST /stars/collect` | 手动触发 Stars 扫描 |
 | `POST /stars/scans/{id}/retry` | 重试失败或部分成功扫描 |
-| `GET /recommendations` | 推荐结果 |
-| `POST /recommendations/recalculate` | 重新计算推荐 |
+| `GET /recommendations/profiles` | 查询推荐权重预设 |
+| `GET /recommendations/runs` | 查询历史推荐计算批次 |
+| `POST /recommendations/runs` | 按指定权重方案创建新推荐批次 |
+| `GET /recommendations/runs/latest` | 查询最新成功推荐结果 |
+| `GET /recommendations/runs/{id}` | 查询指定批次结果，支持类别、关键词和分页筛选 |
 | `GET /research` | 研究工作区 |
 
 耗时操作返回 job_id，前端轮询任务状态；首期不要求 WebSocket。
@@ -195,7 +213,7 @@ GitScout/
 
 ## 9. 当前实现边界
 
-M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度；M4 已实现趋势总览聚合、同周期快照比较和仓库详情历史。M2 / M3 CI 已通过，M4 CI 与 Windows 本机数据验收待确认。推荐计算、收藏和研究 CRUD 按后续阶段完成。
+M0 / M1 建立工程骨架和 SQLite 数据底座；M2 已实现 Trending 采集与本地调度；M3 已实现 Stars Search API 采集、分片、去重、历史扫描、覆盖审计、重试及 Stars 每日调度；M4 已实现趋势总览聚合、同周期快照比较和仓库详情历史；M5 已实现推荐评分引擎、权重预设、批次留痕和推荐工作台。M2 / M3 / M4 CI 已通过；M5 CI 验收中，所有阶段的 Windows 本机真实数据验收仍待确认。M6 感兴趣与研究 CRUD、M7 本地备份恢复按后续阶段完成。
 
 ## 10. 升级条件
 
