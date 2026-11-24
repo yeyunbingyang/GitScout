@@ -181,6 +181,165 @@ export interface TrendingComparisonResponse {
   pagination: Pagination;
 }
 
+
+export type RecommendationCategory = "all" | "priority" | "emerging" | "stable";
+
+export interface RecommendationProfile {
+  id: number;
+  name: string;
+  description: string | null;
+  is_default: boolean;
+  weights: Record<"stars" | TrendingPeriod, number>;
+  weights_percent: Record<"stars" | TrendingPeriod, number>;
+  created_at: string;
+}
+
+export interface RecommendationPeriodCoverage {
+  sample_count: number;
+  window_limit: number;
+  minimum_samples: number;
+  appearance_count: number;
+  available: boolean;
+  score: number | null;
+}
+
+export interface RecommendationStarsCoverage {
+  rank: number;
+  candidate_count: number;
+  stars_count: number;
+  last_synced_at: string | null;
+  scoring_scan_id: number | null;
+  scoring_scan_finished_at: string | null;
+  latest_scan_id: number | null;
+  latest_scan_status: string | null;
+  latest_scan_incomplete_results: boolean | null;
+  stale: boolean;
+  incomplete: boolean;
+  age_days: number | null;
+  stale_after_days: number;
+}
+
+export interface RecommendationCoverage {
+  stars: RecommendationStarsCoverage;
+  periods: Record<TrendingPeriod, RecommendationPeriodCoverage>;
+  last_appearance_at: string | null;
+  available_dimensions: string[];
+  effective_weight: number;
+  weights: Record<"stars" | TrendingPeriod, number>;
+}
+
+export interface RecommendationItem {
+  repository_id: number;
+  github_repo_id: number | null;
+  full_name: string;
+  owner: string;
+  name: string;
+  description: string | null;
+  html_url: string;
+  language: string | null;
+  stars_count: number;
+  forks_count: number;
+  last_synced_at: string | null;
+  stars_score: number | null;
+  daily_score: number | null;
+  weekly_score: number | null;
+  monthly_score: number | null;
+  total_score: number;
+  rank: number;
+  grade: "priority" | "strong" | "watch" | "observe" | "low";
+  grade_label: string;
+  reason_codes: string[];
+  reasons: string[];
+  coverage: RecommendationCoverage;
+  stars_rank: number | null;
+  interested: boolean;
+  research_status: "pending" | "in_progress" | "completed" | "paused" | null;
+  categories: Exclude<RecommendationCategory, "all">[];
+}
+
+export interface RecommendationRun {
+  id: number;
+  profile_id: number | null;
+  profile_name: string | null;
+  profile_description?: string | null;
+  algorithm_version: string;
+  weights: Record<"stars" | TrendingPeriod, number>;
+  window_config: Record<string, unknown>;
+  candidate_count: number;
+  data_cutoff_at: string | null;
+  status: "running" | "success" | "failed";
+  created_at: string;
+  finished_at: string | null;
+  error_summary: string | null;
+}
+
+export interface RecommendationStarsScanSummary {
+  id: number;
+  trigger_type: string;
+  started_at: string;
+  finished_at: string | null;
+  status: string;
+  incomplete_results: boolean | number;
+  total_count: number;
+  fetched_count: number;
+  deduplicated_count: number;
+  coverage_description: string | null;
+  error_summary?: string | null;
+}
+
+export interface RecommendationRunSummary {
+  candidate_count: number;
+  scored_count: number;
+  priority_count: number;
+  emerging_count: number;
+  stable_count: number;
+  grade_counts: Record<RecommendationItem["grade"], number>;
+  latest_stars_scan: RecommendationStarsScanSummary | null;
+  scoring_stars_scan: RecommendationStarsScanSummary | null;
+  stars_stale: boolean;
+  stars_incomplete: boolean;
+  stars_stale_after_days: number;
+  stars_scan_age_days: number | null;
+  data_coverage: Partial<Record<TrendingPeriod, {
+    sample_count: number;
+    minimum_samples: number;
+    window_limit: number;
+    latest_snapshot: TrendingSnapshot | null;
+  }>>;
+  candidate_sources: string[];
+}
+
+export interface RecommendationRunResponse {
+  run: RecommendationRun | null;
+  summary: RecommendationRunSummary;
+  items: RecommendationItem[];
+  pagination: Pagination;
+  filters: {
+    category: RecommendationCategory;
+    category_label: string;
+    query: string;
+  };
+}
+
+export interface RecommendationRunHistoryItem {
+  id: number;
+  profile_id: number | null;
+  profile_name: string | null;
+  algorithm_version: string;
+  weights: Record<string, number>;
+  candidate_count: number;
+  data_cutoff_at: string | null;
+  status: "running" | "success" | "failed";
+  created_at: string;
+  finished_at: string | null;
+  error_summary: string | null;
+}
+
+export interface RecommendationRunHistoryResponse {
+  items: RecommendationRunHistoryItem[];
+  pagination: Pagination;
+}
+
 export interface Pagination {
   page: number;
   page_size: number;
@@ -412,6 +571,53 @@ export const api = {
     if (filters.q) params.set("q", filters.q);
     if (filters.language) params.set("language", filters.language);
     return request<TrendingComparisonResponse>("/api/v1/trending/compare?" + params.toString());
+  },
+
+  recommendationProfiles: () =>
+    request<{ items: RecommendationProfile[] }>("/api/v1/recommendations/profiles"),
+  recommendationRuns: (page = 1) =>
+    request<RecommendationRunHistoryResponse>(
+      "/api/v1/recommendations/runs?page=" + page + "&page_size=30",
+    ),
+  createRecommendationRun: (profileId?: number | null) =>
+    postJson<RecommendationRunResponse>(
+      "/api/v1/recommendations/runs",
+      profileId ? { profile_id: profileId } : {},
+    ),
+  latestRecommendationRun: (filters: {
+    category?: RecommendationCategory;
+    q?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}) => {
+    const params = new URLSearchParams({
+      category: filters.category ?? "all",
+      page: String(filters.page ?? 1),
+      page_size: String(filters.pageSize ?? 50),
+    });
+    if (filters.q) params.set("q", filters.q);
+    return request<RecommendationRunResponse>(
+      "/api/v1/recommendations/runs/latest?" + params.toString(),
+    );
+  },
+  recommendationRun: (
+    runId: number,
+    filters: {
+      category?: RecommendationCategory;
+      q?: string;
+      page?: number;
+      pageSize?: number;
+    } = {},
+  ) => {
+    const params = new URLSearchParams({
+      category: filters.category ?? "all",
+      page: String(filters.page ?? 1),
+      page_size: String(filters.pageSize ?? 50),
+    });
+    if (filters.q) params.set("q", filters.q);
+    return request<RecommendationRunResponse>(
+      "/api/v1/recommendations/runs/" + runId + "?" + params.toString(),
+    );
   },
   repositories: (page = 1) =>
     request<ListResponse<Repository>>("/api/v1/repositories?page=" + page + "&page_size=20"),
