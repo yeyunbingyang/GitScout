@@ -22,10 +22,10 @@ const categories: { value: RecommendationCategory; label: string }[] = [
 ];
 
 const dimensions = [
-  { key: "stars_score", label: "Stars", short: "S" },
-  { key: "daily_score", label: "日榜", short: "D" },
-  { key: "weekly_score", label: "周榜", short: "W" },
-  { key: "monthly_score", label: "月榜", short: "M" },
+  { key: "stars_score", weightKey: "stars", label: "Stars", short: "S" },
+  { key: "daily_score", weightKey: "daily", label: "日榜", short: "D" },
+  { key: "weekly_score", weightKey: "weekly", label: "周榜", short: "W" },
+  { key: "monthly_score", weightKey: "monthly", label: "月榜", short: "M" },
 ] as const;
 
 function number(value: number): string {
@@ -277,7 +277,9 @@ export default function RecommendationPage() {
           <label>
             <span><History size={12} />历史计算批次</span>
             <select value={selectedRunId ?? ""} onChange={(event) => {
-              setSelectedRunId(Number(event.target.value) || null);
+              const nextRunId = Number(event.target.value) || null;
+              setSelectedRunId(nextRunId);
+              if (nextRunId === null) setResult(null);
               setPage(1);
             }}>
               <option value="">选择历史批次</option>
@@ -294,7 +296,7 @@ export default function RecommendationPage() {
             {dimensions.map((dimension) => (
               <div className="recommendation-weight-chip" key={dimension.key}>
                 <span>{dimension.label}</span>
-                <strong>{selectedProfile.weights_percent[dimension.key]}</strong>
+                <strong>{selectedProfile.weights_percent[dimension.weightKey]}</strong>
                 <small>%</small>
               </div>
             ))}
@@ -427,7 +429,7 @@ export default function RecommendationPage() {
                         {dimensions.map((dimension) => {
                           const value = item[dimension.key];
                           const periodKey = dimension.key === "daily_score" ? "daily" : dimension.key === "weekly_score" ? "weekly" : "monthly";
-                          const coverage = periodKey === "stars" ? null : item.coverage.periods[periodKey];
+                          const coverage = dimension.key === "stars_score" ? null : item.coverage.periods[periodKey];
                           return (
                             <td key={dimension.key} className="recommendation-score-cell">
                               <strong>{score(value)}</strong>
