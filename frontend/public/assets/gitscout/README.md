@@ -9,3 +9,5 @@ Local editable SVG assets, no remote icon CDN.
 - neon-waves.svg — subtle ambient wave decoration
 
 Palette follows theme.css: cyan #48d5ef, blue #548dff, violet #9673ff.
+
+- icon-preview.svg — visual index of the local brand, page, repository, ranking and ambient-effect assets.

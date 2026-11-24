@@ -15,6 +15,16 @@ const prototype = read("prototype/GitScout_v0.8.2_EditorialIdentity_Prototype.ht
 const identity = read("frontend/src/components/RepositoryIdentity.tsx");
 const rankBadge = read("frontend/src/components/ProjectRankBadge.tsx");
 const repositoryPage = read("frontend/src/pages/RepositoriesPage.tsx");
+const identityPages = [
+  "DashboardPage.tsx", "TrendingPage.tsx", "StarsPage.tsx", "ComparisonPage.tsx",
+  "RecommendationPage.tsx", "RepositoriesPage.tsx", "InterestedPage.tsx",
+  "ResearchPage.tsx", "RepositoryDetailPage.tsx",
+];
+for (const page of identityPages) {
+  const source = read("frontend/src/pages/" + page);
+  assert.ok(source.includes("RepositoryIdentity"), "Missing shared repository identity in " + page);
+}
+
 
 const tokens = {
   "--gs-bg": "#070c16",
@@ -80,4 +90,7 @@ for (const asset of ["brand-mark.svg","repository-mark.svg","layers-mark.svg","c
   assert.ok(existsSync(resolve(repoRoot, "frontend/public/assets/gitscout", asset)), "Missing GitScout visual asset: " + asset);
 }
 assert.ok(prototype.includes("repository-identity-owner") && prototype.includes("GitScout v0.8.2"), "Editorial HTML prototype is missing");
+assert.ok(prototype.includes("function identityMarkup("), "Prototype repository identity renderer is missing");
+assert.ok(!prototype.includes('<b class="repo">'), "Prototype still contains raw repository-name treatments");
+
 console.log("GitScout v0.8.2 check passed: dark tokens, editorial identity, icon assets and prototype parity.");

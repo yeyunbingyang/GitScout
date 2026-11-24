@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+<defs>
+  <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#142844"/><stop offset="1" stop-color="#0b1528"/></linearGradient>
+  <linearGradient id="stroke" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#48d5ef"/><stop offset=".55" stop-color="#548dff"/><stop offset="1" stop-color="#9673ff"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1200" height="560" rx="28" fill="#070c16"/>
+<path d="M0 0H1200V560H0Z" fill="url(#panel)" opacity=".32"/>
+<text x="54" y="58" fill="#edf4ff" font-size="28" font-family="Inter,Arial,sans-serif" font-weight="700">GitScout · Visual Asset Set</text>
+<text x="55" y="86" fill="#8fa3c0" font-size="13" font-family="Inter,Arial,sans-serif" letter-spacing="2">EDITORIAL IDENTITY · v0.8.2</text>
+<g fill="#91a7c5" font-size="14" font-family="Inter,Arial,sans-serif">
+ <text x="95" y="148">品牌标记</text><text x="335" y="148">页面层级</text><text x="575" y="148">仓库档案</text>
+ <text x="815" y="148">排行徽章</text><text x="1030" y="148">背景光效</text>
+</g>
+<g>
+ <rect x="50" y="170" width="190" height="180" rx="18" fill="#0a1426" stroke="#29486c"/>
+ <rect x="280" y="170" width="190" height="180" rx="18" fill="#0a1426" stroke="#29486c"/>
+ <rect x="510" y="170" width="190" height="180" rx="18" fill="#0a1426" stroke="#29486c"/>
+ <rect x="740" y="170" width="210" height="180" rx="18" fill="#0a1426" stroke="#29486c"/>
+ <rect x="990" y="170" width="160" height="180" rx="18" fill="#0a1426" stroke="#29486c"/>
+</g>
+<g filter="url(#glow)">
+ <image href="brand-mark.svg" x="105" y="210" width="80" height="80"/>
+ <image href="layers-mark.svg" x="335" y="210" width="80" height="80"/>
+ <image href="repository-mark.svg" x="565" y="210" width="80" height="80"/>
+</g>
+<g>
+ <image href="crown-gold.svg" x="765" y="220" width="44" height="44"/>
+ <image href="crown-silver.svg" x="822" y="220" width="44" height="44"/>
+ <image href="crown-bronze.svg" x="879" y="220" width="44" height="44"/>
+ <text x="787" y="302" fill="#f3d27d" font-size="12" font-family="Inter,Arial,sans-serif">#1</text>
+ <text x="844" y="302" fill="#dce6f5" font-size="12" font-family="Inter,Arial,sans-serif">#2</text>
+ <text x="901" y="302" fill="#d9a17b" font-size="12" font-family="Inter,Arial,sans-serif">#3</text>
+ <image href="neon-waves.svg" x="1000" y="225" width="140" height="78"/>
+</g>
+<g fill="#d7e6fa" font-size="12" font-family="Inter,Arial,sans-serif">
+ <text x="75" y="390">brand-mark.svg</text><text x="300" y="390">layers-mark.svg</text><text x="525" y="390">repository-mark.svg</text>
+ <text x="760" y="390">crown-gold / silver / bronze</text><text x="1010" y="390">neon-waves.svg</text>
+</g>
+<rect x="52" y="430" width="1096" height="1" fill="#29415f"/>
+<rect x="52" y="466" width="4" height="38" rx="2" fill="url(#stroke)"/>
+<text x="72" y="480" fill="#83dff5" font-size="10" font-family="Inter,Arial,sans-serif" letter-spacing="2">OWNER</text>
+<text x="72" y="507" fill="#f0f5ff" font-size="23" font-family="Inter,Arial,sans-serif" font-weight="700">repository-name</text>
+<text x="285" y="507" fill="#a5b7d0" font-size="13" font-family="Inter,Arial,sans-serif">Description · editorial hierarchy · cyan / blue / violet accent</text>
+</svg>
