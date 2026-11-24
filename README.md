@@ -38,24 +38,17 @@ GitScout 是面向 GitHub 开源项目发现、趋势追踪、智能推荐与项
 
 ## Windows 本地启动
 
-### 方式一：本地单地址运行
+### 方式一：一键本地运行（推荐）
 
 1. 安装 Python 3.11、Node.js 20+。
-2. 首次构建前端：
+2. 首次运行双击根目录 setup_gitscout.bat，自动创建 Python 虚拟环境、安装前后端依赖并构建前端。
+3. 双击 start_gitscout.bat，启动器会等待健康检查通过后自动打开浏览器。
+4. 停止服务双击 stop_gitscout.bat。
+5. 浏览器访问：
 
-```powershell
-cd frontend
-npm install
-npm run build
-cd ..
-```
-
-3. 双击根目录的 `start_gitscout.bat`。
-4. 浏览器访问：
-
-```text
+~~~text
 http://127.0.0.1:8765
-```
+~~~
 
 FastAPI 会提供前端构建产物和 API。默认只监听本机回环地址；服务以隐藏后台进程运行，日志写入 .runtime/logs/。
 
@@ -63,23 +56,23 @@ FastAPI 会提供前端构建产物和 API。默认只监听本机回环地址�
 
 终端一：
 
-```powershell
+~~~powershell
 cd backend
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
+~~~
 
 终端二：
 
-```powershell
+~~~powershell
 cd frontend
 npm install
 npm run dev
-```
+~~~
 
-访问 `http://127.0.0.1:5173`。Vite 会把 `/api` 请求代理到 FastAPI。
+访问 http://127.0.0.1:5173。Vite 会把 /api 请求代理到 FastAPI。
 
 ## 本地配置
 
