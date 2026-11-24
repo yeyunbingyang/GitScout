@@ -32,5 +32,5 @@
 - [x] 本地 SVG 图标资源，无运行时外链依赖。
 - [x] HTML 原型同步相同命名层级。
 - [x] 长名称换行与窄屏布局规则。
-- [ ] GitHub Actions 构建与主题检查。
+- [x] GitHub Actions 构建与主题检查（Frontend build / Backend tests / Windows setup smoke test 全部通过）。
 - [ ] 本地浏览器真实数据视觉回归。
