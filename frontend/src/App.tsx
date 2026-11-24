@@ -13,7 +13,8 @@ import StarsPage from "./pages/StarsPage";
 import ComparisonPage from "./pages/ComparisonPage";
 import RepositoryDetailPage from "./pages/RepositoryDetailPage";
 import RecommendationPage from "./pages/RecommendationPage";
-import PlaceholderPage from "./pages/PlaceholderPage";
+import InterestedPage from "./pages/InterestedPage";
+import ResearchPage from "./pages/ResearchPage";
 import { api, type HealthResponse } from "./services/api";
 
 const navigation = [
@@ -90,7 +91,7 @@ function AppShell() {
             <span className={apiError ? "connection-state offline" : "connection-state"}>
               <i />{apiError ? "后端未连接" : health ? "本地服务已连接" : "正在连接"}
             </span>
-            <span className="version-tag">RECOMMENDATION ENGINE · 0.5.0</span>
+            <span className="version-tag">RESEARCH WORKSPACE · 0.6.0</span>
           </div>
         </header>
         <div className="page-header"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></div>
@@ -103,8 +104,8 @@ function AppShell() {
             <Route path="/stars" element={<StarsPage />} />
             <Route path="/recommendations" element={<RecommendationPage />} />
             <Route path="/compare" element={<ComparisonPage />} />
-            <Route path="/interested" element={<PlaceholderPage title="感兴趣项目库" description="轻量保存感兴趣项目；该标记与加入项目研究相互独立。" milestone="M6 · RESEARCH WORKSPACE" />} />
-            <Route path="/research" element={<PlaceholderPage title="项目研究工作区" description="管理待研究、研究中、已完成和暂缓项目，记录目标、笔记、下一步行动与结论。" milestone="M6 · RESEARCH WORKSPACE" />} />
+            <Route path="/interested" element={<InterestedPage />} />
+            <Route path="/research" element={<ResearchPage />} />
             <Route path="/collections" element={<CollectionJobsPage />} />
             <Route path="/settings" element={<CollectionSettingsPage />} />
           </Routes>
