@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, BookOpen, Check, ExternalLink, FileText,
+  ArrowRight, BookOpen, Check, Download, ExternalLink, FileText,
   Lightbulb, Plus, Save, Search, Tag, Trash2, X,
 } from "lucide-react";
 import {
@@ -50,6 +50,7 @@ export default function ResearchPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ResearchStatus | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<ResearchPriority | "all">("all");
+  const [tagFilter, setTagFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,7 @@ export default function ResearchPage() {
   });
   const [tagsDraft, setTagsDraft] = useState("");
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [savingTags, setSavingTags] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
@@ -86,6 +88,7 @@ export default function ResearchPage() {
         q: query.trim(),
         status: statusFilter === "all" ? undefined : statusFilter,
         priority: priorityFilter === "all" ? undefined : priorityFilter,
+        tag: tagFilter.trim(),
         page,
         pageSize: 30,
       });
@@ -233,6 +236,59 @@ export default function ResearchPage() {
     }
   }
 
+  async function exportAll() {
+    setExporting(true);
+    setError(null);
+    try {
+      const first = await api.researchProjects({
+        q: query.trim(),
+        status: statusFilter === "all" ? undefined : statusFilter,
+        priority: priorityFilter === "all" ? undefined : priorityFilter,
+        tag: tagFilter.trim(),
+        page: 1,
+        pageSize: 100,
+      });
+      const all = [...first.items];
+      for (let current = 2; current <= first.pagination.total_pages; current += 1) {
+        const response = await api.researchProjects({
+          q: query.trim(),
+          status: statusFilter === "all" ? undefined : statusFilter,
+          priority: priorityFilter === "all" ? undefined : priorityFilter,
+          tag: tagFilter.trim(),
+          page: current,
+          pageSize: 100,
+        });
+        all.push(...response.items);
+      }
+      const detailed = [];
+      for (const item of all) {
+        const response = await api.researchProject(item.id);
+        detailed.push(response.item);
+      }
+      const header = ["仓库", "状态", "优先级", "研究目标", "下一步行动", "研究结论", "标签", "研究笔记", "加入时间", "开始时间", "完成时间", "最近更新", "GitHub URL"];
+      const rows = detailed.map((item) => [
+        item.repository.full_name, statusLabel(item.status), priorityLabel(item.priority),
+        item.research_goal ?? "", item.next_action ?? "", item.conclusion ?? "",
+        item.tags.map((tag) => tag.name).join("；"),
+        item.notes.map((note) => (note.title ? note.title + "\n" : "") + note.content).join("\n\n"),
+        item.added_at, item.started_at ?? "", item.completed_at ?? "", item.updated_at,
+        item.repository.html_url,
+      ]);
+      const quote = (value: string | number) => '"' + String(value).replace(/"/g, '""') + '"';
+      const csv = "\uFEFF" + [header, ...rows].map((row) => row.map(quote).join(",")).join("\r\n");
+      const url = window.URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "gitscout-research-workspace.csv";
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "导出研究记录失败");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   async function searchPicker(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPickerLoading(true);
@@ -285,10 +341,14 @@ export default function ResearchPage() {
         <section className="surface-card research-list-panel">
           <div className="research-list-heading">
             <div><h3>研究项目</h3><p>{total.toLocaleString("zh-CN")} 个项目</p></div>
-            <span className="count-chip">{total}</span>
+            <div className="research-list-heading-actions">
+              <button className="button button-quiet" disabled={exporting || total === 0} onClick={() => void exportAll()}><Download size={12} />{exporting ? "导出中…" : "导出"}</button>
+              <span className="count-chip">{total}</span>
+            </div>
           </div>
           <div className="research-list-filters">
             <label className="workspace-search"><Search size={13} /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="搜索项目或研究目标…" /></label>
+            <input className="research-tag-filter" value={tagFilter} onChange={(event) => { setTagFilter(event.target.value); setPage(1); }} placeholder="按标签筛选…" />
             <div className="research-filter-pair">
               <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value as typeof statusFilter); setPage(1); }}>
                 <option value="all">全部状态</option>
