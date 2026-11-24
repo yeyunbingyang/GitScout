@@ -5,6 +5,7 @@ import {
   TrendingDown, TrendingUp,
 } from "lucide-react";
 import { api, type RepositoryDetailResponse, type TrendingPeriod } from "../services/api";
+import RepositoryWorkspaceActions from "../components/RepositoryWorkspaceActions";
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("zh-CN").format(value);
@@ -179,6 +180,16 @@ export default function RepositoryDetailPage() {
         <a className="button button-primary" href={repository.html_url} target="_blank" rel="noreferrer">
           打开 GitHub <ExternalLink size={13} />
         </a>
+      </section>
+
+      <section className="surface-card repository-workspace-action-card">
+        <div><strong>个人工作区</strong><span>兴趣标记和研究记录独立保存</span></div>
+        <RepositoryWorkspaceActions
+          repositoryId={repository.id}
+          interested={Boolean(repository.interested)}
+          researchStatus={repository.research?.status ?? null}
+          sourcePage="repository_detail"
+        />
       </section>
 
       <section className="repository-stat-grid">
