@@ -8,6 +8,7 @@ import {
 import {
   api,
   type RecommendationCategory,
+  type RecommendationDimension,
   type RecommendationItem,
   type RecommendationProfile,
   type RecommendationRunHistoryItem,
@@ -101,6 +102,9 @@ export default function RecommendationPage() {
   const [category, setCategory] = useState<RecommendationCategory>("all");
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
+  const [language, setLanguage] = useState("");
+  const [appliedLanguage, setAppliedLanguage] = useState("");
+  const [dimension, setDimension] = useState<RecommendationDimension>("all");
   const [page, setPage] = useState(1);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -146,6 +150,8 @@ export default function RecommendationPage() {
     api.recommendationRun(selectedRunId, {
       category,
       q: appliedQuery,
+      language: appliedLanguage,
+      dimension,
       page,
       pageSize: 50,
     })
@@ -159,7 +165,7 @@ export default function RecommendationPage() {
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [selectedRunId, category, appliedQuery, page, initialLoading]);
+  }, [selectedRunId, category, appliedQuery, appliedLanguage, dimension, page, initialLoading]);
 
   const selectedProfile = useMemo(
     () => profiles.find((item) => item.id === selectedProfileId) ?? null,
@@ -183,6 +189,9 @@ export default function RecommendationPage() {
       setCategory("all");
       setAppliedQuery("");
       setQuery("");
+      setAppliedLanguage("");
+      setLanguage("");
+      setDimension("all");
       setPage(1);
       const historyResponse = await api.recommendationRuns(1);
       setHistory(historyResponse.items);
@@ -196,6 +205,7 @@ export default function RecommendationPage() {
   function applySearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAppliedQuery(query.trim());
+    setAppliedLanguage(language.trim());
     setPage(1);
   }
 
@@ -209,6 +219,8 @@ export default function RecommendationPage() {
         const response = await api.recommendationRun(run.id, {
           category,
           q: appliedQuery,
+          language: appliedLanguage,
+          dimension,
           page: currentPage,
           pageSize: 100,
         });
@@ -398,10 +410,23 @@ export default function RecommendationPage() {
                     onClick={() => { setCategory(item.value); setPage(1); }}>{item.label}</button>
                 ))}
               </div>
+              <div className="recommendation-filter-controls">
               <form className="recommendation-search" onSubmit={applySearch}>
                 <label><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索仓库名称或简介…" /></label>
+                <label className="recommendation-language-input"><input value={language} onChange={(event) => setLanguage(event.target.value)} placeholder="语言，如 Python" /></label>
                 <button className="button button-filter" type="submit"><Filter size={13} />筛选</button>
               </form>
+              <label className="recommendation-dimension-filter">
+                <span>主要贡献维度</span>
+                <select value={dimension} onChange={(event) => { setDimension(event.target.value as RecommendationDimension); setPage(1); }}>
+                  <option value="all">全部维度</option>
+                  <option value="stars">Stars</option>
+                  <option value="daily">日榜</option>
+                  <option value="weekly">周榜</option>
+                  <option value="monthly">月榜</option>
+                </select>
+              </label>
+            </div>
             </div>
 
             {loading ? <div className="analytics-empty">正在读取推荐项目…</div> : result?.items.length ? (
