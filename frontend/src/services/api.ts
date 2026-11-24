@@ -120,6 +120,7 @@ export interface InterestedProject extends Repository {
   source_page: string | null;
   tags: string[];
   notes: string | null;
+  research_status: ResearchStatus | null;
 }
 
 export interface ResearchTag {
@@ -631,6 +632,7 @@ export const api = {
     q?: string;
     language?: string;
     tag?: string;
+    research?: "all" | "added" | "not_added";
     sort?: "marked_at" | "stars" | "name";
     page?: number;
     pageSize?: number;
@@ -643,6 +645,7 @@ export const api = {
     if (filters.q) params.set("q", filters.q);
     if (filters.language) params.set("language", filters.language);
     if (filters.tag) params.set("tag", filters.tag);
+    if (filters.research) params.set("research", filters.research);
     return request<ListResponse<InterestedProject>>("/api/v1/interested?" + params.toString());
   },
   markInterested: (payload: {
