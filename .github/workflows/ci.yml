@@ -66,36 +66,32 @@ jobs:
       - name: Run first-run setup
         shell: pwsh
         run: .\scripts\setup_gitscout.ps1
-      - name: Start and verify local service
+      - name: Verify launcher, backup and restore lifecycle
         shell: pwsh
         run: |
-          .\scripts\start_gitscout.ps1
-          $health = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/v1/health" -TimeoutSec 10
-          if ($health.status -ne "ok") { throw "GitScout health check failed." }
-      - name: Verify backup and deferred restore lifecycle
-        shell: pwsh
-        run: |
-          $backup = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8765/api/v1/system/backups" -TimeoutSec 120
-          $filename = $backup.item.filename
-          $verified = Invoke-RestMethod -Method Post -Uri ("http://127.0.0.1:8765/api/v1/system/backups/" + [uri]::EscapeDataString($filename) + "/verify") -TimeoutSec 120
-          if (-not $verified.result.valid) { throw "Created backup did not pass integrity validation." }
-          $restore = Invoke-RestMethod -Method Post -Uri ("http://127.0.0.1:8765/api/v1/system/backups/" + [uri]::EscapeDataString($filename) + "/restore") -ContentType "application/json" -Body '{"confirm":true}' -TimeoutSec 120
-          if (-not $restore.restore.restart_required) { throw "Restore was not queued for restart." }
-      - name: Stop service before restore
-        shell: pwsh
-        run: .\scripts\stop_gitscout.ps1
-      - name: Restart and verify restore was applied
-        shell: pwsh
-        run: |
-          .\scripts\start_gitscout.ps1
-          $system = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/v1/system" -TimeoutSec 15
-          if ($null -ne $system.info.pending_restore) { throw "Pending restore marker was not consumed." }
-          if ($system.schema_version -ne "0005") { throw "Restored database schema version is unexpected." }
-          if (-not $system.info.database_exists) { throw "Restored database is missing." }
-      - name: Stop service
-        if: always()
-        shell: pwsh
-        run: |
-          if (Test-Path ".runtime/gitscout.pid") {
+          try {
+            .\scripts\start_gitscout.ps1
+            $health = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/v1/health" -TimeoutSec 10
+            if ($health.status -ne "ok") { throw "GitScout health check failed." }
+
+            $backup = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8765/api/v1/system/backups" -TimeoutSec 120
+            $filename = $backup.item.filename
+            $escaped = [uri]::EscapeDataString($filename)
+            $verified = Invoke-RestMethod -Method Post -Uri ("http://127.0.0.1:8765/api/v1/system/backups/" + $escaped + "/verify") -TimeoutSec 120
+            if (-not $verified.result.valid) { throw "Created backup did not pass integrity validation." }
+
+            $restore = Invoke-RestMethod -Method Post -Uri ("http://127.0.0.1:8765/api/v1/system/backups/" + $escaped + "/restore") -ContentType "application/json" -Body '{"confirm":true}' -TimeoutSec 120
+            if (-not $restore.restore.restart_required) { throw "Restore was not queued for restart." }
+
             .\scripts\stop_gitscout.ps1
+            .\scripts\start_gitscout.ps1
+            $system = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/v1/system" -TimeoutSec 15
+            if ($null -ne $system.info.pending_restore) { throw "Pending restore marker was not consumed." }
+            if ($system.schema_version -ne "0005") { throw "Restored database schema version is unexpected." }
+            if (-not $system.info.database_exists) { throw "Restored database is missing." }
+          }
+          finally {
+            if (Test-Path ".runtime/gitscout.pid") {
+              .\scripts\stop_gitscout.ps1
+            }
           }
